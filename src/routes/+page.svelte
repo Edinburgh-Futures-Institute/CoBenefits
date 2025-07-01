@@ -533,7 +533,7 @@
                 />
             </div>
 
-            <div class="explore-block search-section">
+            <div class="explore-block">
                 <h1>Read Stories and Analyses</h1>
             </div>
 
@@ -846,6 +846,7 @@
     }
 
     .explore-block {
+        padding: 10px;
         background-color: #f9f9f9;
         border: 1px solid lightgray;
     }
