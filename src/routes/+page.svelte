@@ -101,6 +101,7 @@
     let sortBy = 'total';
     let maxLADValue = 0;
     let maxHHLADValue = 0;
+
     // let LADToName = data.LADToName;
 
     async function fetchLADData() {
@@ -431,10 +432,10 @@
                         <div class="waffle-stat">
                             <div class="waffle-value-container">
                                 <img class="aggregation-icon-small" src="{total}" alt="icon"/>
-                            <div class="waffle-value">
-                                <span class="waffle-big">£{activeValueLabel}</span>
-                                <span class="small">billion</span>
-                            </div>
+                                <div class="waffle-value">
+                                    <span class="waffle-big">£{activeValueLabel}</span>
+                                    <span class="small">billion</span>
+                                </div>
                             </div>
                             {#if activeValueLabel > 0}
                                 <div class="waffle-caption">National benefits</div>
@@ -445,10 +446,10 @@
                         <div class="waffle-stat">
                             <div class="waffle-value-container">
                                 <img class="aggregation-icon-small" src="{per_capita}" alt="icon"/>
-                            <div class="waffle-value">
-                                <span class="waffle-big">£{activePerCapitaLabel}</span>
-                                <!-- <span class="small">thousand</span> -->
-                            </div>
+                                <div class="waffle-value">
+                                    <span class="waffle-big">£{activePerCapitaLabel}</span>
+                                    <!-- <span class="small">thousand</span> -->
+                                </div>
                             </div>
                             {#if activePerCapitaLabel > 0}
                                 <div class="waffle-caption">Per capita benefits</div>
@@ -460,15 +461,15 @@
                             <div class="waffle-stat">
                                 <div class="waffle-value-container">
                                     <img class="aggregation-icon-small" src="{percentage}" alt="icon"/>
-                                <div class="waffle-value">
-                                    <span class="waffle-big">{activePercentLabel}</span>
-                                    <span class="small">%</span>
+                                    <div class="waffle-value">
+                                        <span class="waffle-big">{activePercentLabel}</span>
+                                        <span class="small">%</span>
+                                    </div>
                                 </div>
-                            </div>
                                 <div class="waffle-caption">Contribution</div>
                             </div>
                         {/if}
-                        
+
                     </div>
 
 
@@ -479,18 +480,80 @@
             </div>
     </section>
 
-    <section class="search-section">
-        <h1>Find My Place</h1>
-        <LADSearch
-            items={LADToName}
-            on:search={(e) => handleSearch(e.detail)}
-        />
-        <!-- {#if selectedLAD}
-          <h2>Total Cobenefits</h2>
-          <h2>Cobenefits Over Time</h2>
 
-        {/if} -->
+    <section>
+
+        <h1>Explore the Atlas</h1>
+        <div id="explore-section">
+
+            <div class="explore-block">
+                <h1>Browse Report Pages</h1>
+
+                <div style="display: flex">
+
+
+                    <div class="explore-page">
+                    <a href="{base}/coben"><img class="page-teaser-img" src="{base}/pages-teasers/coben.png"/></a>
+                    <h2>11 Cobenefits Pages</h2>
+                </div>
+
+                <div class="explore-page">
+                    <a href="{base}/lad">
+                        <img class="page-teaser-img" src="{base}/pages-teasers/location.png"/>
+                    </a>
+                    <h2>388 Local Area Pages</h2>
+                </div>
+
+                <div class="explore-page">
+                    <a href="{base}/sefs">
+                        <img class="page-teaser-img" src="{base}/pages-teasers/sef.png"/>
+                    </a>
+                    <h2>17 Socio-Economic Factors Pages</h2>
+
+                </div>
+
+                <div class="explore-page">
+                    <a href="{base}/map">
+                        <img class="page-teaser-img" src="{base}/pages-teasers/map.png"/>
+                    </a>
+                    <h2>1 Interactive Map</h2>
+                </div>
+
+                </div>
+
+
+
+            </div>
+
+            <div class="explore-block search-section">
+                <h1>Find My Place</h1>
+                <LADSearch
+                        items={LADToName}
+                        on:search={(e) => handleSearch(e.detail)}
+                />
+            </div>
+
+            <div class="explore-block search-section">
+                <h1>Read Stories and Analyses</h1>
+            </div>
+
+        </div>
+
+
     </section>
+
+    <!--    <section class="search-section">-->
+    <!--        <h1>Find My Place</h1>-->
+    <!--        <LADSearch-->
+    <!--            items={LADToName}-->
+    <!--            on:search={(e) => handleSearch(e.detail)}-->
+    <!--        />-->
+    <!--        &lt;!&ndash; {#if selectedLAD}-->
+    <!--          <h2>Total Cobenefits</h2>-->
+    <!--          <h2>Cobenefits Over Time</h2>-->
+
+    <!--        {/if} &ndash;&gt;-->
+    <!--    </section>-->
 
 
     <section class="side-by-side-section">
@@ -727,6 +790,15 @@
         background-color: #f9f9f9;
     }
 
+    #explore-section {
+        display: flex;
+        flex-direction: row;
+        gap: 2rem;
+        padding: 2rem 3rem;
+        justify-content: space-between;
+        /*background-color: #f9f9f9;*/
+    }
+
     .side-box {
         flex: 1;
         background-color: #fff;
@@ -773,14 +845,30 @@
         font-weight: bold;
     }
 
-    .aggregation-icon-small {
-    width: 30px;
-    height: 30px;
-}
+    .explore-block {
+        background-color: #f9f9f9;
+        border: 1px solid lightgray;
+    }
 
-.waffle-value-container {
+    .aggregation-icon-small {
+        width: 30px;
+        height: 30px;
+    }
+
+    .waffle-value-container {
         display: flex;
         align-items: center;
         gap: 8px; /* space between icon and number */
+    }
+
+    .page-teaser-img {
+        max-width: 140px;
+        /*height: 100%;*/
+    }
+
+    .explore-page {
+        border: 1px solid black;
+        background-color: #f9f9f9;
+        margin-right: 1rem;
     }
 </style>
