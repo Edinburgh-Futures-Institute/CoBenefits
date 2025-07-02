@@ -3,6 +3,7 @@
     import * as Plot from "@observablehq/plot";
     import {onMount, onDestroy} from 'svelte';
     import { base } from '$app/paths';
+    import posthog from 'posthog-js';
 
     import {MapUK} from "$lib/components/mapUK";
 
@@ -37,8 +38,11 @@
 
     import per_capita from '$lib/icons/per_capita.png';
     import total from '$lib/icons/total.png';
+	import posthog from 'posthog-js';
+
     import negative from '$lib/icons/negative.png';
     import Footer from "$lib/components/Footer.svelte";
+
 
     let element: HTMLElement;
     let plotDist: HTMLElement;
@@ -100,6 +104,12 @@
             const isInView = rect.top <= 150 && rect.bottom >= 150;
 
             if (isInView) {
+
+                if (currentSection !== id) {
+                posthog.capture('section entered (sef)', {
+                    section_name: id,
+                })};
+
                 currentSection = id;
                 // console.log("currentSection", currentSection);
                 break;
@@ -639,7 +649,20 @@
                     <div style="height: 0.8em;"></div>
                         {#each CO_BEN as CB}
                         <div class="legend-item">
-                            <div class="legend-header" on:click={() => toggle(CB.id)} style="cursor: pointer;">
+                            <div class="legend-header" on:click={() => {
+                                const wasExpanded = expanded.has(CB.id);
+                                toggle(CB.id);
+                                
+                                if (!wasExpanded) {
+                                    posthog.capture('cobenefit opened', {
+                                        cobenefit: CB.label
+                                    });
+                                } else {
+                                    posthog.capture('cobenefit closed', {
+                                        cobenefit: CB.label
+                                    });
+                                }
+                            }} style="cursor: pointer;">
                                 <span class="legend-color" style="background-color: {COBENEFS_SCALE(CB.id)};"></span>
                                 <span class="legend-text {expanded.has(CB.id) ? 'expanded' : ''}" >{CB.label}</span>
                                 <span class="toggle-icon">{expanded.has(CB.id) ? "▲" : "▼"}</span>
