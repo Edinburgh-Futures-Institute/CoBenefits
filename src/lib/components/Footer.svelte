@@ -7,15 +7,17 @@
 
 <footer>
         <div class="logos-grid">
-            <img src="{base}/logos/SBNZ.png" alt="SBNZ" class="logo"/>
-            <img src="{base}/logos/ECCI.png" alt="ECCI" class="logo"/>
-            <img src="{base}/logos/vishub.svg" alt="VISHUB" class="logo"/>
-            <img src="{base}/logos/DI.png" alt="DI" class="logo"/>
-            <img src="{base}/logos/UOE.png" alt="UOE" class="logo"/>
+            <a href="https://vishub.net/"><img src="{base}/logos/vishub.png" alt="VISHUB" class="logo"/></a>
+            <a href="https://edinburghcentre.org/"><img src="{base}/logos/ECCI.png" alt="ECCI" class="logo"/></a>
+            <a href="https://www.inria.fr/en"><img src="{base}/logos/inria.jpg" alt="Inria" class="logo"/></a>
+            <a href="https://efi.ed.ac.uk/"><img src="{base}/logos/EFI.png" alt="UOE" class="logo"/></a>
+            <a href="https://www.designinformatics.org/"><img src="{base}/logos/DI.png" alt="DI" class="logo"/></a>
+            <a href="https://scotland-beyond-net-zero.ac.uk"><img src="{base}/logos/SBNZ.png" alt="SBNZ" class="logo"/></a>
+            <a href="https://thedatalab.com/"><img src="{base}/logos/datalab.png" alt="DataLab" class="logo"/></a>
         </div>
 
     <div id="footer-text">
-        Work funded by Scotland Beyond Net Zero.
+        Work funded by <a href="https://scotland-beyond-net-zero.ac.uk/">Scotland Beyond Net Zero.</a>
     </div>
 
     <div>
@@ -32,29 +34,38 @@
         flex-direction: row;
         align-items: center;
         justify-content: space-between;
-        margin-left: 3em;
-        margin-right: 3em;
+        margin-left: 2em;
+        margin-right: 2em;
 
         font-size: 14px;
         padding-top: 1rem;
         padding-bottom: 1rem;
     }
 
+    .logos-grid > a {
+        max-width: 11%;
+        /*height: auto;*/
+        /*object-fit: contain;*/
+    }
+
     .logo {
-        max-width: 140px;
+        /*max-width: 11%;*/
+        width: 100%;
         height: auto;
         object-fit: contain;
     }
 
     #footer-text {
-        max-width: 200px;
+        /*width: 120px;*/
+        min-width: 15%;
+        /*max-width: 200px;*/
     }
 
 
     .logos-grid {
         display: flex;
         flex-wrap: wrap;
-        gap: 2rem;
+        gap: 2.2rem;
         justify-content: flex-start;
         align-items: center;
     }
@@ -70,8 +81,14 @@
         text-decoration: underline;
     }
 
-    #footer-list a:visited {
+    /*#footer-list a:visited {*/
+    a:visited {
         color: #6C6C6C;
+    }
+
+    a {
+        color: #6C6C6C;
+        text-decoration: underline;
     }
 
 </style>
