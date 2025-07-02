@@ -489,38 +489,44 @@
             <div class="explore-block">
                 <h1>Browse Report Pages</h1>
 
-                <div style="display: flex">
+                <div class="explore-pages">
 
+                    <a href="{base}/coben">
+                        <div class="explore-page">
+                            <img class="page-teaser-img" src="{base}/pages-teasers/coben.png"/>
+                            <h3>11 Co-Benefits Pages</h3>
+                            <p> A Co-benefit page shows the spatial and temporal distribution of a given co-benefit, and its relationship with socio-economic factors. </p>
+                        </div>
+                    </a>
 
-                    <div class="explore-page">
-                    <a href="{base}/coben"><img class="page-teaser-img" src="{base}/pages-teasers/coben.png"/></a>
-                    <h2>11 Cobenefits Pages</h2>
-                </div>
-
-                <div class="explore-page">
                     <a href="{base}/lad">
-                        <img class="page-teaser-img" src="{base}/pages-teasers/location.png"/>
-                    </a>
-                    <h2>388 Local Area Pages</h2>
-                </div>
 
-                <div class="explore-page">
+                        <div class="explore-page">
+                            <img class="page-teaser-img" src="{base}/pages-teasers/location.png"/>
+                            <h3>382 Local Area Pages</h3>
+                            <p> A Local Area page shows the different co-benefits in this area, temporal distributions, and their relationships with local socio-economic distributions.</p>
+                        </div>
+                    </a>
+
                     <a href="{base}/sefs">
-                        <img class="page-teaser-img" src="{base}/pages-teasers/sef.png"/>
+                        <div class="explore-page">
+                            <img class="page-teaser-img" src="{base}/pages-teasers/sef.png"/>
+                            <h3>17 Socio-Economic Factors Pages</h3>
+                            <p> A Socio-Economic Factor Page shows the spatial distribution of a given factor and it's relationships with the different co-benefits.</p>
+
+                        </div>
                     </a>
-                    <h2>17 Socio-Economic Factors Pages</h2>
 
-                </div>
-
-                <div class="explore-page">
                     <a href="{base}/map">
-                        <img class="page-teaser-img" src="{base}/pages-teasers/map.png"/>
+                        <div class="explore-page">
+                            <img class="page-teaser-img" src="{base}/pages-teasers/map.png"/>
+                            <h3>1 Interactive Map</h3>
+                            <p> The interactive map enables exploring the spatial distributions of both the co-benefits and the socio-economic factors at the datazones and local area levels.</p>
+
+                        </div>
                     </a>
-                    <h2>1 Interactive Map</h2>
-                </div>
 
                 </div>
-
 
 
             </div>
@@ -793,8 +799,10 @@
     #explore-section {
         display: flex;
         flex-direction: row;
-        gap: 2rem;
-        padding: 2rem 3rem;
+        gap: 1rem;
+        /*padding: 2rem 3rem;*/
+        padding-right: 1.5rem;
+        padding-left: 1.5rem;
         justify-content: space-between;
         /*background-color: #f9f9f9;*/
     }
@@ -862,14 +870,45 @@
         gap: 8px; /* space between icon and number */
     }
 
-    .page-teaser-img {
-        max-width: 140px;
-        /*height: 100%;*/
+
+    .explore-pages {
+        display: flex;
+        gap: 2%;
     }
 
     .explore-page {
-        border: 1px solid black;
+        /*border: 1px solid black;*/
         background-color: #f9f9f9;
-        margin-right: 1rem;
+        max-width: 14rem;
+        /*margin-right: 1rem;*/
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        /*justify-content: flex-end;*/
+        height: 100%;
     }
+
+    .explore-page > p {
+        /*margin-top: auto;*/
+        /*height: 25%;*/
+        height: 200px;
+    }
+
+    .explore-pages a {
+        color: black;
+
+    }
+
+    .page-teaser-img {
+        /*max-width: 140px;*/
+
+        width: 100%;
+        height: 300px;
+        /*height: 200px;*/
+
+        object-fit: cover;
+        object-position: center;
+
+    }
+
 </style>
