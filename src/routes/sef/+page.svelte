@@ -1,9 +1,10 @@
 <script lang="ts">
     import * as d3 from 'd3';
     import * as Plot from "@observablehq/plot";
+	import posthog from 'posthog-js';
+
     import {onMount, onDestroy} from 'svelte';
     import { base } from '$app/paths';
-    import posthog from 'posthog-js';
 
     import {MapUK} from "$lib/components/mapUK";
 
@@ -37,7 +38,6 @@
 
     import per_capita from '$lib/icons/per_capita.png';
     import total from '$lib/icons/total.png';
-	import posthog from 'posthog-js';
 
     import negative from '$lib/icons/negative.png';
     import Footer from "$lib/components/Footer.svelte";

@@ -25,17 +25,17 @@
         addSpinner,
         SEF_SCALE,
         getIconFromCobenef, COBENEFS_SCALE2,
-        SE_FACTORS, SEF_LEVEL_LABELS
+        SE_FACTORS, SEF_LEVEL_LABELS, type Nation
     } from "../../globals";
     import {getRandomSubarray} from "$lib/utils";
 
     import NavigationBar from "$lib/components/NavigationBar.svelte";
     import {
-        getAllCBAllDatazones, getAllCBForOneLAD,
+        getAllCBAllDatazones, getAllCBForOneLAD, getAllCBForOneNation,
         getAverageCBGroupedByLAD,
         getSUMCBGroupedByLAD, getSUMCBGroupedByLADAndCB,
         getTableData, getTopSelectedLADs,
-        getTotalCBAllDatazones, getTotalCBForOneLAD
+        getTotalCBAllDatazones, getTotalCBForOneLAD, getTotalCBForOneNation
     } from "$lib/duckdb";
     import Footer from "$lib/components/Footer.svelte";
 
@@ -65,8 +65,8 @@
     // Data from load function
     export let data;
 
-    const LAD = data.LAD;
-    let compareTo: "UK" | "England" | "Wales" | "NI" | "Scotland" = "UK"
+    const NATION = data.nation;
+    let compareTo: "UK" | Nation = "UK"
 
     let totalCBAllZones;
     let allCBsAllZones;
@@ -76,8 +76,8 @@
 
     let allCBAllLADSUM;
 
-    let oneLADData;
-    let oneLADAllCbs;
+    let oneNationData;
+    let oneNationAllCbs;
 
     let totalValue: number;
     let totalValuePerCapita: number;
@@ -86,33 +86,29 @@
     let totalValueMean: number;
     let totalValuePerCapitaMean: number;
 
-
     let dataLoaded = false;
-
 
     async function loadData() {
         totalCBAllZones = await getTableData(getTotalCBAllDatazones());
         allCBsAllZones = await getTableData(getAllCBAllDatazones());
 
         totalCBAllZones.forEach(datazone => {
-            datazone.isPageLAD = (datazone.LAD == LAD) ? true : false
+            datazone.isPageLAD = (datazone.Nation == NATION) ? true : false
         })
 
         totalCBAllLAD = await getTableData(getSUMCBGroupedByLAD([]));
-
         allCBAllLAD = await getTableData(getAverageCBGroupedByLAD(COBENEFS.map(d => d.id)));
 
         allCBAllLADSUM = await getTableData(getSUMCBGroupedByLADAndCB());
 
-        oneLADData = await getTableData(getTotalCBForOneLAD(LAD));
-        oneLADAllCbs = await getTableData(getAllCBForOneLAD(LAD));
+        oneNationData = await getTableData(getTotalCBForOneNation(NATION));
+        oneNationAllCbs = await getTableData(getAllCBForOneNation(NATION));
 
-
-        totalValue = (d3.sum(oneLADData, d => d.total) / 1000).toFixed(3);
+        totalValue = (d3.sum(oneNationData, d => d.total) / 1000).toFixed(3);
         totalValueMax = d3.max(totalCBAllLAD, d => d.val) / 1000;
 
         // This is an approximation
-        totalValuePerCapita = (d3.mean(oneLADData, d => d.totalPerCapita) * 1000000).toFixed(1);
+        totalValuePerCapita = (d3.mean(oneNationData, d => d.totalPerCapita) * 1000000).toFixed(1);
 
         totalValuePerCapitaMax = await getTableData(getTopSelectedLADs({limit: 1, sortBy: "per_capita"}));
         totalValuePerCapitaMax = totalValuePerCapitaMax[0].value_per_capita;
@@ -175,8 +171,8 @@
 
     onMount(() => {
         addSpinner(element)
-        map = new MapUK(LAD, "LAD", mapDiv, "val", true, "Lookup_value", false, null, 8);
-        map.initMap(false);
+        // map = new MapUK(LAD, "LAD", mapDiv, "val", true, "Lookup_value", false, null, 8);
+        // map.initMap(false);
 
         window.addEventListener('scroll', handleScroll); // header scroll listener
 
@@ -206,9 +202,13 @@
     }
 
     function renderDistributionPlot(totalCBAllZones, oneLADData) {
+        console.log(22)
+
         if (!totalCBAllZones || !oneLADData) return;
 
-        let filtered = totalCBAllZones.filter(d => d.total < 20);
+        let filtered = totalCBAllZones.filter(d => d.total < 20)
+
+        console.log(232323, oneLADData)
 
         const plot = Plot.plot({
             height: height / 1.6,
@@ -297,48 +297,9 @@
                         x: "scenario",
                         tip: true
                     })),
-
-                    //  Median and Mean from ALL datazones
-                    // Plot.tickY(
-                    //     totalCBAllLAD,
-                    //     Plot.groupX(
-                    //         {y: "mean"},
-                    //         {y: "val", x: "scenario", stroke: "red", strokeWidth: 2}
-                    //     )
-                    // ),
-                    // Plot.tickY(
-                    //     totalCBAllLAD,
-                    //     Plot.groupX(
-                    //         {y: "median"},
-                    //         {y: "val", x: "scenario", stroke: "blue", strokeWidth: 2}
-                    //     )
-                    // )
-
                 ]
             })
-            // );
-            // console.log("debug", pl)
-
             plotDist?.append(pl);
-
-            setTimeout(() => {
-                const rects = d3.select(pl)
-                    .selectAll("g[aria-label='bar']")
-                // .selectAll("g")
-
-                const rects1 = d3.select(rects.nodes()[0])
-                const rects2 = d3.select(rects.nodes()[1])
-
-                // // Move all children of groupB into groupA
-                rects2.selectAll("rect").each(function () {
-                    // console.log(2, this)
-                    // rects1.node().appendChild(this);
-                });
-                //
-                rects2.remove();
-
-            }, 1000)
-
 
         } else if (chartType == "distribution") {
             plotDist?.append(
@@ -376,7 +337,6 @@
     }
 
     function renderPerCobenefPlot() {
-
         if (plotPerCb) {
             let plot = Plot.plot({
                 height: height / 1,
@@ -497,26 +457,6 @@
 
             } else {
                 if (SEF_CATEGORICAL.includes(sef)) {
-
-                    // const counts = Array.from(
-                    //   d3.rollup(
-                    //     totalCBAllZones,
-                    //     v => v.length,
-                    //     d => d.fx,        // facet
-                    //     d => d.isPageLAD  // category
-                    //   ),
-                    //   ([fx, ladMap]) =>
-                    //     Array.from(ladMap, ([isPageLAD, count]) => ({ fx, isPageLAD, count }))
-                    // ).flat();
-                    //
-                    // // Step 3: Sum by isPageLAD
-                    // const totalByLAD = Array.from(
-                    //   d3.rollup(counts, v => d3.sum(v, d => d.count), d => d.isPageLAD)
-                    // );
-                    //
-                    // // Convert to lookup map
-                    // const totalMap = new Map(totalByLAD);
-
 
                     // console.log(999, sef)
                     // console.log(new Set(totalCBAllZones.map(d => d[sef])))
@@ -714,9 +654,6 @@
 
             }
 
-
-            // console.log("debug", cbplot)
-
             if (SEFPlotPerCB[sef]) {
                 SEFPlotPerCB[sef].innerHTML = ""
             }
@@ -724,71 +661,6 @@
         })
     }
 
-    function renderHeatmap() {
-
-        // May want to show sum
-        heatmapPlot?.append(Plot.plot({
-            ...MARGINS,
-            marginLeft: 100,
-            height: height,
-            width: 300,
-            grid: true,
-            // x: {axis: "top", label: "Season"},
-            // y: {label: "Episode"},
-            color: {type: "linear", scheme: "greys", legend: true},
-            marks: [
-                Plot.cell(allCBAllLAD, Plot.group({fill: "mean"}, {
-                    x: "scenario",
-                    y: "co_benefit_type",
-                    fill: "val",
-                    stroke: "black",
-                    dx: AVERAGE_DX / 2,
-                    dy: -AVERAGE_DX / 2,
-                    inset: 0.5
-                })),
-                Plot.cell(oneLADAllCbs, Plot.group({fill: "mean"}, {
-                    x: "scenario",
-                    y: "co_benefit_type",
-                    fill: "total",
-                    stroke: "black",
-                    inset: 0.5
-                }))
-                // Plot.text(allCBAllLAD, {x: "scenario", y: "co_benefit_type", text: (d) => d.val?.toFixed(1), fill: "black", title: "title"})
-            ]
-        }))
-    }
-
-    function renderScenarioXCBPlot() {
-        for (let scenario of SCENARIOS) {
-            let plot = Plot.plot({
-                height: height,
-                width: 410,
-                ...MARGINS,
-                marginRight: 0,
-                marginLeft: 100,
-                // x: {type: "band"},
-
-                marks: [
-                    Plot.barX(allCBAllLAD, Plot.groupY({x: "mean"}, {
-                        x: "val",
-                        y: "co_benefit_type",
-                        // dx: AVERAGE_DX,
-                        dy: -AVERAGE_DX / 2,
-                        fill: AVERAGE_COLOR,
-                        tip: true
-                    })),
-                    Plot.barX(oneLADAllCbs, Plot.groupY({x: "mean"}, {
-                        x: "total",
-                        y: "co_benefit_type",
-                        tip: true
-                    }))
-                ]
-            })
-
-            scenarioXcoBenefPLots[scenario]?.append(plot);
-
-        }
-    }
 
     function renderCBOverTimePlot() {
         let dataLAD = oneLADData.flatMap(d => {
@@ -843,61 +715,6 @@
         })
         CBOverTimePLot?.append(plot);
 
-        // Make the bars overlay and one on top of the other depending of values
-        // TODO: finish
-        d3.select(CBOverTimePLot)
-            .select("g[aria-label='bar']")
-            .selectAll("g")
-            .each(function (d, i) {
-                // Translate the second <rect>
-                const secondRect = d3.select(this).selectAll("rect").nodes()[0];
-
-                // Get the current transform of the second rect, if any
-                const currentTransform = d3.select(secondRect).attr("transform") || "";
-
-                // Apply translation (e.g., move it 20 units to the right and 10 down)
-                d3.select(secondRect)
-                    .attr("transform", `${currentTransform} translate(-20, 0)`);
-
-
-                // Select both <rect> elements within the current <g>
-                let first = d3.select(this).selectAll("rect").nodes()[0].getAttribute("height")
-                let second = d3.select(this).selectAll("rect").nodes()[1].getAttribute("height")
-
-                // console.log(first, second)
-                const rects = d3.select(this).selectAll("rect");
-
-                // if (first < second) {
-                // rects.each(function (d, i2) {
-                //     if (i2 == 0) {
-                //         // console.log(333, this)
-                //         d3.select(this).raise()
-                //     }
-                //
-                //     //Do stuff with first and last child
-                // });
-
-            });
-
-
-        let plotPerScenario = Plot.plot({
-            height: height,
-            width: 800,
-            ...MARGINS,
-            paddingLeft: 200,
-            marginRight: 0,
-            color: {legend: true},
-            marks: [
-                Plot.lineY(data, Plot.groupX({y: "mean"}, {
-                    x: "time",
-                    y: "value",
-                    tip: true,
-                    stroke: "scenario"
-                    // fill: "scenario",
-                })),
-            ]
-        })
-        CBOverTimePerScenarioPLot?.append(plotPerScenario);
 
 
         let dataCBs = oneLADAllCbs.flatMap(d => {
@@ -905,8 +722,6 @@
                 return {time: t, value: d[t], cobenefit: d.co_benefit_type}
             })
         })
-
-        console.log("dataCBs", dataCBs)
 
         let plotPerCB = Plot.plot({
             height: height,
@@ -1000,42 +815,28 @@
         }
 
         if (dataLoaded && allCBAllLADSUM && totalCBAllLAD && totalCBAllZones) {
-            renderPlot();
-            renderPerCobenefPlot();
-            renderCBOverTimePlot();
+            // renderPlot();
+            // renderPerCobenefPlot();
+            // renderCBOverTimePlot();
         }
     }
 
     $: {
-        Object.values(SEFPlotLAD).forEach(sefPlot => {
-            if (sefPlot) removeChart(sefPlot)
-        })
-
-        Object.values(SEFPlotFullDistrib).forEach(sefPlot => {
-            if (sefPlot) removeChart(sefPlot)
-        })
-
-        Object.values(SEFPlotPerCB).forEach(sefPlot => {
-            if (sefPlot) removeChart(sefPlot)
-        })
-
-        if (dataLoaded) {
-            renderSEFPlot();
-        }
-    }
-
-    $: {
-        heatmapPlot?.firstChild?.remove();
-
-        Object.values(scenarioXcoBenefPLots).forEach(plot => {
-            // plot?.firstChild?.remove();
-            if (plot) removeChart(plot)
-        })
-
-        if (dataLoaded) {
-            renderHeatmap();
-            renderScenarioXCBPlot();
-        }
+        // Object.values(SEFPlotLAD).forEach(sefPlot => {
+        //     if (sefPlot) removeChart(sefPlot)
+        // })
+        //
+        // Object.values(SEFPlotFullDistrib).forEach(sefPlot => {
+        //     if (sefPlot) removeChart(sefPlot)
+        // })
+        //
+        // Object.values(SEFPlotPerCB).forEach(sefPlot => {
+        //     if (sefPlot) removeChart(sefPlot)
+        // })
+        //
+        // if (dataLoaded) {
+        //     renderSEFPlot();
+        // }
     }
 
     function onChange(event) {
@@ -1044,23 +845,20 @@
 
     async function onChangeComparison(event) {
         compareTo = event.currentTarget.value;
+        console.log(232323333, compareTo)
 
         allCBAllLADSUM = await getTableData(getSUMCBGroupedByLADAndCB("total", compareTo));
         totalCBAllLAD = await getTableData(getSUMCBGroupedByLAD([], compareTo));
-
         totalCBAllZones = await getTableData(getTotalCBAllDatazones(compareTo));
 
         posthog.capture('clicked nation filter', {
-        nation: event.currentTarget.value
+        nation: compareTo
         })   
     }
 
 </script>
 
-
 <NavigationBar></NavigationBar>
-<!-- <StickyNav sectionRefs={sectionRefs}></StickyNav> -->
-
 
 <div class="page-container" bind:this={element}>
 
@@ -1068,7 +866,7 @@
         <div class="mini-header">
             <div class="mini-header-content">
           <span class="mini-header-text">
-            {LADToName[LAD]}
+            {NATION}
               {#if totalValue}
             <span class="mini-header-value">(Total: £{totalValue.toLocaleString()} billion)</span>
             {/if}
@@ -1080,13 +878,13 @@
 
     <div class="section header header-row" id="head">
         <div>
-            <p class="page-subtitle">Local Authority Report</p>
-            <h1 class="page-title"> {LADToName[LAD]}</h1>
+            <p class="page-subtitle">Nation Report</p>
+            <h1 class="page-title"> {NATION}</h1>
             <p class="description">Explore how this local authority will benefit from achieving Net Zero and learn about
                 the characteristics of its households.</p>
 
             <div class="radio-set">
-                Compare this Local Authority District (LAD) against:<br/>
+                Compare {NATION} against:<br/>
                 <input type="radio" on:change={onChangeComparison} name="compare" value="UK" checked>
                 <label class="nation-label" for="html" >UK</label><br>
                 <input type="radio" on:change={onChangeComparison} name="compare" value="England">
@@ -1102,9 +900,7 @@
 
 
         <div>
-            <!--{d3.sum(totalCBAllZones.map(d => d.total))}-->
             {#if totalValue}
-
                 <div class="waffle-stats">
                     <div class="waffle-stat">
                         <div class="waffle-value">
@@ -1154,8 +950,6 @@
                     </div>
                 </div>
             {/if}
-
-
         </div>
 
     </div>
@@ -1169,27 +963,6 @@
         </div>
 
         <div id="vis-block">
-            <!--            <div class="component column" bind:clientHeight={height}>-->
-            <!--                <h3 class="component-title">Total Co-benefits Values Across Five Pathways (vs. UK Average)</h3>-->
-            <!--                <p class="description">Aggregated values from 2025-2050 in {LADToName[LAD]} verus average value of benefits received across all local authorities in UK.</p>-->
-
-            <!--                <div class="radio-set">-->
-            <!--                    <input type="radio" on:change={onChange} name="visType" value="barchart" checked>-->
-            <!--                    <label for="html">Barchart</label><br>-->
-            <!--                    <input type="radio" on:change={onChange} name="visType" value="boxplot">-->
-            <!--                    <label for="css">Boxplot</label><br>-->
-            <!--                    <input type="radio" on:change={onChange} name="visType" value="distribution">-->
-            <!--                    <label for="javascript">Distribution</label>-->
-            <!--                </div>-->
-
-            <!--                <div class="plot" bind:this={plot}>-->
-            <!--&lt;!&ndash;                    <div class="badge-container">&ndash;&gt;-->
-            <!--&lt;!&ndash;                        <img class="badge" src={mouseOverBadge} />&ndash;&gt;-->
-            <!--&lt;!&ndash;                        <img class="badge" src={aggregationBadge} />&ndash;&gt;-->
-            <!--&lt;!&ndash;                    </div>&ndash;&gt;-->
-            <!--                </div>-->
-            <!--            </div>-->
-
             <div class="component column">
 
                 <h3 class="component-title">Distribution of the cobenefit per
@@ -1201,15 +974,15 @@
                         </span>
                         compared to <span
                         class="nation-label">{compareTo}</span> Average)</h3>
-                <p class="description">Co-benefit values for {LADToName[LAD]} compared to average value of benefits
+                <p class="description">Co-benefit values for {NATION} compared to average value of benefits
                     received across all local
                     authorities in <span class="nation-label">{compareTo}</span> (grey).</p>
                 <br>
-                {@html renderDistributionPlot(totalCBAllZones, oneLADData)}
+                {@html renderDistributionPlot(totalCBAllZones, oneNationData) }
 
                 <h3 class="component-title">11 types of co-benefit values (vs. <span
                         class="nation-label">{compareTo}</span> Average)</h3>
-                <p class="description">Co-benefit values for {LADToName[LAD]} compared to average value of benefits
+                <p class="description">Co-benefit values for {NATION} compared to average value of benefits
                     received across all local
                     authorities in <span class="nation-label">{compareTo}</span> (grey).</p>
                 <div class="plot" bind:this={plotPerCb}>
@@ -1217,46 +990,15 @@
             </div>
 
             <div class="component column">
-                <h3 class="component-title">Where is {LADToName[LAD]}?</h3>
-                <p class="description">{LADToName[LAD]} has been highlighted in dark grey on this UK map.</p>
+                <h3 class="component-title">Where is NATION?</h3>
+                <p class="description">NATION has been highlighted in dark grey on this UK map.</p>
                 <p class="description">*Scroll for zooming in and out</p>
                 <div id="map" bind:this={mapDiv}>
-                    <!--                    <div class="badge-container">-->
-                    <!--                        <img class="badge" src={zoomBadge} />-->
-                    <!--                    </div>-->
                 </div>
             </div>
         </div>
     </div>
 
-    <!--    <div class="section">-->
-    <!--        <div class="section-header">-->
-    <!--            <p class="section-subtitle">Breakdown</p>-->
-    <!--            <h2 class="section-title">How would the co-benefit results vary if we take different pathways?</h2>-->
-    <!--            <p class="description">We break down the modeled co-benefit values in different pathways towards achieving Net Zero. All Results are compared with the average value across all local authorities in UK.</p>-->
-    <!--        </div>-->
-
-    <!--        <div class="row">-->
-    <!--            <div class="component">-->
-    <!--                <h3 class="component-title">Five Pathways and their 11 Co-benefits</h3>-->
-    <!--                <p class="description">Scroll for zooming in and out.</p>-->
-    <!--                <div class="plot" bind:this={heatmapPlot}></div>-->
-    <!--            </div>-->
-
-    <!--            {#each SCENARIOS as scenario}-->
-    <!--                <div class="component">-->
-    <!--                    <h3 class="component-title"> Pathway: {scenario}</h3>-->
-    <!--                    <p class="description">Please refer to CCC website on definitions of {scenario}.</p>-->
-    <!--                    <div class="plot" bind:this={scenarioXcoBenefPLots[scenario]}>-->
-    <!--&lt;!&ndash;                        <div class="badge-container">&ndash;&gt;-->
-    <!--&lt;!&ndash;                            <img class="badge" src={roundingBadge} />&ndash;&gt;-->
-    <!--&lt;!&ndash;                            <img class="badge" src={aggregationBadge} />&ndash;&gt;-->
-    <!--&lt;!&ndash;                        </div>&ndash;&gt;-->
-    <!--                    </div>-->
-    <!--                </div>  -->
-    <!--            {/each}-->
-    <!--        </div>-->
-    <!--    </div>-->
 
     <div class="section" id="temporal">
         <div class="section-header">
@@ -1271,7 +1013,7 @@
                     <h3 class="component-title">Total co-benefit distribution from 2025-2049 (vs. <span
                             class="nation-label">{compareTo}</span> Average)</h3>
                     <p class="description" style="margin-bottom:5px">Aggregated values from 2025-2049
-                        in {LADToName[LAD]} compared to average value of benefits received across all local authorities
+                        in {NATION} compared to average value of benefits received across all local authorities
                         in <span class="nation-label">{compareTo}</span>.</p>
 
                     <!-- Legend -->
@@ -1279,7 +1021,7 @@
                         <strong style="margin-bottom: 0.5rem;">Legend:</strong> <br/>
                         <ul class="legend-list">
                             <li><span class="legend-color" style="background-color: {VIS_COLOR}"></span>
-                                {LADToName[LAD]}</li>
+                                {NATION}</li>
                             <li><span class="legend-color" style="background-color: {AVERAGE_COLOR}"></span>
                                 <span class="nation-label">{compareTo}</span></li>
                         </ul>
@@ -1299,7 +1041,7 @@
             </div>
             <div id="main-block" class="component column">
                 <div>
-                    <h3 class="component-title">Co-benefit gain/loss for {LADToName[LAD]} over 5 year intervals</h3>
+                    <h3 class="component-title">Co-benefit gain/loss for {NATION} over 5 year intervals</h3>
                     <p class="description" style="margin-bottom:5px">Total gains and losses are shown at five-year
                         intervals for each co-benefit. The curve between points is smoothed to show the general
                         trends.</p>
@@ -1374,14 +1116,14 @@
     <div class="section" id="households">
         <div class="section-header">
             <p class="section-subtitle">Households</p>
-            <h2 class="section-title">{LADToName[LAD]} social-economic factors</h2>
+            <h2 class="section-title">{NATION} social-economic factors</h2>
             <p class="description">We describe the distribution of household economic factors aggregated on the data
                 zone level and the different level of co-benefits received by those data zones.</p>
         </div>
 
         <div id="se-block" class="component" style="margin-left: 1rem;">
             <div id="se-title">
-                <h3 class="component-title">Comparing the Socio-Economic factors distributions of {LADToName[LAD]}
+                <h3 class="component-title">Comparing the Socio-Economic factors distributions of {NATION}
                     and {compareTo}, and their correlation with co-benefits.</h3>
                 <br>
 
@@ -1391,7 +1133,7 @@
                     <strong style="margin-bottom: 1rem;">Legend:</strong> <br/>
                     <ul class="legend-list">
                         <li><span class="legend-color" style="background-color: {VIS_COLOR}"></span>
-                            {LADToName[LAD]}</li>
+                            {NATION}</li>
                         <li><span class="legend-color" style="background-color: {AVERAGE_COLOR}"></span>
                             {compareTo}</li>
                     </ul>
@@ -1402,7 +1144,7 @@
                     <strong style="margin-bottom: 1rem;">Interpreting the charts:</strong> <br/>
                     <p><strong>Barchart:</strong> Each bar represents the normalized frequency of datazones linked to a
                         given social economic factor value. </p>
-                    <p><strong>Scatterplot:</strong> Each dot represents a datazone inside {LADToName[LAD]}. The cloud
+                    <p><strong>Scatterplot:</strong> Each dot represents a datazone inside {NATION}. The cloud
                         shows the distribution for {compareTo}. </p>
                 </div>
 
@@ -1456,7 +1198,7 @@
                                             across {sef.label}
                                             values</h3>
                                         <p class="description short">Density plot refers to UK distribution while the
-                                            scattered points refer to data zones in {LADToName[LAD]}.</p>
+                                            scattered points refer to data zones in {NATION}.</p>
                                         <!--                                    <div class="plot" bind:this={SEFPlotFullDistrib[sef]}>-->
                                         <!--                                    </div>-->
                                     </div>
