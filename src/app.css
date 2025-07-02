@@ -422,7 +422,7 @@ button:focus {
 
   .tooltip-txt {
     position: absolute;
-    bottom: 100%; /* Position above the term */
+    bottom: 100%; 
     left: 50%;
     transform: translateX(-50%);
     margin-bottom: 8px;
@@ -463,8 +463,8 @@ button:focus {
 }
 
 .aggregation-icon {
-    width: 40px;
-    height: 40px;
+    width: 35px;
+    height: 35px;
 }
 
 .tooltip-text {
@@ -487,7 +487,32 @@ button:focus {
     display: inline-block;
 }
 
+.tooltip-text-neg {
+    visibility: hidden;
+    background-color: #BD210E;
+    color: #fff;
+    font-size: 12px;
+    padding: 5px 8px;
+    border-radius: 4px;
+    position: absolute;
+    top: 35px;
+    right: -60px;
+    left: -60px;
+    z-index: 1;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    max-width: 200px;
+    white-space: normal;
+    word-break: break-word;
+    display: inline-block;
+}
+
 .tooltip-wrapper:hover .tooltip-text {
+    visibility: visible;
+    opacity: 1;
+}
+
+.tooltip-wrapper:hover .tooltip-text-neg {
     visibility: visible;
     opacity: 1;
 }
