@@ -3,6 +3,7 @@
     import * as Plot from "@observablehq/plot";
     import {onMount} from 'svelte';
     import {base} from '$app/paths';
+    import posthog from 'posthog-js';
 
     import * as maplibregl from "maplibre-gl"
     import "maplibre-gl/dist/maplibre-gl.css";
@@ -258,6 +259,10 @@
         } else {
             coBenefits = [cobenef];
         }
+
+        posthog.capture('clicked specific CoBenefit', {
+        CoBenefit: e.currentTarget.value
+        }) 
     }
 
     const onChangeTime = (e) => {
@@ -271,6 +276,10 @@
 
     const onChangeSEF = (e) => {
         selectedSef = e.currentTarget.value;
+
+        posthog.capture('clicked specific SEF', {
+        SEF: e.currentTarget.value
+        })  
     }
 
     const onChangeGranularity = (e) => {
@@ -287,6 +296,10 @@
         }
 
         loadLayers = true;
+
+        posthog.capture('clicked granularity', {
+        granularity: e.currentTarget.value
+        })   
     }
 
     const tooltipValue = (value) => {

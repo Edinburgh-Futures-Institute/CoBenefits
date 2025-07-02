@@ -4,6 +4,7 @@
     import {onMount, onDestroy} from 'svelte';
     import {writable} from 'svelte/store';
     import {base} from "$app/paths";
+    import posthog from 'posthog-js';
 
 
     import {MapUK} from "$lib/components/mapUK";
@@ -104,6 +105,12 @@
             const isInView = rect.top <= 150 && rect.bottom >= 150;
 
             if (isInView) {
+
+                if (currentSection !== id) {
+                posthog.capture('section entered (coben)', {
+                    section_name: id,
+                })};
+
                 currentSection = id;
                 // console.log("currentSection", currentSection);
                 break;

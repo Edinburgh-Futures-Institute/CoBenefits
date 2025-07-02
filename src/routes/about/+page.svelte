@@ -1,6 +1,63 @@
 <script lang="ts">
     import NavigationBar from "$lib/components/NavigationBar.svelte";
     import { base } from "$app/paths";
+    import Modal from "$lib/components/Modal.svelte"
+    import posthog from "posthog-js";
+  
+    const CONSENT_KEY = 'cookie-consent';
+    const CONTACT_CONSENT_KEY = 'contact-consent';
+    const USER_EMAIL_KEY = 'user-email';
+    
+    let trackingDisabled = localStorage.getItem('cookie-consent') === 'rejected';
+    let showModal = false;
+    let showDeleteConfirmationModal = false;
+    let showDeleteEmailModal = false;
+    let userEmail = '';
+    let hasContactConsent = localStorage.getItem(CONTACT_CONSENT_KEY) === 'true';
+    let savedEmail = localStorage.getItem(USER_EMAIL_KEY) || '';
+    
+    function submitContactInfo() {
+      
+      localStorage.setItem(CONTACT_CONSENT_KEY, 'true');
+      localStorage.setItem(USER_EMAIL_KEY, userEmail);
+      
+      hasContactConsent = true;
+      savedEmail = userEmail;
+      
+      posthog.identify(userEmail, {
+        email: userEmail,
+      });
+    }
+    
+    function removeContactConsent() {
+      localStorage.removeItem(CONTACT_CONSENT_KEY);
+      localStorage.removeItem(USER_EMAIL_KEY);
+      hasContactConsent = false;
+      savedEmail = '';
+      userEmail = '';
+      showDeleteEmailModal = true;
+      posthog.reset(); 
+    }
+    
+    function enableTracking() {
+      posthog.opt_in_capturing();
+      localStorage.setItem('cookie-consent', 'accepted');
+      trackingDisabled = false;
+      
+      // Re-identify user if they have contact consent
+      if (hasContactConsent && savedEmail) {
+        posthog.identify(savedEmail, {
+          email: savedEmail,
+          contact_consent: true
+        });
+      }
+    }
+    
+    function disableTracking() {
+      localStorage.setItem('cookie-consent', 'rejected');
+      trackingDisabled = true;
+      showModal = true;
+    }
 
 </script>
 
@@ -109,6 +166,88 @@ Visualization atlases are online platforms making large and complex data sets ac
   <i>[2] <a href="https://arxiv.org/pdf/2408.07483">Wang, J., Shu X., Bach B., Hinrichs U., (2024). Visualization Atlases: Explaining and Exploring Complex Topics through Data, Visualization, and Narration. Transactions on Visualization and Computer Graphics.</a></i>
 </p>
 
+<h2>Interaction Logging</h2>
+    <p class="intro-paragraph">
+      This atlas anonymously logs your interactive activity (e.g., session duration, page navigation, and interaction with visualizations) for research purposes. Our goal is to create a better user experience, develop more useful Atlas features, and advance information visualization techniques. Participation is voluntary, fully anonymous unless you provide your email (optional), and users can opt in or out of logging at any time.
+    </p>
+    
+    {#if !trackingDisabled}
+      <!-- User has consented to tracking -->
+      <p class="intro-paragraph">You can opt out of interaction logging if you have changed your mind.</p>
+      <button class="privacy-button" on:click={disableTracking}>
+        Disable Logging
+      </button>
+      
+      {#if !hasContactConsent}
+        <!-- Case 1: Tracking enabled + No email given -->
+        <h3>Contact Permission</h3>
+        <p class="intro-paragraph">
+          We may also want to contact you about your usage patterns to improve our research. If you consent to this, please provide your email address:
+        </p>
+        <div class="contact-section">
+          <input
+            type="email"
+            bind:value={userEmail}
+            placeholder="your.email@example.com"
+            class="email-input"
+          />
+          <button
+            type="button"
+            class="submit-button"
+            on:click={submitContactInfo}
+          >
+            Submit
+          </button>
+        </div>
+      {:else}
+        <!-- Case 2: Tracking enabled + Email given -->
+        <h3>Contact Permission</h3>
+        <p class="intro-paragraph">
+          You've provided your email: <strong>{savedEmail}</strong> <br> 
+          We may contact you about your usage patterns to improve our research.
+        </p>
+        <button class="remove-button" on:click={removeContactConsent}>
+          Remove Email & Contact Permission
+        </button>
+      {/if}
+    {:else}
+      <!-- Case 3: Tracking disabled -->
+      <p class="intro-paragraph">Interaction logging is currently disabled.</p>
+      <button class="privacy-button" on:click={enableTracking}>
+        Enable Logging
+      </button>
+    {/if}
+    
+    <Modal bind:showModal>
+      <p>Logging disabled. Your usage will no longer be logged.</p>
+      <p>Do you also want to delete any data collected up to this point?</p>
+      <button class="delete-data-button" on:click={() => {
+        posthog.reset();
+        showModal = false;
+        showDeleteConfirmationModal = true;
+        posthog.opt_out_capturing();
+      }}>
+        Delete My Data
+      </button>
+      <button class="keep-data-button" on:click={() => {
+        showModal = false;
+        posthog.opt_out_capturing()}}>
+        Keep Data
+      </button>
+    </Modal>
+
+    <Modal bind:showModal={showDeleteConfirmationModal}>
+      <div class="confirmation-content">
+        <p>Your request to delete your data has been processed successfully.</p>
+        <p>All collected data has been removed from our systems.</p>
+      </div>
+    </Modal>
+
+    <Modal bind:showModal={showDeleteEmailModal}>
+      <div class="confirmation-content">
+        <p>Your request to remove your email has been processed successfully.</p>
+      </div>
+    </Modal>
 
 <h2>Who's involved in this project?</h2>
 
