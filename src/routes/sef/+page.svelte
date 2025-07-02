@@ -33,7 +33,8 @@
         getSEFbyCobenData,
         getSefForOneCoBenefit,
         getAggregationPerCapitaPerBenefit,
-        getAverageSEFbyCobenDataGroupedByLAD
+        getAverageSEFbyCobenDataGroupedByLAD,
+        getAverageSEFGroupedByLAD
     } from "$lib/duckdb";
 
     import per_capita from '$lib/icons/per_capita.png';
@@ -56,6 +57,9 @@
     let fullData;
     let SEFData;
     let PCData;
+    let LADfullData;
+    let useLAD = false; 
+    let LADfullData_alt;
     let dataLoaded = false;
     let averageValue;
     let modeValue;
@@ -133,6 +137,13 @@
         console.log("by cobens", SEFData);
         PCData = await getTableData(getAggregationPerCapitaPerBenefit());
         console.log("per_capita_data", PCData);
+
+        LADfullData = await getTableData(getAverageSEFGroupedByLAD(SEF));
+        // LADfullData_alt =await getTableData(getAverageSEFbyCobenDataGroupedByLAD(SEF));
+
+        console.log("LAD data 1 ", LADfullData);
+        // console.log("LAD data 2 ", LADfullData_alt);
+        
         averageValue = (
             d3.mean(fullData, d => d.val) ?? 0).toLocaleString('en-US',
             {minimumFractionDigits: 2, maximumFractionDigits: 2});
@@ -171,12 +182,19 @@
         // mapLegendDiv.append(legendSvg)
     });
 
+    $: currentData = useLAD ? LADfullData : fullData;
+
+    function toggleDataSource() {
+    useLAD = !useLAD;
+        }
+
     function renderDistPlot() {
         const average = d3.mean(fullData, d => d.val) ?? 0;
         const maxY = d3.max(
             d3.bin().thresholds(20).value(d => d.val)(fullData),
             bin => bin.length
         );
+        plotDist.innerHTML = ""; 
 
         plotDist?.append(
             Plot.plot({
@@ -190,7 +208,7 @@
                 y: {label: 'No. of datazones', labelArrow: false},
                 style: {fontSize: "16px"},
                 marks: [
-                    Plot.rectY(fullData, Plot.binX({y: "count"}, {
+                    Plot.rectY(currentData, Plot.binX({y: "count"}, {
                         x: {value: "val", thresholds: 20},
                         fill: "black",
                         fillOpacity: 0.5,
@@ -266,7 +284,8 @@
         );
     }
 
-    function renderDotPlot() {        
+    function renderDotPlot() {   
+        plotDot.innerHTML = "";     
         plotDot?.append(
             Plot.plot({
                 height: height * 1.5,
@@ -281,7 +300,7 @@
                 marks: [
                     Plot.ruleY([0], {stroke: "#333", strokeWidth: 1.25}),
                     Plot.ruleX([0], {stroke: "#333", strokeWidth: 0.75}),
-                    Plot.dot(fullData, {
+                    Plot.dot(currentData, {
                         x: "val",
                         y: d => d.total_per_capita * 1000,
                         fill: d => d.total_per_capita < 0 ? '#BD210E'
@@ -479,12 +498,18 @@
             renderDistPlot();
             renderJitterPlot();
             renderBarPlot();
-            renderDotPlot();
+            
             // renderplotSmallMult();
             renderMultPlotDot();
             renderMultPlotJitter();
         }
+
+        if (dataLoaded && currentData) {
+            renderDotPlot();
+        }
     }
+
+
 
 
 </script>
@@ -537,6 +562,10 @@
         </div>
     </div>
 
+    <button on:click={toggleDataSource}>
+        {useLAD ? 'Switch to LAD level data' : 'Switch to LSOA level data'}
+    </button>
+
     {#if scrolledPastHeader}
         <div class="mini-header">
             <div class="mini-header-content">
@@ -566,7 +595,7 @@
                 <div class="component column">
                     <h3 class="component-title">{sefLabel} against per capita co-benefit values (£, thousand)</h3>
                     <p class="description">Each point in the chart below represents a UK data zone (LSOA). </p>
-                    <div class="aggregation-icon-container">
+                    <div class="aggregation-icon-container2">
                         <div class="tooltip-wrapper">
                             <img class="aggregation-icon" src="{per_capita}" alt="icon"/>
                             <span class="tooltip-text">This chart uses per capita values. i.e. shows the cost/benefit per person in each AREA.</span>
@@ -614,11 +643,6 @@
                 <p class="explanation">Each plot shows the distribution of benefits or costs for each of the 11 co-benefits.</p>
                 <br>
 
-                <div class="aggregation-icon-container2">
-                    <div class="tooltip-wrapper">
-                        <span class="tooltip-text">These charts use per capita values. i.e. show the cost/benefit per person in each LAD.</span>
-                    </div> 
-                </div>
                 <!-- Legend -->
                 <div id="main-legend" class="legend-box">
                     <strong>Co-benefits:</strong><br>Expand for detailed explanation
@@ -674,10 +698,21 @@
                             <div class="component-chart-title-container">
                             <h3 class="component-chart-title">{CB.label}</h3>
                             {#if CB.id == "Hassle costs"  || CB.id == "Road repairs" || CB.id == "Road safety" || CB.id == "Congestion" || CB.id == "Excess heat"}
-                            <img class="sm-icon" src="{per_capita}" alt="icon" />
-                            <img class="sm-icon" src="{negative}" alt="icon" />
+                           
+                                <div class="tooltip-wrapper">
+                                    <img class="sm-icon" src="{per_capita}" alt="icon" />
+                                    <span class="tooltip-text">This chart use per capita values. i.e. show the cost/benefit per person in each LAD.</span>
+                                </div>
+                        
+                            <div class="tooltip-wrapper">
+                                    <img class="sm-icon" src="{negative}" alt="icon" />
+                                    <span class="tooltip-text-neg">This chart include some/all negative values.</span>
+                                </div>
                             {:else}
+                            <div class="tooltip-wrapper">
                             <img class="sm-icon" src="{per_capita}" alt="icon" />
+                            <span class="tooltip-text">This chart use per capita values. i.e. show the cost/benefit per person in each LAD.</span>
+                        </div>
                             {/if}
                         </div>
                             {#if SEF_CATEGORICAL.includes(sefId)}
@@ -971,5 +1006,25 @@
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+.tooltip-text-neg {
+    visibility: hidden;
+    background-color: #BD210E;
+    color: #fff;
+    font-size: 12px;
+    padding: 5px 8px;
+    border-radius: 4px;
+    position: absolute;
+    top: 35px;
+    right: -60px;
+    left: -60px;
+    z-index: 1;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    max-width: 200px;
+    white-space: normal;
+    word-break: break-word;
+    display: inline-block;
 }
 </style>

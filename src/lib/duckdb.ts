@@ -153,7 +153,7 @@ export function getAverageSEFbyCobenDataGroupedByLAD(sef: SEFactor) {
 // CAST(25.65 AS int);
 export function getAverageSEFGroupedByLAD(sef: SEFactor) {
     let query;
-    query = `SELECT AVG(${sef}) as val, LAD as Lookup_Value
+    query = `SELECT AVG(${sef}) as val, AVG(total) as total, AVG(total)/AVG(population) as total_per_capita, LAD as Lookup_Value
              FROM ${DB_TABLE_NAME}
              WHERE co_benefit_type = 'Total'
              GROUP BY LAD, scenario`
