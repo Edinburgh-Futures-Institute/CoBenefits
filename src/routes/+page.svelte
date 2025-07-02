@@ -101,6 +101,7 @@
     let sortBy = 'total';
     let maxLADValue = 0;
     let maxHHLADValue = 0;
+
     // let LADToName = data.LADToName;
 
     async function fetchLADData() {
@@ -431,10 +432,10 @@
                         <div class="waffle-stat">
                             <div class="waffle-value-container">
                                 <img class="aggregation-icon-small" src="{total}" alt="icon"/>
-                            <div class="waffle-value">
-                                <span class="waffle-big">£{activeValueLabel}</span>
-                                <span class="small">billion</span>
-                            </div>
+                                <div class="waffle-value">
+                                    <span class="waffle-big">£{activeValueLabel}</span>
+                                    <span class="small">billion</span>
+                                </div>
                             </div>
                             {#if activeValueLabel > 0}
                                 <div class="waffle-caption">National benefits</div>
@@ -445,10 +446,10 @@
                         <div class="waffle-stat">
                             <div class="waffle-value-container">
                                 <img class="aggregation-icon-small" src="{per_capita}" alt="icon"/>
-                            <div class="waffle-value">
-                                <span class="waffle-big">£{activePerCapitaLabel}</span>
-                                <!-- <span class="small">thousand</span> -->
-                            </div>
+                                <div class="waffle-value">
+                                    <span class="waffle-big">£{activePerCapitaLabel}</span>
+                                    <!-- <span class="small">thousand</span> -->
+                                </div>
                             </div>
                             {#if activePerCapitaLabel > 0}
                                 <div class="waffle-caption">Per capita benefits</div>
@@ -460,15 +461,15 @@
                             <div class="waffle-stat">
                                 <div class="waffle-value-container">
                                     <img class="aggregation-icon-small" src="{percentage}" alt="icon"/>
-                                <div class="waffle-value">
-                                    <span class="waffle-big">{activePercentLabel}</span>
-                                    <span class="small">%</span>
+                                    <div class="waffle-value">
+                                        <span class="waffle-big">{activePercentLabel}</span>
+                                        <span class="small">%</span>
+                                    </div>
                                 </div>
-                            </div>
                                 <div class="waffle-caption">Contribution</div>
                             </div>
                         {/if}
-                        
+
                     </div>
 
 
@@ -479,18 +480,98 @@
             </div>
     </section>
 
-    <section class="search-section">
-        <h1>Find My Place</h1>
-        <LADSearch
-            items={LADToName}
-            on:search={(e) => handleSearch(e.detail)}
-        />
-        <!-- {#if selectedLAD}
-          <h2>Total Cobenefits</h2>
-          <h2>Cobenefits Over Time</h2>
 
-        {/if} -->
+    <section id="explore-section">
+
+        <h1 id="explore-title">Explore the Atlas</h1>
+        <div id="explore-section-main">
+
+            <div class="explore-block">
+                <h2>Browse Report Pages</h2>
+
+                <div class="explore-pages">
+
+                    <a href="{base}/coben">
+                        <div class="explore-page">
+                            <img class="page-teaser-img" src="{base}/pages-teasers/coben.png"/>
+                            <h3>11 Co-Benefits Pages</h3>
+                            <p> A Co-benefit page shows the spatial and temporal distribution of a given co-benefit, and
+                                its relationship with socio-economic factors. </p>
+                        </div>
+                    </a>
+
+                    <a href="{base}/lad">
+
+                        <div class="explore-page">
+                            <img class="page-teaser-img" src="{base}/pages-teasers/location.png"/>
+                            <h3>382 Local Area Pages</h3>
+                            <p> A Local Area page shows the different co-benefits in this area, temporal distributions,
+                                and their relationships with local socio-economic distributions.</p>
+                        </div>
+                    </a>
+
+                    <a href="{base}/sefs">
+                        <div class="explore-page">
+                            <img class="page-teaser-img" src="{base}/pages-teasers/sef.png"/>
+                            <h3>17 Socio-Economic Factors Pages</h3>
+                            <p> A Socio-Economic Factor Page shows the spatial distribution of a given factor and it's
+                                relationships with the different co-benefits.</p>
+
+                        </div>
+                    </a>
+
+                    <a href="{base}/map">
+                        <div class="explore-page">
+                            <img class="page-teaser-img" src="{base}/pages-teasers/map.png"/>
+                            <h3>1 Interactive Map</h3>
+                            <p> The interactive map enables exploring the spatial distributions of both the co-benefits
+                                and the socio-economic factors at the datazones and local area levels.</p>
+
+                        </div>
+                    </a>
+                </div>
+            </div>
+
+            <div class="explore-block search-section">
+                <h1>Find My Place</h1>
+                <LADSearch
+                        items={LADToName}
+                        on:search={(e) => handleSearch(e.detail)}
+                />
+            </div>
+
+            <div class="explore-block">
+                <h1>Read Stories and Analyses</h1>
+
+                <div class="explore-pages">
+                    <a href="{base}/stories/Derry_story.docx" download="story">
+                        <div class="story">
+                            <img class="story-teaser-img" src="{base}/stories/Derry_picture.png"/>
+                            <h3>Accelerating climate financing in Derry City and Strabane District Council</h3>
+                            <!--                        <p> A Co-benefit page shows the spatial and temporal distribution of a given co-benefit, and its relationship with socio-economic factors. </p>-->
+                        </div>
+                    </a>
+                </div>
+
+            </div>
+
+        </div>
+
+
     </section>
+
+    <!--    <section class="search-section">-->
+    <!--        <h1>Find My Place</h1>-->
+    <!--        <LADSearch-->
+    <!--            items={LADToName}-->
+    <!--            on:search={(e) => handleSearch(e.detail)}-->
+    <!--        />-->
+    <!--        &lt;!&ndash; {#if selectedLAD}-->
+    <!--          <h2>Total Cobenefits</h2>-->
+    <!--          <h2>Cobenefits Over Time</h2>-->
+
+    <!--        {/if} &ndash;&gt;-->
+    <!--    </section>-->
 
 
     <section class="side-by-side-section">
@@ -727,6 +808,26 @@
         background-color: #f9f9f9;
     }
 
+    #explore-section {
+        padding: 0 2rem;
+    }
+
+    #explore-title {
+        font-size: 32px;
+        margin: 1rem 0;
+    }
+
+    #explore-section-main {
+        display: flex;
+        flex-direction: row;
+        gap: 1rem;
+        /*padding: 2rem 3rem;*/
+        /*padding-right: 1.5rem;*/
+        /*padding-left: 1.5rem;*/
+        justify-content: space-between;
+        /*background-color: #f9f9f9;*/
+    }
+
     .side-box {
         flex: 1;
         background-color: #fff;
@@ -773,14 +874,74 @@
         font-weight: bold;
     }
 
-    .aggregation-icon-small {
-    width: 30px;
-    height: 30px;
-}
+    .explore-block {
+        padding: 10px;
+        background-color: #f9f9f9;
+        border: 1px solid lightgray;
+        flex-grow: 1;
 
-.waffle-value-container {
+    }
+
+
+    .aggregation-icon-small {
+        width: 30px;
+        height: 30px;
+    }
+
+    .waffle-value-container {
         display: flex;
         align-items: center;
         gap: 8px; /* space between icon and number */
     }
+
+
+    .explore-pages {
+        display: flex;
+        justify-content: space-evenly;
+        gap: 2%;
+    }
+
+    .explore-page {
+        /*border: 1px solid black;*/
+        background-color: #f9f9f9;
+        max-width: 14rem;
+        /*margin-right: 1rem;*/
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        /*justify-content: flex-end;*/
+        /*height: 100%;*/
+    }
+
+    /* Need fixed height so text afterwards starts at same y position*/
+    .explore-page > h3 {
+        height: 3.5rem;
+    }
+
+    .explore-page > p {
+        /*margin-top: auto;*/
+        /*height: 25%;*/
+        /*height: 1000px;*/
+    }
+
+    .explore-pages a {
+        color: black;
+
+    }
+
+    .page-teaser-img {
+        width: 100%;
+        height: 300px;
+
+        object-fit: cover;
+        object-position: center;
+    }
+
+    .story-teaser-img {
+        width: 100%;
+
+        object-fit: cover;
+        object-position: center;
+    }
+
 </style>

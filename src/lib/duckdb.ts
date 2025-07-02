@@ -3,8 +3,10 @@ import duckdb_wasm from '/node_modules/@duckdb/duckdb-wasm/dist/duckdb-mvp.wasm?
 import duckdb_worker from '/node_modules/@duckdb/duckdb-wasm/dist/duckdb-browser-mvp.worker.js?worker';
 import type {AsyncDuckDB} from '@duckdb/duckdb-wasm';
 
-import {type CoBenefit, COBENEFS, type Scenario, SEF, type SEFactor, TIMES, 
-    SEF_CATEGORICAL} from "../globals";
+import {
+    type CoBenefit, COBENEFS, type Scenario, SEF, type SEFactor, TIMES,
+    SEF_CATEGORICAL, type Nation
+} from "../globals";
 import {browser} from '$app/environment';
 
 let db: AsyncDuckDB;
@@ -311,12 +313,14 @@ export function getTotalCBForOneLAD(LAD: string) {
              WHERE LAD = '${LAD}'
                AND co_benefit_type = 'Total'`
 
-    // let q= `SELECT ${TIMES.map(d => d).join(" , ")}
-    //     FROM ${DB_TABLE_NAME}
-    //     WHERE LAD = '${LAD}'
-    //     AND co_benefit_type='Total'`
+    return q;
+}
 
-    // console.log("Q ", q)
+export function getTotalCBForOneNation(nation: Nation) {
+    let q = `SELECT total, total / Population as totalPerCapita, Lookup_value, co_benefit_type, LAD, scenario, Nation, ${TIMES.map(d => `"${d}"`).join(", ")}, ${SEF.join(", ")}
+             FROM ${DB_TABLE_NAME}
+             WHERE Nation = '${nation}'
+            AND co_benefit_type = 'Total'`
     return q;
 }
 
@@ -324,6 +328,14 @@ export function getAllCBForOneLAD(LAD: string) {
     return `SELECT total, Lookup_value, co_benefit_type, LAD, scenario, ${SEF.join(", ")}, ${TIMES.map(d => `"${d}"`).join(", ")}
             FROM ${DB_TABLE_NAME}
             WHERE LAD = '${LAD}'
+              AND co_benefit_type!='Total'
+    `
+}
+
+export function getAllCBForOneNation(nation: Nation) {
+    return `SELECT total, Lookup_value, co_benefit_type, LAD, Nation, scenario, ${SEF.join(", ")}, ${TIMES.map(d => `"${d}"`).join(", ")}
+            FROM ${DB_TABLE_NAME}
+            WHERE Nation = '${nation}'
               AND co_benefit_type!='Total'
     `
 }

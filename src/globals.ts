@@ -81,6 +81,8 @@ export type CoBenefit = typeof COBENEFS[number]
 export type Scenario = typeof SCENARIOS[number]
 export type SEFactor = typeof COBENEFS[number]
 
+export type Nation = "NI" | "England" | "Wales" | "Scotland"
+
 
 // DESIGN PARAMS
 export const VIS_COLOR = "#333";
@@ -101,7 +103,6 @@ export const MARGINS = {
     marginBottom: 60,
     marginTop: 60
 }
-
 
 export const AVERAGE_DX = 20;
 
