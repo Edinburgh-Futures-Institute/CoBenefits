@@ -481,13 +481,13 @@
     </section>
 
 
-    <section>
+    <section id="explore-section">
 
-        <h1>Explore the Atlas</h1>
-        <div id="explore-section">
+        <h1 id="explore-title">Explore the Atlas</h1>
+        <div id="explore-section-main">
 
             <div class="explore-block">
-                <h1>Browse Report Pages</h1>
+                <h2>Browse Report Pages</h2>
 
                 <div class="explore-pages">
 
@@ -495,7 +495,8 @@
                         <div class="explore-page">
                             <img class="page-teaser-img" src="{base}/pages-teasers/coben.png"/>
                             <h3>11 Co-Benefits Pages</h3>
-                            <p> A Co-benefit page shows the spatial and temporal distribution of a given co-benefit, and its relationship with socio-economic factors. </p>
+                            <p> A Co-benefit page shows the spatial and temporal distribution of a given co-benefit, and
+                                its relationship with socio-economic factors. </p>
                         </div>
                     </a>
 
@@ -504,7 +505,8 @@
                         <div class="explore-page">
                             <img class="page-teaser-img" src="{base}/pages-teasers/location.png"/>
                             <h3>382 Local Area Pages</h3>
-                            <p> A Local Area page shows the different co-benefits in this area, temporal distributions, and their relationships with local socio-economic distributions.</p>
+                            <p> A Local Area page shows the different co-benefits in this area, temporal distributions,
+                                and their relationships with local socio-economic distributions.</p>
                         </div>
                     </a>
 
@@ -512,7 +514,8 @@
                         <div class="explore-page">
                             <img class="page-teaser-img" src="{base}/pages-teasers/sef.png"/>
                             <h3>17 Socio-Economic Factors Pages</h3>
-                            <p> A Socio-Economic Factor Page shows the spatial distribution of a given factor and it's relationships with the different co-benefits.</p>
+                            <p> A Socio-Economic Factor Page shows the spatial distribution of a given factor and it's
+                                relationships with the different co-benefits.</p>
 
                         </div>
                     </a>
@@ -521,14 +524,12 @@
                         <div class="explore-page">
                             <img class="page-teaser-img" src="{base}/pages-teasers/map.png"/>
                             <h3>1 Interactive Map</h3>
-                            <p> The interactive map enables exploring the spatial distributions of both the co-benefits and the socio-economic factors at the datazones and local area levels.</p>
+                            <p> The interactive map enables exploring the spatial distributions of both the co-benefits
+                                and the socio-economic factors at the datazones and local area levels.</p>
 
                         </div>
                     </a>
-
                 </div>
-
-
             </div>
 
             <div class="explore-block search-section">
@@ -541,6 +542,17 @@
 
             <div class="explore-block">
                 <h1>Read Stories and Analyses</h1>
+
+                <div class="explore-pages">
+                    <a href="{base}/stories/Derry_story.docx" download="story">
+                        <div class="story">
+                            <img class="story-teaser-img" src="{base}/stories/Derry_picture.png"/>
+                            <h3>Accelerating climate financing in Derry City and Strabane District Council</h3>
+                            <!--                        <p> A Co-benefit page shows the spatial and temporal distribution of a given co-benefit, and its relationship with socio-economic factors. </p>-->
+                        </div>
+                    </a>
+                </div>
+
             </div>
 
         </div>
@@ -797,12 +809,21 @@
     }
 
     #explore-section {
+        padding: 0 2rem;
+    }
+
+    #explore-title {
+        font-size: 32px;
+        margin: 1rem 0;
+    }
+
+    #explore-section-main {
         display: flex;
         flex-direction: row;
         gap: 1rem;
         /*padding: 2rem 3rem;*/
-        padding-right: 1.5rem;
-        padding-left: 1.5rem;
+        /*padding-right: 1.5rem;*/
+        /*padding-left: 1.5rem;*/
         justify-content: space-between;
         /*background-color: #f9f9f9;*/
     }
@@ -857,7 +878,10 @@
         padding: 10px;
         background-color: #f9f9f9;
         border: 1px solid lightgray;
+        flex-grow: 1;
+
     }
+
 
     .aggregation-icon-small {
         width: 30px;
@@ -873,6 +897,7 @@
 
     .explore-pages {
         display: flex;
+        justify-content: space-evenly;
         gap: 2%;
     }
 
@@ -885,13 +910,18 @@
         flex-direction: column;
         justify-content: space-between;
         /*justify-content: flex-end;*/
-        height: 100%;
+        /*height: 100%;*/
+    }
+
+    /* Need fixed height so text afterwards starts at same y position*/
+    .explore-page > h3 {
+        height: 3.5rem;
     }
 
     .explore-page > p {
         /*margin-top: auto;*/
         /*height: 25%;*/
-        height: 200px;
+        /*height: 1000px;*/
     }
 
     .explore-pages a {
@@ -900,15 +930,18 @@
     }
 
     .page-teaser-img {
-        /*max-width: 140px;*/
-
         width: 100%;
         height: 300px;
-        /*height: 200px;*/
 
         object-fit: cover;
         object-position: center;
+    }
 
+    .story-teaser-img {
+        width: 100%;
+
+        object-fit: cover;
+        object-position: center;
     }
 
 </style>
