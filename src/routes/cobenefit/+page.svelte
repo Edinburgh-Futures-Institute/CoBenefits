@@ -383,16 +383,12 @@
                     y: {label: '£, thousand', labelArrow: 'none'},
                     color: {legend: true},
                     marks: [
-                        Plot.dot(LADAveragedData.filter(d => d["SEFMAME"] == sef), {
+                        Plot.boxY(LADAveragedData.filter(d => d["SEFMAME"] == sef), {
                             x: "SE",
                             y: d => d.total * 1000,
                             r: 1.8,
                             fillOpacity: 0.7,
-                            fill: d =>
-                                d.LAD.startsWith("S") ? COBENEFS_SCALE3(coBenefit)[1] :
-                                d.LAD.startsWith("N") ? COBENEFS_SCALE3(coBenefit)[2] :
-                                d.LAD.startsWith("E") ? COBENEFS_SCALE3(coBenefit)[3] :
-                                COBENEFS_SCALE3(coBenefit)[4]
+                            fill:  COBENEFS_SCALE(coBenefit)
                         }),
                         Plot.ruleY([0], {stroke: "#333", strokeWidth: 0.75})
                     ]
