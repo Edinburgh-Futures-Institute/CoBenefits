@@ -32,6 +32,7 @@
     import {getTableData} from '$lib/duckdb';
     import {csv} from "d3";
     import Footer from "$lib/components/Footer.svelte";
+    import * as d3 from "d3";
 
     // const LADEngPath = `${base}/LAD/Eng_Wales_LSOA_LADs.csv`
     // const LADNIPath = `${base}/LAD/NI_DZ_LAD.csv`
@@ -58,7 +59,7 @@
 
     async function loadData() {
         aggregationPerBenefit = await getTableData(getAggregationPerBenefit());
-        // console.log("aggregationPerBenefit", aggregationPerBenefit);
+        console.log("aggregationPerBenefit", aggregationPerBenefit);
         // for landing page LAD columns
 
         aggregationPerCapitaPerBenefit = await getTableData(getAggregationPerCapitaPerBenefit());
@@ -67,7 +68,12 @@
         aggregationPerBenefit = [...aggregationPerBenefit].sort((a, b) => b.total - a.total);
         aggregationPerCapitaPerBenefit = [...aggregationPerCapitaPerBenefit].sort((a, b) => b.total_value - a.total_value);
         console.log("aggregationPerCapitaPerBenefit", aggregationPerCapitaPerBenefit);
-        aggregationPerCapita = totalAggregation[0].total_value_per_capita;
+
+        // aggregationPerCapita = totalAggregation[0].total_value_per_capita;
+        aggregationPerCapita = d3.sum(aggregationPerCapitaPerBenefit, d => d.value_per_capita)
+
+        console.log("aggregationPerCapita", aggregationPerCapita);
+
 
         maxCoBenefValue = Math.max(...aggregationPerCapitaPerBenefit.map(d => d.total_value));
         minCoBenefValue = Math.min(...aggregationPerCapitaPerBenefit.map(d => d.total_value));
@@ -91,7 +97,6 @@
         // })
 
         dataLoading = false;
-
     }
 
 
@@ -192,7 +197,6 @@
                 const percent = totalValue > 0 ? ((total / totalValue) * 100).toFixed(2) : 0;
 
                 console.log("percentage", type, total, totalValue, percent);
-
 
                 return {
                     type,
