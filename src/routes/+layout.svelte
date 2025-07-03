@@ -48,7 +48,7 @@
 
     function initPosthog() {
       posthog.init(
-        'phc_5El1OotgrsS7hUFInEEWFvaZnhoiQboqFfzBuYXCfwa',
+        'phc_mKgPtFSI9BNxlCsEYhhte5fu07Pp99BhWEtBMvU8pzV',
         {
           api_host: 'https://eu.i.posthog.com',
           person_profiles: 'identified_only',
@@ -103,7 +103,7 @@
 {#if showBanner} 
     <div class="cookie-banner">
       <div class="banner-content">
-        <p>This atlas would like to anonymously log your interactive activity (e.g., session duration, page navigation, and interaction with visualizations) for research purposes. Our goal is to create a better user experience, develop useful Atlas features, and advance information visualization techniques. <strong>Do you consent?</strong></p>
+        <p>The atlas would like to anonymously log your interactive activity (e.g., session duration, page navigation, and interaction with visualizations) for research purposes. Our goal is to create a better user experience, develop useful Atlas features, and advance information visualization techniques. <strong>Do you consent?</strong></p>
         <a href="/Participation_Information_Sheet.pdf" target="_blank" rel="noopener noreferrer">Learn how we use your data</a>.
         
           <div class="cookie-buttons">
