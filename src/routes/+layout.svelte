@@ -104,7 +104,7 @@
     <div class="cookie-banner">
       <div class="banner-content">
         <p>The atlas would like to anonymously log your interactive activity (e.g., session duration, page navigation, and interaction with visualizations) for research purposes. Our goal is to create a better user experience, develop useful Atlas features, and advance information visualization techniques. <strong>Do you consent?</strong></p>
-        <a href="/Participation_Information_Sheet.pdf" target="_blank" rel="noopener noreferrer">Learn how we use your data</a>.
+        <a href="/src/routes/Participation_Information_Sheet.pdf" target="_blank" rel="noopener noreferrer">Learn how we use your data</a>.
         
           <div class="cookie-buttons">
             <button class="accept" on:click={acceptCookies}>Accept</button>
