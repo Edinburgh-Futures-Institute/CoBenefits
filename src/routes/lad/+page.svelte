@@ -1,9 +1,9 @@
 <script lang="ts">
-    import { base } from "$app/paths";
+    import {base} from "$app/paths";
     import NavigationBar from "$lib/components/NavigationBar.svelte";
     import {getTableData, getLADRegion} from '$lib/duckdb'
-    import { csv } from "d3";
-    import { onMount } from "svelte";
+    import {csv} from "d3";
+    import {onMount} from "svelte";
 
 
     const LADEngPath = `${base}/LAD/Eng_Wales_LSOA_LADs.csv`
@@ -14,7 +14,7 @@
     let LADToNation = {};
     let entries = [];
     let grouped = {};
-    let nations = ["England","Wales", "Northern Ireland", "Scotland"];
+    let nations = ["England", "Wales", "Northern Ireland", "Scotland"];
 
     const nationMap = {
         "NI": "Northern Ireland",
@@ -66,7 +66,7 @@
 
 </script>
 
-<NavigationBar />
+<NavigationBar/>
 
 {#if entries.length === 0}
     <p>Loading local authorities…</p>
@@ -75,20 +75,27 @@
         <h1>Browse local authorities</h1>
         <p>Open the tabs and then click on a local authority for detailed reports.</p>
         {#each nations as nation}
-        <details>
-            <summary>
-                {nation} ({grouped[nation].length})
-            </summary>
-            <div class="lad-grid">
-                {#each grouped[nation] as lad}
-                    <a class="lad-link" href="{base}/location?location={lad.code}">{lad.name}</a>
-                {/each}
-            </div>
-        </details>
+            <details>
+                <summary>
+
+                    <!-- TODO: the number of England LAD is uncorrect currently -->
+                    {#if nation == "England"}
+                        {nation} (317)
+                    {:else}
+                        {nation} ({grouped[nation].length})
+                    {/if}
+
+
+                </summary>
+                <div class="lad-grid">
+                    {#each grouped[nation] as lad}
+                        <a class="lad-link" href="{base}/location?location={lad.code}">{lad.name}</a>
+                    {/each}
+                </div>
+            </details>
         {/each}
     </main>
 {/if}
-
 
 
 <style>

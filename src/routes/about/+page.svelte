@@ -167,9 +167,9 @@ Visualization atlases are online platforms making large and complex data sets ac
 </p>
 
 <h2>Interaction Logging</h2>
-    <p class="intro-paragraph">
-      This atlas anonymously logs your interactive activity (e.g., session duration, page navigation, and interaction with visualizations) for research purposes. Our goal is to create a better user experience, develop more useful Atlas features, and advance information visualization techniques. Participation is voluntary, fully anonymous unless you provide your email (optional), and users can opt in or out of logging at any time.
-    </p>
+<p class="intro-paragraph">
+  This atlas anonymously logs your interactive activity (e.g., session duration, page navigation, and interaction with visualizations) for research purposes. Our goal is to create a better user experience, develop more useful Atlas features, and advance information visualization techniques. Participation is voluntary, fully anonymous unless you provide your email (optional), and users can opt in or out of logging at any time. <a href="/src/routes/about/Participation_Information_Sheet.pdf" target="_blank" rel="noopener noreferrer">Learn more about how we use your data</a>. For more information, please contact Gwennan Drouillet (<a href="mailto:s2747627@ed.ac.uk" target="_blank" rel="noopener noreferrer">
+    s2747627@ed.ac.uk</a>) or Benjamin Bach (<a href="mailto:bbach@exseed.ed.ac.uk" target="_blank" rel="noopener noreferrer">bbach@exseed.ed.ac.uk</a>). </p>
     
     {#if !trackingDisabled}
       <!-- User has consented to tracking -->
@@ -368,4 +368,72 @@ Visualization atlases are online platforms making large and complex data sets ac
   line-height: 1.4;
 }
 
-  </style>
+
+.privacy-button,
+.submit-button,
+.remove-button,
+.delete-data-button,
+.keep-data-button {
+  background-color: #f3f4f6;
+  color: #333;
+  border: 1px solid #333;
+  padding: 0.375rem 0.75rem;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.privacy-button:hover,
+.submit-button:hover,
+.remove-button:hover,
+.delete-data-button:hover,
+.keep-data-button:hover {
+  background-color: #e5e7eb;
+}
+
+.contact-section {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin: 1rem 0;
+}
+
+.email-input {
+  width: 280px;
+  height: 32px;
+  padding: 0 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  box-sizing: border-box;
+}
+
+.email-input:focus {
+  outline: none;
+  border-color: #333;
+}
+
+
+:global(.modal) button {
+  background-color: #f3f4f6 !important;
+  color: #333 !important;
+  border: 1px solid #333 !important;
+  padding: 0.375rem 0.75rem !important;
+  border-radius: 4px !important;
+  font-size: 0.875rem !important;
+  cursor: pointer !important;
+  transition: background-color 0.2s ease !important;
+  height: 32px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+}
+
+:global(.modal) button:hover {
+  background-color: #e5e7eb !important;
+}
+
+</style>
