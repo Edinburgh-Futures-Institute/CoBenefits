@@ -20,18 +20,29 @@
 <NavigationBar />
 
 <main>
-    <h1>Browse socio-economic factors</h1>
+    <h1 class="page-title">Browse socio-economic factors</h1>
     <!--<div class="disclaimer-box">
     <p style="margin: 0 0 0rem 0;"><strong>What are socio-economic factors?:</strong> ...</p>
     </div>-->
-    <p class="description">Click on a socio-economic factor for a detailed report.</p>
+    <p class='description'>
+        <strong>Socio-economic factors</strong> in the context of co-benefits refer to the social and economic conditions that influence how different populations may be affected by climate action.
+        Exploring the socio-economic factors help determine:
+
+    <ul class='definition spaced-list'>
+            <li><strong>Who benefits most or least</strong> (e.g., low-income vs. high-income groups)</li>
+            <li><strong>How benefits/costs are distributed</strong> </li>
+            <li><strong>Whether existing inequalities are reduced or reinforced</strong></li>
+          </ul>
+<hr>
+<br>
+    <h3 class="component-title"> Click on a socio-economic factor for a detailed report:</h3>
 </main>
 
 <main class="main-container">
     <div class="left-column">
         <div class="heading-container">
             <img src={PeopleIcon} alt="Icon" class="heading-icon" />
-            <h2>Demographics</h2>
+            <h2 class="page-title">Demographics</h2>
         </div>
         <div class="sef-link-wrapper">
         <a class="sef-link" href="{base}/sef?sef=Under_35">Age - under 35 </a>
@@ -48,7 +59,7 @@
 
         <div class="heading-container">
             <img src={CarIcon} alt="Icon" class="heading-icon" />
-            <h2>Transport</h2>
+            <h2 class="page-title">Transport</h2>
         </div>
         <div class="sef-link-wrapper">
         <a class="sef-link" href="{base}/sef?sef=Number_cars">Number of cars</a>
@@ -67,7 +78,7 @@
     <div class="right-column">
         <div class="heading-container">
             <img src={HouseIcon} alt="Icon" class="heading-icon" />
-            <h2>Building factors</h2>
+            <h2 class="page-title">Building factors</h2>
         </div>
         <div class="sef-link-wrapper">
         <a class="sef-link" href="{base}/sef?sef=EPC">Domestic energy performance certificate (EPC)</a>
@@ -97,7 +108,7 @@
 
         <div class="heading-container">
             <img src={TreeIcon} alt="Icon" class="heading-icon" />
-            <h2>Geography</h2>
+            <h2 class="page-title">Geography</h2>
         </div>
         <div class="sef-link-wrapper">
         <a class="sef-link" href="{base}/sef?sef=Rurality">Rurality</a>
@@ -174,6 +185,15 @@
     border-left: 4px solid #ccc;
     font-size: 0.9rem;
     color: #555;
+}
+
+.definition li {
+  font-size: 0.9rem; 
+}
+
+.spaced-list {
+  margin-top: 0.5em; 
+  margin-bottom: 2.5em;;
 }
 
 </style>

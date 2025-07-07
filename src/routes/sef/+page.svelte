@@ -1,5 +1,6 @@
 <script lang="ts">
     import * as d3 from 'd3';
+    import {csv} from "d3";
     import * as Plot from "@observablehq/plot";
 	import posthog from 'posthog-js';
 
@@ -22,7 +23,8 @@
         COBENEFS_SCALE,
         SEF_ID,
         SEF_LEVEL_LABELS,
-        SEF_SCALE
+        SEF_SCALE,
+        getIconFromCobenef
     } from "../../globals";
 
 
@@ -44,6 +46,9 @@
     import negative from '$lib/icons/negative.png';
     import Footer from "$lib/components/Footer.svelte";
 
+    const LADEngPath = `${base}/LAD/Eng_Wales_LSOA_LADs.csv`;
+    const LADNIPath = `${base}/LAD/NI_DZ_LAD.csv`;
+    const LADScotlandPath = `${base}/LAD/Scotland_DZ_LA.csv`;
 
     let element: HTMLElement;
     let plotDist: HTMLElement;
@@ -93,6 +98,49 @@
     let scrolledPastHeader = false;
     let currentSection = '';
     const sectionIds = ['overview', 'compare'];
+
+    let LADToName = {};
+    let ladLoaded = false;
+    
+
+    async function loadLADNames() {
+    const eng = await csv(LADEngPath);
+    const seenLADs = new Set();
+
+    for (let row of eng) {
+        const code = row.LAD22CD?.trim();
+        const name = row.LAD22NM?.trim();
+
+        if (!seenLADs.has(code) && code && name) {
+            LADToName[code] = name;
+            seenLADs.add(code);
+        }
+    }
+
+    const ni = await csv(LADNIPath);
+    for (let row of ni) {
+        const code = row.LGD2014_code;
+        const name = row.LGD2014_name;
+        if (!seenLADs.has(code) && code && name) {
+            LADToName[code] = name;
+            seenLADs.add(code);
+        }
+    }
+
+    const sco = await csv(LADScotlandPath);
+    for (let row of sco) {
+        const code = row.LA_Code;
+        const name = row.LA_Name;
+        if (!seenLADs.has(code) && code && name) {
+            LADToName[code] = name;
+            seenLADs.add(code);
+        }
+    }
+
+    ladLoaded = true;
+
+    console.log("Loaded LAD names", Object.keys(LADToName).length, LADToName);
+}
 
     function handleScroll() {
         const scrollY = window.scrollY;
@@ -182,7 +230,7 @@ $: modeValue = modeNumeric != null && labelLookup
 
 $: maxIndex = currentData ? d3.maxIndex(currentData, d => d.val) : -1;
 $: maxLookupValue = maxIndex !== -1 && currentData
-  ? currentData[maxIndex].Lookup_Value
+  ? currentData[maxIndex].Lookup_Value?.trim()
   : "N/A";
 $: maxValue = maxIndex !== -1 && currentData
   ? (currentData[maxIndex].val ?? 0).toLocaleString('en-US', {
@@ -201,6 +249,19 @@ $: minValue = minIndex !== -1 && currentData
       maximumFractionDigits: 2
     })
   : "N/A";
+
+  $: minLookupName = ladLoaded && minLookupValue in LADToName
+  ? LADToName[minLookupValue]
+  : minLookupValue;
+
+$: maxLookupName = ladLoaded && maxLookupValue in LADToName
+  ? LADToName[maxLookupValue]
+  : maxLookupValue;
+
+  
+
+  console.log("Example Lookup_Value from currentData", currentData?.[0]?.Lookup_Value);
+  console.log("Known LAD codes", Object.keys(LADToName));
 
     function toggleDataSource() {
     useLAD = !useLAD;
@@ -253,9 +314,9 @@ $: minValue = minIndex !== -1 && currentData
     }
 
     function renderBarPlot() {
-        const average = d3.mode(fullData, d => d.val) ?? 0;
+        const average = d3.mode(currentData, d => d.val) ?? 0;
         const maxY = d3.max(
-            d3.bin().thresholds(20).value(d => d.val)(fullData),
+            d3.bin().thresholds(20).value(d => d.val)(currentData),
             bin => bin.length
         );
 
@@ -263,7 +324,7 @@ $: minValue = minIndex !== -1 && currentData
 
         const fullLevels = labelLookup
             ? Object.keys(labelLookup).map(Number)
-            : fullData.filter(d => d["SEFMAME"] == sefId).map(d => d.SE);
+            : currentData.filter(d => d["SEFMAME"] == sefId).map(d => d.SE);
 
         plotBar?.append(
             Plot.plot({
@@ -282,14 +343,14 @@ $: minValue = minIndex !== -1 && currentData
                 y: {label: 'No. of datazones', labelArrow: false},
                 style: {fontSize: "16px"},
                 marks: [
-                    Plot.barY(fullData, Plot.groupX({ y: "count" }, { x: "val", fill: "black", opacity: 0.5})),
+                    Plot.barY(currentData, Plot.groupX({ y: "count" }, { x: "val", fill: "black", opacity: 0.5})),
                     Plot.ruleX([average], {
                                 stroke: "#BD210E",
                                 strokeWidth: 4,
                                 channels: {average: {value: average, label: "Average"}},
                                 tip: {format: {average:d => `${d.toFixed(2)}`, x:false}},
                             }),
-                    Plot.dot(fullData, {
+                    Plot.dot(currentData, {
                         x: {value: average, thresholds: 20},
                         y: maxY + 0.1 * maxY,
                         r: 5,
@@ -345,11 +406,6 @@ $: minValue = minIndex !== -1 && currentData
     }
 
     function renderJitterPlot() {
-        const jitterAmount = 0.2; // tune as needed
-        const jitteredData = fullData.map(d => ({
-                ...d,
-                jittered_val: d.val + (Math.random() - 0.5) * jitterAmount
-            }));
             
         
         plotJitter?.append(
@@ -366,8 +422,8 @@ $: minValue = minIndex !== -1 && currentData
                 marks: [
                     Plot.ruleY([0], {stroke: "#333", strokeWidth: 1.25}),
                     Plot.ruleX([0], {stroke: "#333", strokeWidth: 0.75}),
-                    Plot.dot(jitteredData, {
-                        x: "jittered_val",
+                    Plot.boxY(currentData, {
+                        x: "val",
                         y: d => d.total_per_capita * 1000,
                         fill: d => d.total_per_capita < 0 ? '#BD210E' : '#242424',
                         r: 0.9,
@@ -397,13 +453,13 @@ $: minValue = minIndex !== -1 && currentData
             plot = Plot.plot({
                 height: height,
                 width: height,
-                marginLeft: 60,
-                marginTop: 10,
+                marginLeft: CB === "Excess heat" ? 80 : 60,
+                marginTop: 30,
                 marginRight: 10,
-                marginBottom: 60,
+                marginBottom: 40,
                 x: {label: null},
                 y: {label: null},
-                style: {fontSize: "12px"},
+                style: {fontSize: "14px"},
                 marks: [
                     Plot.ruleY([0], {stroke: "#333", strokeWidth: 1.25}),
                     Plot.ruleX([0], {stroke: "#333", strokeWidth: 0.75}),
@@ -428,7 +484,7 @@ $: minValue = minIndex !== -1 && currentData
                     Plot.axisY({
                         label: "Per capita co-benefit value (£, thousand)",
                         labelArrow: false,
-                        labelAnchor: "center"
+                        labelAnchor: "top"
                     }),
                     Plot.axisX({label: `${sefUnits}`, labelArrow: false, labelAnchor: "center"}),
                 ]
@@ -438,11 +494,6 @@ $: minValue = minIndex !== -1 && currentData
     }
 
     function renderMultPlotJitter() {
-        const jitterAmount = 0.2; // tune as needed
-        const jitteredData = SEFData.map(d => ({
-                ...d,
-                jittered_val: d.val + (Math.random() - 0.5) * jitterAmount
-            }));
         
         CBS.forEach(CB => {
             let plot;
@@ -450,17 +501,17 @@ $: minValue = minIndex !== -1 && currentData
                 height: height,
                 width: height,
                 marginLeft: 60,
-                marginTop: 10,
+                marginTop: 30,
                 marginRight: 10,
-                marginBottom: 60,
+                marginBottom: 40,
                 x: {label: null},
                 y: {label: null},
-                style: {fontSize: "12px"},
+                style: {fontSize: "14px"},
                 marks: [
                     Plot.ruleY([0], {stroke: "#333", strokeWidth: 1.25}),
                     Plot.ruleX([0], {stroke: "#333", strokeWidth: 0.75}),
-                    Plot.dot(jitteredData.filter(d => d["co_benefit_type"] == CB), {
-                        x: "jittered_val",
+                    Plot.dot(currentSEFData.filter(d => d["co_benefit_type"] == CB), {
+                        x: "val",
                         y: "total",
                         fill: COBENEFS_SCALE(CB),
                         fillOpacity: 0.5,
@@ -515,7 +566,7 @@ $: minValue = minIndex !== -1 && currentData
 
             renderDistPlot();
             renderJitterPlot();
-            renderBarPlot();
+            
             
             // renderplotSmallMult();
             renderMultPlotDot();
@@ -524,8 +575,12 @@ $: minValue = minIndex !== -1 && currentData
 
         if (dataLoaded && currentData) {
             renderDotPlot();
+            renderBarPlot();
+            renderMultPlotJitter();
+            renderJitterPlot();
         }
     }
+
 
     
 
@@ -541,7 +596,7 @@ $: minValue = minIndex !== -1 && currentData
     <div class="section header">
         <div class="header-content">
             <div class="header-text">
-                <p class="page-subtitle">SEF Report</p>
+                <p class="page-subtitle">Socio-Economic Factor Report</p>
                 <div class="title-container">
                     <h1 class="page-title">{sefdescr}</h1>
                     <p class="definition">{sefDef}</p>
@@ -561,7 +616,7 @@ $: minValue = minIndex !== -1 && currentData
                     {#if SEF_CATEGORICAL.includes(sefId)}
                     -
                     {:else}
-                    Max value: <strong>{formatValue(maxValue, sefShortUnits)}</strong>({maxLookupValue})
+                    Max value: <strong>{formatValue(maxValue, sefShortUnits)}</strong>({maxLookupValue} {maxLookupName})
                     {/if}
                 </p>
                 <p class="definition-stat">
@@ -575,7 +630,7 @@ $: minValue = minIndex !== -1 && currentData
                     {#if SEF_CATEGORICAL.includes(sefId)}
                     -
                     {:else}
-                    Min value: <strong>{formatValue(minValue, sefShortUnits)}</strong>({minLookupValue})
+                    Min value: <strong>{formatValue(minValue, sefShortUnits)}</strong>({minLookupValue} {minLookupName})
                     {/if}
                 </p>
             </div>
@@ -725,7 +780,8 @@ $: minValue = minIndex !== -1 && currentData
                     {#each CO_BEN as CB}
                         <div class="plot-container">
                             <div class="component-chart-title-container">
-                            <h3 class="component-chart-title">{CB.label}</h3>
+                            <img class="sm-cb-icon" src={getIconFromCobenef(CB.id)} alt="{CB.label} icon" />
+                            <h3 class="component-title">{CB.label}</h3>
                             {#if CB.id == "Hassle costs"  || CB.id == "Road repairs" || CB.id == "Road safety" || CB.id == "Congestion" || CB.id == "Excess heat"}
                            
                                 <div class="tooltip-wrapper">
@@ -1027,7 +1083,15 @@ $: minValue = minIndex !== -1 && currentData
     width: 20px;
     height: 20px;
     opacity: 0.75;
-    margin-top: -5px;
+    margin-top: 5px;
+    margin-left: 3px;
+}
+
+.sm-cb-icon {
+    width: 30px;
+    height: 30px;
+    opacity: 0.75;
+    margin-top: -10px;
     margin-left: 3px;
 }
 
