@@ -300,13 +300,12 @@ $: maxLookupName = ladLoaded && maxLookupValue in LADToName
                                 channels: {average: {value: average, label: "Average"}},
                                 tip: {format: {average:d => `${d.toFixed(2)}`, x:false}},
                             }),
-                    Plot.dot(fullData, {
-                        x: {value: average, thresholds: 20},
-                        y: maxY + 0.1 * maxY,
-                        r: 5,
-                        fill: "#BD210E"
-
-                    }),
+                    //Plot.dot(fullData, {
+                    //    x: {value: average, thresholds: 20},
+                    //    y: maxY + 0.1 * maxY,
+                    //    r: 5,
+                    //   fill: "#BD210E"
+//}),
                     Plot.axisX({label: `${sefUnits}`, labelArrow: false, labelAnchor: "center"}),
                 ]
             })
@@ -454,9 +453,9 @@ $: maxLookupName = ladLoaded && maxLookupValue in LADToName
                 height: height,
                 width: height,
                 marginLeft: CB === "Excess heat" ? 80 : 60,
-                marginTop: 30,
+                marginTop: 40,
                 marginRight: 10,
-                marginBottom: 40,
+                marginBottom: 50,
                 x: {label: null},
                 y: {label: null},
                 style: {fontSize: "14px"},
@@ -501,9 +500,9 @@ $: maxLookupName = ladLoaded && maxLookupValue in LADToName
                 height: height,
                 width: height,
                 marginLeft: 60,
-                marginTop: 30,
+                marginTop: 40,
                 marginRight: 10,
-                marginBottom: 40,
+                marginBottom: 50,
                 x: {label: null},
                 y: {label: null},
                 style: {fontSize: "14px"},
@@ -781,12 +780,12 @@ $: maxLookupName = ladLoaded && maxLookupValue in LADToName
                         <div class="plot-container">
                             <div class="component-chart-title-container">
                             <img class="sm-cb-icon" src={getIconFromCobenef(CB.id)} alt="{CB.label} icon" />
-                            <h3 class="component-title">{CB.label}</h3>
+                            <h3 class="chart-component-title">{CB.label}</h3>
                             {#if CB.id == "Hassle costs"  || CB.id == "Road repairs" || CB.id == "Road safety" || CB.id == "Congestion" || CB.id == "Excess heat"}
                            
                                 <div class="tooltip-wrapper">
                                     <img class="sm-icon" src="{per_capita}" alt="icon" />
-                                    <span class="tooltip-text">This chart use per capita values. i.e. show the cost/benefit per person in each area.</span>
+                                    <span class="tooltip-text">This chart uses per capita values. i.e. show the cost/benefit per person in each area.</span>
                                 </div>
                         
                             <div class="tooltip-wrapper">
@@ -796,7 +795,7 @@ $: maxLookupName = ladLoaded && maxLookupValue in LADToName
                             {:else}
                             <div class="tooltip-wrapper">
                             <img class="sm-icon" src="{per_capita}" alt="icon" />
-                            <span class="tooltip-text">This chart use per capita values. i.e. show the cost/benefit per person in each area.</span>
+                            <span class="tooltip-text">This chart uses per capita values. i.e. show the cost/benefit per person in each area.</span>
                         </div>
                             {/if}
                         </div>
@@ -1091,7 +1090,7 @@ $: maxLookupName = ladLoaded && maxLookupValue in LADToName
     width: 30px;
     height: 30px;
     opacity: 0.75;
-    margin-top: -10px;
+    margin-top: -5px;
     margin-left: 3px;
 }
 
