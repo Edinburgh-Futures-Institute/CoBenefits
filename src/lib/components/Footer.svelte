@@ -17,12 +17,14 @@
         </div>
 
     <div id="footer-text">
-        Work funded by <a href="https://scotland-beyond-net-zero.ac.uk/">Scotland Beyond Net Zero.</a>
+        Work funded by 
+    <br>
+        <a href="https://scotland-beyond-net-zero.ac.uk/">Scotland Beyond Net Zero.</a>
     </div>
 
     <div>
         <ul id="footer-list">
-            <li><a href="https://docs.google.com/forms/d/1w-8Lt9bESZ56PdklTIT38plec7dPgDbJtORkatoXFVY/edit">Feedback</a></li>
+            <li style="margin-bottom: 10px;"><a href="https://docs.google.com/forms/d/1w-8Lt9bESZ56PdklTIT38plec7dPgDbJtORkatoXFVY/edit">Feedback</a></li>
             <li><a href="https://github.com/Edinburgh-Futures-Institute/CoBenefits">Code</a></li>
         </ul>
     </div>
@@ -74,6 +76,7 @@
         list-style-type: none; /* removes bullet points */
         padding: 0; /* removes left padding */
         margin: 0;  /* optional: removes default margin */
+        margin-right: 0.5em;
     }
 
     #footer-list > li {

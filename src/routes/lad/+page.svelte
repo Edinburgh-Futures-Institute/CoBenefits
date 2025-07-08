@@ -80,15 +80,17 @@
 
                     <!-- TODO: the number of England LAD is uncorrect currently -->
                     {#if nation == "England"}
-                        {nation} (317)
+                        <p>{nation} (317) - <span class="small-text">Click <a class="nation-link" href="{base}/nation?nation={nation}" target="_blank">here</a> for the England report page</span></p>
                     {:else}
-                        {nation} ({grouped[nation].length})
+                        <p>{nation} ({grouped[nation].length}) - <span class="small-text">Click <a class="nation-link" href="{base}/nation?nation={nation}" target="_blank">here</a> for the {nation} report page</span></p>
                     {/if}
 
 
                 </summary>
                 <div class="lad-grid">
+                    
                     {#each grouped[nation] as lad}
+                    
                         <a class="lad-link" href="{base}/location?location={lad.code}">{lad.name}</a>
                     {/each}
                 </div>
@@ -102,6 +104,10 @@
     main {
         padding: 2rem 4rem;
         font-family: Arial, sans-serif;
+    }
+    p {
+        font-size: 1em;
+        line-height: 1.6;
     }
 
     section {
@@ -127,7 +133,7 @@
     summary {
         font-size: 1.1em;
         font-weight: 600;
-        padding: 1em;
+        padding: 0em 1em;
         cursor: pointer;
         display: flex;
         align-items: center;
@@ -171,8 +177,23 @@
         display: block;
     }
 
+    .nation-link {
+        text-decoration: none;
+        color: #1a73e8;
+        font-weight: 600;
+        text-decoration: underline;
+        
+    }
+
     .lad-link:hover {
         text-decoration: underline;
         color: #155ab6;
     }
+
+    .small-text {
+        font-size: 0.9em;
+        display: inline; /* ensures it stays on the same line */
+        margin-left: 4px;
+        color: #333;
+     }
 </style>
