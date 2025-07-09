@@ -14,7 +14,7 @@
     let LADToNation = {};
     let entries = [];
     let grouped = {};
-    let nations = ["England", "Wales", "Northern Ireland", "Scotland"];
+    let nations = ["England", "Northern Ireland", "Scotland", "Wales"];
 
     const nationMap = {
         "NI": "Northern Ireland",
