@@ -80,9 +80,11 @@
 
                     <!-- TODO: the number of England LAD is uncorrect currently -->
                     {#if nation == "England"}
-                        <p>{nation} (317) - <span class="small-text">Click <a class="nation-link" href="{base}/nation?nation={nation}" target="_blank">here</a> for the England report page</span></p>
+                        <p>{nation} (317) </p>
+                            <!-- <span class="small-text">Click <a class="nation-link" href="{base}/nation?nation={nation}" target="_blank">here</a> for the England report page</span> -->
                     {:else}
-                        <p>{nation} ({grouped[nation].length}) - <span class="small-text">Click <a class="nation-link" href="{base}/nation?nation={nation}" target="_blank">here</a> for the {nation} report page</span></p>
+                        <p>{nation} ({grouped[nation].length}) </p>
+                            <!--<span class="small-text">Click <a class="nation-link" href="{base}/nation?nation={nation}" target="_blank">here</a> for the {nation} report page</span></p>-->
                     {/if}
 
 

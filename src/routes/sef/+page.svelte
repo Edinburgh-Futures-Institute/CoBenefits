@@ -94,14 +94,12 @@
     let map: MapUK;
     let mapDiv: HTMLElement;
 
-
     let scrolledPastHeader = false;
     let currentSection = '';
     const sectionIds = ['overview', 'compare'];
 
     let LADToName = {};
     let ladLoaded = false;
-    
 
     async function loadLADNames() {
     const eng = await csv(LADEngPath);
@@ -191,7 +189,6 @@
         LADSEFData = await getTableData(allCBgetAverageSEFGroupedByLAD(SEF));
         console.log("LADsef", LADSEFData);
         
-        
         PCData = await getTableData(getAggregationPerCapitaPerBenefit());
         console.log("per_capita_data", PCData);
         
@@ -202,7 +199,6 @@
         dataLoaded = true;
     }
 
-
     loadData().then(() => {
         map = new MapUK(fullData, "LSOA", mapDiv, "val", false, "Lookup_Value", false);
         map.initMap();
@@ -211,57 +207,58 @@
         // mapLegendDiv.append(legendSvg)
     });
 
+    let expanded = new Set();
+
+    function toggle(id) {
+        if (expanded.has(id)) {
+            expanded.delete(id);
+        } else {
+            expanded.add(id);
+        }
+        // Force reactivity
+        expanded = new Set(expanded);
+    }
+
+    // Setting up the data switches
     $: currentData = useLAD ? fullData : LADfullData;
     $: currentSEFData = useLAD ? SEFData : LADSEFData;
 
+    // Summary statistics
     $: averageValue = currentData
-  ? (d3.mean(currentData, d => d.val) ?? 0).toLocaleString('en-US', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
+    ? (d3.mean(currentData, d => d.val) ?? 0).toLocaleString('en-US', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
     })
-  : "N/A";
+    : "N/A";
 
-$: modeNumeric = currentData ? d3.mode(currentData, d => d.val) : null;
+    $: modeNumeric = currentData ? d3.mode(currentData, d => d.val) : null;
 
-$: labelLookup = SEF_LEVEL_LABELS[sefId];
-$: modeValue = modeNumeric != null && labelLookup
-  ? labelLookup[modeNumeric] ?? modeNumeric
-  : "N/A";
+    $: labelLookup = SEF_LEVEL_LABELS[sefId];
+    $: modeValue = modeNumeric != null && labelLookup
+    ? labelLookup[modeNumeric] ?? modeNumeric
+    : "N/A";
 
-$: maxIndex = currentData ? d3.maxIndex(currentData, d => d.val) : -1;
-$: maxLookupValue = maxIndex !== -1 && currentData
-  ? currentData[maxIndex].Lookup_Value?.trim()
-  : "N/A";
-$: maxValue = maxIndex !== -1 && currentData
-  ? (currentData[maxIndex].val ?? 0).toLocaleString('en-US', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
+    $: maxIndex = currentData ? d3.maxIndex(currentData, d => d.val) : -1;
+    $: maxLookupValue = maxIndex !== -1 && currentData
+    ? currentData[maxIndex].Lookup_Value?.trim()
+    : "N/A";
+    $: maxValue = maxIndex !== -1 && currentData
+    ? (currentData[maxIndex].val ?? 0).toLocaleString('en-US', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
     })
-  : "N/A";
+    : "N/A";
 
-$: minIndex = currentData ? d3.minIndex(currentData, d => d.val) : -1;
-$: minLookupValue = minIndex !== -1 && currentData
-  ? currentData[minIndex].Lookup_Value
-  : "N/A";
-$: minValue = minIndex !== -1 && currentData
-  ? (currentData[minIndex].val ?? 0).toLocaleString('en-US', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
+    $: minIndex = currentData ? d3.minIndex(currentData, d => d.val) : -1;
+    $: minLookupValue = minIndex !== -1 && currentData
+    ? currentData[minIndex].Lookup_Value
+    : "N/A";
+    $: minValue = minIndex !== -1 && currentData
+    ? (currentData[minIndex].val ?? 0).toLocaleString('en-US', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
     })
-  : "N/A";
-
-  $: minLookupName = ladLoaded && minLookupValue in LADToName
-  ? LADToName[minLookupValue]
-  : minLookupValue;
-
-$: maxLookupName = ladLoaded && maxLookupValue in LADToName
-  ? LADToName[maxLookupValue]
-  : maxLookupValue;
-
-  
-
-  console.log("Example Lookup_Value from currentData", currentData?.[0]?.Lookup_Value);
-  console.log("Known LAD codes", Object.keys(LADToName));
+    : "N/A";
 
     function toggleDataSource() {
     useLAD = !useLAD;
@@ -342,20 +339,19 @@ $: maxLookupName = ladLoaded && maxLookupValue in LADToName
                 y: {label: 'No. of datazones', labelArrow: false},
                 style: {fontSize: "16px"},
                 marks: [
-                    Plot.barY(currentData, Plot.groupX({ y: "count" }, { x: "val", fill: "black", opacity: 0.5})),
-                    Plot.ruleX([average], {
-                                stroke: "#BD210E",
-                                strokeWidth: 4,
-                                channels: {average: {value: average, label: "Average"}},
-                                tip: {format: {average:d => `${d.toFixed(2)}`, x:false}},
-                            }),
-                    Plot.dot(currentData, {
-                        x: {value: average, thresholds: 20},
-                        y: maxY + 0.1 * maxY,
-                        r: 5,
-                        fill: "#BD210E"
-
-                    }),
+                    Plot.barY(currentData, Plot.groupX({ y: "count" }, { x: "val", fill: "black", opacity: 0.5, tooltip: true })),
+                    //Plot.ruleX([average], {
+                    //            stroke: "#BD210E",
+                    //            strokeWidth: 4,
+                    //            channels: {average: {value: average, label: "Average"}},
+                    //            tip: {format: {average:d => `${d.toFixed(2)}`, x:false}},
+                    //        }),
+                    //Plot.dot(currentData, {
+                    //    x: {value: average, thresholds: 20},
+                    //    y: maxY + 0.1 * maxY,
+                    //    r: 5,
+                    //    fill: "#BD210E"
+                   // }),
                     // Plot.axisX({label: `${sefUnits}`, labelArrow: false, labelAnchor: "center"}),
                 ]
             })
@@ -405,8 +401,7 @@ $: maxLookupName = ladLoaded && maxLookupValue in LADToName
     }
 
     function renderJitterPlot() {
-            
-        
+  
         plotJitter?.append(
             Plot.plot({
                 height: height * 1.5,
@@ -492,8 +487,7 @@ $: maxLookupName = ladLoaded && maxLookupValue in LADToName
         })
     }
 
-    function renderMultPlotJitter() {
-        
+    function renderMultPlotJitter() {      
         CBS.forEach(CB => {
             let plot;
             plot = Plot.plot({
@@ -514,7 +508,7 @@ $: maxLookupName = ladLoaded && maxLookupValue in LADToName
                         y: "total",
                         fill: COBENEFS_SCALE(CB),
                         fillOpacity: 0.5,
-                        r:0.5,
+                        r:currentSEFData === LADSEFData ? 3.5 : 0.5,
                         channels: {
                             location: {value: "Lookup_Value", label: "Location"},
                             //sef: {value: "val", label: `${sefUnits}`},
@@ -530,7 +524,7 @@ $: maxLookupName = ladLoaded && maxLookupValue in LADToName
                     Plot.axisY({
                         label: "Per capita co-benefit value (£, thousand)",
                         labelArrow: false,
-                        labelAnchor: "center"
+                        labelAnchor: "top"
                     }),
                     Plot.axisX({label: `${sefUnits}`, labelArrow: false, labelAnchor: "center"}),
                 ]
@@ -543,49 +537,23 @@ $: maxLookupName = ladLoaded && maxLookupValue in LADToName
         return unit === "£" ? `${unit}${value}` : `${value} ${unit}`;
     }
 
-    let expanded = new Set();
-
-    function toggle(id) {
-        if (expanded.has(id)) {
-            expanded.delete(id);
-        } else {
-            expanded.add(id);
-        }
-        // Force reactivity
-        expanded = new Set(expanded);
-    }
-
     $: {
         plot?.firstChild?.remove(); // remove old chart, if any
         Object.values(plotSmallMult).forEach(multPlot => {
             multPlot.firstChild?.remove();
         })
 
-        if (height && dataLoaded) {
-
-            renderDistPlot();
-            renderJitterPlot();
-            
-            
-            // renderplotSmallMult();
-            renderMultPlotDot();
-            renderMultPlotJitter();
-        }
-
         if (dataLoaded && currentData) {
             renderDotPlot();
             renderBarPlot();
             renderMultPlotJitter();
             renderJitterPlot();
+            renderDistPlot();
+            renderJitterPlot();
+            renderMultPlotDot();
+            renderMultPlotJitter();
         }
     }
-
-
-    
-
-
-
-
 </script>
 
 <NavigationBar></NavigationBar>
@@ -615,7 +583,7 @@ $: maxLookupName = ladLoaded && maxLookupValue in LADToName
                     {#if SEF_CATEGORICAL.includes(sefId)}
                     -
                     {:else}
-                    Max value: <strong>{formatValue(maxValue, sefShortUnits)}</strong>({maxLookupValue} {maxLookupName})
+                    Max value: <strong>{formatValue(maxValue, sefShortUnits)}</strong>({maxLookupValue})
                     {/if}
                 </p>
                 <p class="definition-stat">
@@ -629,7 +597,7 @@ $: maxLookupName = ladLoaded && maxLookupValue in LADToName
                     {#if SEF_CATEGORICAL.includes(sefId)}
                     -
                     {:else}
-                    Min value: <strong>{formatValue(minValue, sefShortUnits)}</strong>({minLookupValue} {minLookupName})
+                    Min value: <strong>{formatValue(minValue, sefShortUnits)}</strong>({minLookupValue})
                     {/if}
                 </p>
             </div>
@@ -680,11 +648,7 @@ $: maxLookupName = ladLoaded && maxLookupValue in LADToName
                             <span class="tooltip-text">This chart uses per capita values. i.e. shows the cost/benefit per person in each area.</span>
                         </div>
                     </div>
-                    {#if SEF_CATEGORICAL.includes(sefId)}
-                    <div class="plot" bind:this={plotJitter}></div>
-                    {:else}
                     <div class="plot" bind:this={plotDot}></div>
-                    {/if}
                     
                 </div>
                 <div class="component column">

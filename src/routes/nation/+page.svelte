@@ -880,22 +880,37 @@
         <div>
             <p class="page-subtitle">Nation Report</p>
             <h1 class="page-title"> {NATION}</h1>
-            <p class="description">Explore how this local authority will benefit from achieving Net Zero and learn about
+            <p class="description">Explore how this nation will benefit from achieving Net Zero and learn about
                 the characteristics of its households.</p>
 
-            <div class="radio-set">
-                Compare {NATION} against:<br/>
-                <input type="radio" on:change={onChangeComparison} name="compare" value="UK" checked>
-                <label class="nation-label" for="html" >UK</label><br>
-                <input type="radio" on:change={onChangeComparison} name="compare" value="England">
-                <label class="nation-label" for="html">England</label><br>
-                <input type="radio" on:change={onChangeComparison} name="compare" value="Wales">
-                <label class="nation-label" for="html">Wales</label><br>
-                <input type="radio" on:change={onChangeComparison} name="compare" value="Scotland">
-                <label class="nation-label" for="javascript">Scotland</label>
-                <input type="radio" on:change={onChangeComparison} name="compare" value="NI">
-                <label class="nation-label" for="javascript">Northern Ireland</label>
-            </div>
+                <div class="radio-set">
+                    Compare {NATION} against:<br/>
+                  
+                    {#if NATION !== 'UK'}
+                      <input type="radio" on:change={onChangeComparison} name="compare" value="UK" checked>
+                      <label class="nation-label">UK</label><br>
+                    {/if}
+                  
+                    {#if NATION !== 'England'}
+                      <input type="radio" on:change={onChangeComparison} name="compare" value="England">
+                      <label class="nation-label">England</label><br>
+                    {/if}
+                  
+                    {#if NATION !== 'Wales'}
+                      <input type="radio" on:change={onChangeComparison} name="compare" value="Wales">
+                      <label class="nation-label">Wales</label><br>
+                    {/if}
+                  
+                    {#if NATION !== 'Scotland'}
+                      <input type="radio" on:change={onChangeComparison} name="compare" value="Scotland">
+                      <label class="nation-label">Scotland</label><br>
+                    {/if}
+                  
+                    {#if NATION !== 'NI'}
+                      <input type="radio" on:change={onChangeComparison} name="compare" value="NI">
+                      <label class="nation-label">Northern Ireland</label><br>
+                    {/if}
+                  </div>
         </div>
 
 
@@ -990,7 +1005,7 @@
             </div>
 
             <div class="component column">
-                <h3 class="component-title">Where is NATION?</h3>
+                <h3 class="component-title">Total co-benefits across {NATION}</h3>
                 <p class="description">NATION has been highlighted in dark grey on this UK map.</p>
                 <p class="description">*Scroll for zooming in and out</p>
                 <div id="map" bind:this={mapDiv}>
