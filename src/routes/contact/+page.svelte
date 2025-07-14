@@ -40,42 +40,32 @@
     </section>
 
     <section class="contact" id="training" style="margin-bottom: 100px;">
-      <h2>Training Sessions</h2>
+      <h2>Tutorial Sessions</h2>
       <p class="intro-paragraph">
-      We are planning a first set of tutorial sessions on the atlas to: (1) help you better understand the atlas (content, navigation, analysis, etc.); (2) have us help you with your task and to learn how we can improve the atlas; and (3) to meet other people who would like to use the atlas.
-      </p>
-
-      <p class="intro-paragraph" style="font-weight: 700;">
-      No pre-knowledge is required. Our team is here to answer your questions.
+      We now offer hands-on support for your use of the atlas—whether you're just getting started or already utilising it. These in-person or online, one-on-one sessions are part of our effort to disseminate and improve the atlas as well as studying how the atlas is used.
       </p>
 
       <p class="intro-paragraph">
-      Sessions are scheduled weekly on a Friday morning <strong>11-12pm</strong>, while alternating between online and in-person sessions. More sessions will be announced, please check back here! 
+        Sign-up: <a href="https://calendly.com/jwang120-ed/uk-co-benefit-atlas-tutorial" target="_blank" style="color: #646cff">Book via Calendly</a>
       </p>
 
       <p class="intro-paragraph">
-        Sign-up: <a href="https://forms.gle/KFrsGALcVK3XZNKr7" target="_blank" style="color: #646cff">https://forms.gle/KFrsGALcVK3XZNKr7</a>
+      For you, the sessions are a chance to: <br />
+      (1) get tailored help with navigating, interpreting, and applying the atlas to your tasks; <br />
+      (2) share your experience so we can improve the tool for everyone; <br />
+      (3) help us learn about your background and potential use cases so we can improve the atlas. <br />
       </p>
 
       <p class="intro-paragraph">
-        <ul style="max-width: 700px;">
-          <li>June 13: Online <a href="https://teams.microsoft.com/l/meetup-join/19%3ameeting_MzQzODYzNDMtNzRmMC00Mjg4LWJkYjktNTQ2MmFiNjNlMGIx%40thread.v2/0?context=%7b%22Tid%22%3a%222e9f06b0-1669-4589-8789-10a06934dc61%22%2c%22Oid%22%3a%221c4cc21f-0698-4756-b656-1d9b7595893a%22%7d" target="_blank">TEAMS-LINK</a></li>
-          <li>June 20: In-person, ECCI, The Pod. <span style="font-style: italic;">(on entering the ECCI building, continue into the atrium - The Pod is the first room on your right hand side, next to the individual meeting spaces)</span></li>
-          <li>June 27: Online <a href="https://teams.microsoft.com/l/meetup-join/19%3ameeting_MzQzODYzNDMtNzRmMC00Mjg4LWJkYjktNTQ2MmFiNjNlMGIx%40thread.v2/0?context=%7b%22Tid%22%3a%222e9f06b0-1669-4589-8789-10a06934dc61%22%2c%22Oid%22%3a%221c4cc21f-0698-4756-b656-1d9b7595893a%22%7d" target="_blank">TEAMS-LINK</a></li>
-          <li>July 4: In-person, ECCI, The Pod</li>
-        </ul>
-      <!-- </p> -->
-
-      <p class="intro-paragraph">
-          While no sign-up is required and drop-ins are possible, signing up helps us plan ahead. To have enough time for questions and to help you with your tasks, a session is limited to a max of 10 participants. You are welcome to join multiple sessions.
+      The one-on-one sessions are informal and conversational. No pre-knowledge is required. Our team is here to answer your questions. Sessions can last up to 45-60 minutes, and are scheduled flexibly via Calendly. You’re welcome to sign up whether you’ve used the atlas a little or not at all.
       </p>
 
       <p class="intro-paragraph">
-          Sessions are open to everyone, so please don't hesitate to forward this invitation and mailing list. If you have any questions, please reach out to us. 
+          Please feel free to forward this invitation to others who might be interested. If you have any questions, please reach out to us. 
       </p>
 
       <p class="intro-paragraph" style="font-style: italic; font-size: 1rem;">
-          Please note: To help improve the co-benefits atlas, we audio and video record the online training sessions and take notes during in-person sessions. Your participation in the training sessions indicates consent. Materials will be shared only among the atlas developer team at ECCI and the School of Informatics and, in case of use for scientific publication (e.g., summary of observations, quotes), will be fully anonymized. If you wish to exclude your quotes or examples, please contact us before or shortly after a session.
+          Please note: To help improve the Co-Benefits Atlas, we ask you for your consent to audio and video record the  sessions. These materials are used only within the atlas development team. If we include any observations in scientific publications (e.g., summaries or quotes), these will be fully anonymized. Our data collection process has been approved by the School of Informatics ethics board. After signing up to a session, you’ll receive a participant information sheet with more details. If at any point you’d prefer that your quotes or examples not be used, just let us know—before or shortly after your session.
       </p>
     </section>
 
