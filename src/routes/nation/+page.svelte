@@ -91,6 +91,7 @@
     async function loadData() {
         totalCBAllZones = await getTableData(getTotalCBAllDatazones());
         allCBsAllZones = await getTableData(getAllCBAllDatazones());
+        console.log("allCBsAllZones", allCBsAllZones)
 
         totalCBAllZones.forEach(datazone => {
             datazone.isPageLAD = (datazone.Nation == NATION) ? true : false
@@ -103,6 +104,7 @@
 
         oneNationData = await getTableData(getTotalCBForOneNation(NATION));
         oneNationAllCbs = await getTableData(getAllCBForOneNation(NATION));
+        console.log("oneNationAllCbs", oneNationAllCbs)
 
         totalValue = (d3.sum(oneNationData, d => d.total) / 1000).toFixed(3);
         totalValueMax = d3.max(totalCBAllLAD, d => d.val) / 1000;
@@ -171,8 +173,8 @@
 
     onMount(() => {
         addSpinner(element)
-        // map = new MapUK(LAD, "LAD", mapDiv, "val", true, "Lookup_value", false, null, 8);
-        // map.initMap(false);
+        map = new MapUK(totalCBAllLAD, "LAD", mapDiv, "val", true, "Lookup_value", false, null, 8);
+        map.initMap(false);
 
         window.addEventListener('scroll', handleScroll); // header scroll listener
 
@@ -363,15 +365,15 @@
                     //     fill: AVERAGE_COLOR,
                     //     tip: true
                     // })),
-                    Plot.barY(allCBAllLADSUM, Plot.groupX({y: "mean"}, {
-                        y: "val",
+                    Plot.barY(oneNationAllCbs, Plot.groupX({y: "mean"}, {
+                        y: "total",
                         x: "co_benefit_type",
                         dx: 12,
                         fill: AVERAGE_COLOR,
                         sort: {x: "y", reverse: true},
                         tip: true,
                     })),
-                    Plot.barY(oneLADAllCbs, Plot.groupX({y: "sum"}, {
+                    Plot.barY(oneNationAllCbs, Plot.groupX({y: "sum"}, {
                         y: "total",
                         x: "co_benefit_type",
                         dx: -12,
@@ -663,7 +665,7 @@
 
 
     function renderCBOverTimePlot() {
-        let dataLAD = oneLADData.flatMap(d => {
+        let dataNation = oneNationData.flatMap(d => {
             return TIMES.map(t => {
                 return {time: t, value: d[t], scenario: d.scenario, zone: "local"}
             })
@@ -673,7 +675,7 @@
                 return {time: t, value: d[t], scenario: d.scenario, zone: "UK"}
             })
         })
-        let data = dataLAD.concat(dataAllZones)
+        let data = dataNation.concat(dataAllZones)
 
         let plot = Plot.plot({
             height: height,
@@ -700,8 +702,9 @@
                 Plot.barY(data, Plot.groupX({y: "mean"}, {
                     x: "zone",
                     //dx: 30,
-                    y: "value",
                     fx: "time",
+                    y: "value",
+                    //fx: "time",
                     tip: false,
                     fill: "zone",
                     //sort: {x: "x", reverse: true},
@@ -717,68 +720,78 @@
 
 
 
-        let dataCBs = oneLADAllCbs.flatMap(d => {
-            return TIMES.map(t => {
-                return {time: t, value: d[t], cobenefit: d.co_benefit_type}
-            })
-        })
+// Flatten the data for plotting
+let dataCBs = oneNationAllCbs.flatMap(d => {
+    return TIMES.map(t => ({
+        time: t,
+        value: d[t],
+        cobenefit: d.co_benefit_type
+    }));
+});
 
-        let plotPerCB = Plot.plot({
-            height: height,
-            width: 1000,
-            marginRight: 0,
-            marginTop: 20,
-            marginLeft: 80,
-            marginBottom: 80,
-            insetTop: 30,
-            style: {fontSize: "20px"},
-            y: {
-                tickFormat: ".2f",
-                label: '£billion',
-                ticks: 10,
-                labelArrow: false,
-                title: ([d]) => `Cobenefit ${d.cobenefit}`
-            },
-            x: {
-                label: 'Years',
-                tickFormat: d => d.replace(/^Y/, '').replace("_", "-")
-            },
-            color: {legend: false, range: COBENEFS_RANGE, domain: COBENEFS.map(d => d.id)},
-            marks: [
-                Plot.areaY(dataCBs, Plot.groupX({y: "mean"},
-                    {
-                        x: "time",
-                        y: "value",
-                        fill: "cobenefit",
-                        curve: "basis",
-                        order: [
-                            "Road safety",
-                            "Congestion",
-                            "Air quality",
-                            "Noise",
-                            "Excess cold",
-                            "Excess heat",
-                            "Dampness",
-                            "Road repairs",
-                            "Physical activity",
-                            "Diet change",
-                            "Hassle costs"],
-                        tip: {
-                            format: {
-                                y: (d) => `${(+d).toFixed(3)}`,
-                                x: (d) => `${d.replace(/^Y/, '').replace("_", "-")}`,
-                                fill: (d) => `${d}`,
-                            }
-                        }
-                    })),
-                Plot.ruleY([0], {strokeWidth: 2, stroke: '#333333', opacity: 0.5, strokeLinecap: 'round'}),
-            ]
-        })
+// Area plot
+let plotPerCB = Plot.plot({
+    height: height,
+    width: 1000,
+    marginRight: 0,
+    marginTop: 20,
+    marginLeft: 80,
+    marginBottom: 80,
+    insetTop: 30,
+    style: {fontSize: "20px"},
+    y: {
+        tickFormat: ".2f",
+        label: '£billion',
+        ticks: 10,
+        labelArrow: false,
+    },
+    x: {
+        label: 'Years',
+        tickFormat: d => d.replace(/^Y/, '').replace("_", "-")
+    },
+    color: {
+        legend: false,
+        range: COBENEFS_RANGE,
+        domain: COBENEFS.map(d => d.id)
+    },
+    marks: [
+        Plot.areaY(dataCBs, Plot.groupX({y: "mean"}, {
+            x: "time",
+            y: "value",
+            fill: "cobenefit",
+            curve: "basis",
+            order: [
+                "Road safety",
+                "Congestion",
+                "Air quality",
+                "Noise",
+                "Excess cold",
+                "Excess heat",
+                "Dampness",
+                "Road repairs",
+                "Physical activity",
+                "Diet change",
+                "Hassle costs"
+            ],
+            tip: {
+                format: {
+                    y: (d) => `${(+d).toFixed(3)}`,
+                    x: (d) => `${d.replace(/^Y/, '').replace("_", "-")}`,
+                    fill: (d) => `${d}`,
+                }
+            }
+        })),
+        Plot.ruleY([0], {
+            strokeWidth: 2,
+            stroke: '#333333',
+            opacity: 0.5,
+            strokeLinecap: 'round'
+        }),
+    ]
+});
 
-
-        CBOverTimePerCBPLot?.append(plotPerCB);
-
-    }
+// Append to container
+CBOverTimePerCBPLot?.append(plotPerCB); }
 
     function removeChart(plotDiv) {
         // Select the figure element within the div
@@ -806,6 +819,8 @@
         if (plotPerCb) {
             removeChart(plotPerCb)
         } // remove old chart, if any
+        console.log("PLOT",plotPerCb);
+
         if (CBOverTimePLot) removeChart(CBOverTimePLot) // remove old chart, if any
         if (CBOverTimePerScenarioPLot) removeChart(CBOverTimePerScenarioPLot)
         if (CBOverTimePerCBPLot) removeChart(CBOverTimePerCBPLot)
@@ -815,9 +830,9 @@
         }
 
         if (dataLoaded && allCBAllLADSUM && totalCBAllLAD && totalCBAllZones) {
-            // renderPlot();
-            // renderPerCobenefPlot();
-            // renderCBOverTimePlot();
+            //renderPlot();
+            renderPerCobenefPlot();
+            renderCBOverTimePlot();
         }
     }
 
@@ -1128,7 +1143,7 @@
 
     </div>
 
-    <div class="section" id="households">
+  <!--  <div class="section" id="households">
         <div class="section-header">
             <p class="section-subtitle">Households</p>
             <h2 class="section-title">{NATION} social-economic factors</h2>
@@ -1140,10 +1155,10 @@
             <div id="se-title">
                 <h3 class="component-title">Comparing the Socio-Economic factors distributions of {NATION}
                     and {compareTo}, and their correlation with co-benefits.</h3>
-                <br>
+                <br>-->
 
 
-                <!-- Legend -->
+                <!-- Legend 
                 <div id="se-legend" class="legend-box">
                     <strong style="margin-bottom: 1rem;">Legend:</strong> <br/>
                     <ul class="legend-list">
@@ -1152,18 +1167,18 @@
                         <li><span class="legend-color" style="background-color: {AVERAGE_COLOR}"></span>
                             {compareTo}</li>
                     </ul>
-                </div>
+                </div>-->
 
-                <!-- Interpretation  -->
+                <!-- Interpretation  
                 <div id="se-legend" class="legend-box">
                     <strong style="margin-bottom: 1rem;">Interpreting the charts:</strong> <br/>
                     <p><strong>Barchart:</strong> Each bar represents the normalized frequency of datazones linked to a
                         given social economic factor value. </p>
                     <p><strong>Scatterplot:</strong> Each dot represents a datazone inside {NATION}. The cloud
                         shows the distribution for {compareTo}. </p>
-                </div>
+                </div>-->
 
-                <!-- Disclaimer -->
+                <!-- Disclaimer 
                 <div id="se-disclaimer" class="disclaimer-box">
                     <p style="margin: 0 0 1rem 0;"><strong>Correlation ≠ Causation:</strong> The scatter plots represent
                         modelled associations and should not be interpreted as direct causal relationships. </p>
@@ -1171,9 +1186,9 @@
                         factors are using categorical values where the x-axis is non-linear: EPC, Tenure, Typology, Fuel
                         type, Gas flag, Number of cars.</p>
                 </div>
-            </div>
+            </div>-->
 
-
+<!--
             <div id="multiple-comp">
                 {#each SE_FACTORS as sef}
                     <div class="household-column">
@@ -1213,10 +1228,10 @@
                                             across {sef.label}
                                             values</h3>
                                         <p class="description short">Density plot refers to UK distribution while the
-                                            scattered points refer to data zones in {NATION}.</p>
+                                            scattered points refer to data zones in {NATION}.</p>-->
                                         <!--                                    <div class="plot" bind:this={SEFPlotFullDistrib[sef]}>-->
-                                        <!--                                    </div>-->
-                                    </div>
+                                        <!--                                    </div>
+                                    <!--</div>
 
                                     <div>
                                         <div class="plot" bind:this={SEFPlotPerCB[sef.id]}>
@@ -1231,8 +1246,9 @@
             </div>
         </div>
 
-    </div>
 
+    </div>
+-->
 </div>
 <Footer></Footer>
 
