@@ -916,10 +916,10 @@ CBOverTimePerCBPLot?.append(plotPerCB); }
                 <div class="radio-set">
                     Compare {NATION} against:<br/>
                   
-                    <!--{#if NATION !== 'UK'}
+                    {#if NATION !== 'UK'}
                       <input type="radio" on:change={onChangeComparison} name="compare" value="UK" checked>
                       <label class="nation-label">UK</label><br>
-                    {/if}-->
+                    {/if}
                   
                     {#if NATION !== 'England'}
                       <input type="radio" on:change={onChangeComparison} name="compare" value="England">
