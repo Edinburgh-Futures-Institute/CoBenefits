@@ -72,8 +72,24 @@
     <p>Loading local authorities…</p>
 {:else}
     <main>
-        <h1>Browse local authorities</h1>
-        <p>Open the tabs and then click on a local authority for detailed reports.</p>
+        <h1>Browse by nation</h1>
+        <p>Click on a nation for a detailed report.</p>
+        <div class="sef-link-wrapper"> 
+            <a class="sef-link" href="{base}/nation?nation=England" target="_blank" >England</a> 
+        </div>
+        <div class="sef-link-wrapper"> 
+            <a class="sef-link" href="{base}/nation?nation=NI" target="_blank" >Northern Ireland</a> 
+        </div>
+        <div class="sef-link-wrapper"> 
+            <a class="sef-link" href="{base}/nation?nation=Scotland" target="_blank" >Scotland</a> 
+        </div>
+        <div class="sef-link-wrapper"> 
+            <a class="sef-link" href="{base}/nation?nation=Wales" target="_blank" >Wales</a> 
+        </div>
+        <br>
+        <br>
+        <h1>Browse by local authority</h1>
+        <p>Open the tabs and then click on a local authority for a detailed report.</p>
         {#each nations as nation}
             <details>
                 <summary>
@@ -194,8 +210,39 @@
 
     .small-text {
         font-size: 0.9em;
-        display: inline; /* ensures it stays on the same line */
+        display: inline;
         margin-left: 4px;
         color: #333;
      }
+
+    .sef-link-wrapper {
+        display: inline-flex; 
+        align-items: center;
+        gap: 0.5rem; 
+        background: #F8F8F8;
+        border: 1px solid #ECECEC;
+        border-radius: 5px;
+        padding-left: 1%;
+        padding-right: 1%;
+        padding-top: 0.5%;
+        padding-bottom: 0.5%;
+        margin: 5px 5px;
+    }
+    .sef-link-wrapper:hover {
+        background: #404040;
+}
+    .sef-link {
+        text-decoration: none;
+        color: #5A5A5A;
+        font-weight: 500;
+        display: block;
+        font-size: 1.2em;
+    }
+    .sef-link:hover {
+    color: #F8F8F8;
+    background: #404040
+}
+.sef-link-wrapper:hover .sef-link {
+    color: #F8F8F8;
+}
 </style>

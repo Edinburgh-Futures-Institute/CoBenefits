@@ -178,7 +178,10 @@
     }
     .sef-link-wrapper:hover {
         background: #404040;
-}
+    }   
+    .sef-link-wrapper:hover .sef-link {
+    color: #F8F8F8;
+    }
 .disclaimer-box {
     margin-bottom: 0rem;
     padding: 0.5rem;

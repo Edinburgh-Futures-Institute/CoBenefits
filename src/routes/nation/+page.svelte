@@ -98,6 +98,7 @@
         })
 
         totalCBAllLAD = await getTableData(getSUMCBGroupedByLAD([]));
+        console.log("totalCBAllLAD", totalCBAllLAD)
         allCBAllLAD = await getTableData(getAverageCBGroupedByLAD(COBENEFS.map(d => d.id)));
 
         allCBAllLADSUM = await getTableData(getSUMCBGroupedByLADAndCB());
@@ -173,8 +174,8 @@
 
     onMount(() => {
         addSpinner(element)
-        map = new MapUK(totalCBAllLAD, "LAD", mapDiv, "val", true, "Lookup_value", false, null, 8);
-        map.initMap(false);
+        map = new MapUK(totalCBAllLAD, "LAD", mapDiv, "val", true, "Lookup_value", false);
+        map.initMap();
 
         window.addEventListener('scroll', handleScroll); // header scroll listener
 
@@ -346,6 +347,7 @@
                 ...MARGINS,
                 marginBottom: 80,
                 marginTop: 30,
+                marginLeft: 80,
                 x: {type: "band", padding: 0.6},
                 y: {grid: true},
                 style: {fontSize: "14px"},
@@ -365,8 +367,8 @@
                     //     fill: AVERAGE_COLOR,
                     //     tip: true
                     // })),
-                    Plot.barY(oneNationAllCbs, Plot.groupX({y: "mean"}, {
-                        y: "total",
+                    Plot.barY(allCBAllLADSUM, Plot.groupX({y: "sum"}, {
+                        y: "val",
                         x: "co_benefit_type",
                         dx: 12,
                         fill: AVERAGE_COLOR,
@@ -686,7 +688,7 @@
             marginTop: 40,
             marginBottom: 60,
             style: {fontSize: "18px"},
-            y: {label: '£billion', grid: true, labelArrow: false},
+            y: {label: '£Billion', grid: true, labelArrow: false},
             x: {tickSize: 0, label: null, ticks: [], padding: 0.3},
             color: {range: [AVERAGE_COLOR, VIS_COLOR], legend: false},
             // color: {range: [VIS_COLOR, NATION_TO_COLOR[compareTo]]},
@@ -809,6 +811,19 @@ CBOverTimePerCBPLot?.append(plotPerCB); }
         }
     }
 
+        let expanded = new Set();
+
+    function toggle(id) {
+        if (expanded.has(id)) {
+            expanded.delete(id);
+        } else {
+            expanded.add(id);
+        }
+        // Force reactivity
+        expanded = new Set(expanded);
+    }
+
+
 
     $: {
         // remove old chart, if any
@@ -901,10 +916,10 @@ CBOverTimePerCBPLot?.append(plotPerCB); }
                 <div class="radio-set">
                     Compare {NATION} against:<br/>
                   
-                    {#if NATION !== 'UK'}
+                    <!--{#if NATION !== 'UK'}
                       <input type="radio" on:change={onChangeComparison} name="compare" value="UK" checked>
                       <label class="nation-label">UK</label><br>
-                    {/if}
+                    {/if}-->
                   
                     {#if NATION !== 'England'}
                       <input type="radio" on:change={onChangeComparison} name="compare" value="England">
@@ -1021,7 +1036,7 @@ CBOverTimePerCBPLot?.append(plotPerCB); }
 
             <div class="component column">
                 <h3 class="component-title">Total co-benefits across {NATION}</h3>
-                <p class="description">NATION has been highlighted in dark grey on this UK map.</p>
+                <p class="description">Click a region to visit the Local Authority Report Page</p>
                 <p class="description">*Scroll for zooming in and out</p>
                 <div id="map" bind:this={mapDiv}>
                 </div>
@@ -1076,58 +1091,63 @@ CBOverTimePerCBPLot?.append(plotPerCB); }
                         intervals for each co-benefit. The curve between points is smoothed to show the general
                         trends.</p>
 
-                    <!-- Legend -->
+                    <!-- Legend 
                     <div id="main-legend" class="legend-box" style="margin-bottom: 5px;">
                         <strong style="margin-bottom: 0.5rem;">Legend:</strong> <br/>
                         <ul class="horizontal-legend-list" style="margin-bottom:5px">
-                            <!--                            <li><span class="legend-color" style="background-color: #D3A029"></span>-->
-                            <!--                                Diet change-->
-                            <!--                            </li>-->
-                            <!--                            <li><span class="legend-color" style="background-color: #48773E"></span>-->
-                            <!--                                Physical activity-->
-                            <!--                            </li>-->
-                            <!--                            <li><span class="legend-color" style="background-color: #183668"></span>-->
-                            <!--                                Dampness-->
-                            <!--                            </li>-->
-                            <!--                            <li><span class="legend-color" style="background-color: #00AED9"></span>-->
-                            <!--                                Excess cold-->
-                            <!--                            </li>-->
-                            <!--                            <li><span class="legend-color" style="background-color: #E11484"></span>-->
-                            <!--                                Noise-->
-                            <!--                            </li>-->
-                            <!--                            <li><span class="legend-color" style="background-color: #71C35D"></span>-->
-                            <!--                                Air quality-->
-                            <!--                            </li>-->
-                            <!--                            <li><span class="legend-color" style="background-color: #8F1838"></span>-->
-                            <!--                                Congestion-->
-                            <!--                            </li>-->
-                            <!--                            <li><span class="legend-color" style="background-color: #EF402B"></span>-->
-                            <!--                                Excess heat-->
-                            <!--                            </li>-->
-                            <!--                            <li><span class="legend-color" style="background-color: #F36D25"></span>-->
-                            <!--                                Road safety-->
-                            <!--                            </li>-->
-                            <!--                            <li><span class="legend-color" style="background-color: #F99D26"></span>-->
-                            <!--                                Road repairs-->
-                            <!--                            </li>-->
-                            <!--                            <li><span class="legend-color" style="background-color: #C31F33"></span>-->
-                            <!--                                Hassle costs-->
-                            <!--                            </li>-->
-
-                            {#each COBENEFS as cobenef}
+                         {#each COBENEFS as cobenef}
                                 <li><span class="legend-color"
                                           style="background-color: {COBENEFS_SCALE(cobenef.id)}"></span>
                                     <a href="{base}/cobenefit?cobenefit={cobenef.id}"
                                        target="_blank"
                                        class="link">
-                                        <!--{cobenef.label.split(" ").slice(0, 2).join(" ")}-->
-                                        {cobenef.label}
+                                        {cobenef.label.split(" ").slice(0, 2).join(" ")}-->
+                                        <!--{cobenef.label}
                                     </a>
                                 </li>
                             {/each}
 
                         </ul>
 
+                    </div>-->
+                    <div id="main-legend" class="legend-box">
+                    <strong>Co-benefits:</strong><br>Expand for detailed explanation
+                    <div style="height: 0.8em;"></div>
+                    <div class="legend-items-grid">
+                        {#each COBENEFS as CB}
+                        <div class="legend-item">
+                            <div class="legend-header" on:click={() => {
+                                const wasExpanded = expanded.has(CB.id);
+                                toggle(CB.id);
+                                
+                                if (!wasExpanded) {
+                                    posthog.capture('cobenefit opened', {
+                                        cobenefit: CB.label
+                                    });
+                                } else {
+                                    posthog.capture('cobenefit closed', {
+                                        cobenefit: CB.label
+                                    });
+                                }
+                            }} style="cursor: pointer;">
+                                <span class="legend-color" style="background-color: {COBENEFS_SCALE(CB.id)};"></span>
+                                <span class="legend-text {expanded.has(CB.id) ? 'expanded' : ''}" >{CB.label}</span>
+                                <span class="toggle-icon">{expanded.has(CB.id) ? "▲" : "▼"}</span>
+                            </div>
+                            {#if expanded.has(CB.id)}
+                            <div class="legend-description-box">
+                            <div class="legend-description">
+                                <div style="height: 0.8em;"></div>
+                                {CB.def} <br>
+                                <div class="link-box">
+                                <a class="link" href="{base}/cobenefit?cobenefit={CB.id}" target="_blank" rel="noopener noreferrer" style= "color:{COBENEFS_SCALE(CB.id)}; text-decoration: underline">{CB.id} report page</a>
+                                </div>
+                            </div>
+                            </div>
+                            {/if}
+                        </div>
+                        {/each}
+                        </div>
                     </div>
 
                 </div>
@@ -1455,4 +1475,30 @@ CBOverTimePerCBPLot?.append(plotPerCB); }
         margin-left: auto;
         /*margin-right: 10%;*/
     }
+
+    .legend-items-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 0rem 1.5rem; /* row gap, column gap */
+}
+
+.toggle-icon {
+    margin-left: auto;
+    font-size: 0.8em;
+    opacity: 0.6;
+}
+
+.legend-description {
+    margin-left: 0.1em;
+    margin-right: 0em;
+    padding: 1em;
+    padding-top: 0em;
+    font-size: 0.8em;
+    color: #555;
+}
+.legend-description-box {
+    margin: 0.5em 0em;
+    background-color: #f9f9f9;
+    border-radius: 4px;
+}
 </style>

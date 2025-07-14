@@ -19,7 +19,7 @@ import seFactors from '$lib/definitions/se-factor.json'
 
 
 export let CBS = coBenefits.map(f => f.id);
-export const COBENEFS = coBenefits.map(d => ({ id: d.id, label: d.label }));
+export const COBENEFS = coBenefits.map(d => ({ id: d.id, label: d.label, def: d.def }));
 export let CO_BEN = coBenefits.map(d => ({ id: d.id, label: d.label, def: d.def  }));
 export const DEFINITIONS = coBenefits.map(d => ({ id: d.id, def: d.def }));
 
