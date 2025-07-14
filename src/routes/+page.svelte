@@ -59,7 +59,7 @@
 
     async function loadData() {
         aggregationPerBenefit = await getTableData(getAggregationPerBenefit());
-        console.log("aggregationPerBenefit", aggregationPerBenefit);
+        // console.log("aggregationPerBenefit", aggregationPerBenefit);
         // for landing page LAD columns
 
         aggregationPerCapitaPerBenefit = await getTableData(getAggregationPerCapitaPerBenefit());
@@ -67,34 +67,18 @@
 
         aggregationPerBenefit = [...aggregationPerBenefit].sort((a, b) => b.total - a.total);
         aggregationPerCapitaPerBenefit = [...aggregationPerCapitaPerBenefit].sort((a, b) => b.total_value - a.total_value);
-        console.log("aggregationPerCapitaPerBenefit", aggregationPerCapitaPerBenefit);
+        // console.log("aggregationPerCapitaPerBenefit", aggregationPerCapitaPerBenefit);
 
         // aggregationPerCapita = totalAggregation[0].total_value_per_capita;
         aggregationPerCapita = d3.sum(aggregationPerCapitaPerBenefit, d => d.value_per_capita)
 
-        console.log("aggregationPerCapita", aggregationPerCapita);
+        // console.log("aggregationPerCapita", aggregationPerCapita);
 
 
         maxCoBenefValue = Math.max(...aggregationPerCapitaPerBenefit.map(d => d.total_value));
         minCoBenefValue = Math.min(...aggregationPerCapitaPerBenefit.map(d => d.total_value));
         minHHCoBenefValue = Math.min(...aggregationPerCapitaPerBenefit.map(d => d.value_per_capita));
         maxHHCoBenefValue = Math.max(...aggregationPerCapitaPerBenefit.map(d => d.value_per_capita));
-
-        // await csv(LADEngPath).then(data => {
-        //     for (let lad of data) {
-        //         LADToName[lad.LAD22CD] = lad.LAD22NM;
-        //     }
-        // })
-        // await csv(LADNIPath).then(data => {
-        //     for (let lad of data) {
-        //         LADToName[lad.LGD2014_code] = lad.LGD2014_name;
-        //     }
-        // })
-        // await csv(LADScotlandPath).then(data => {
-        //     for (let lad of data) {
-        //         LADToName[lad.LA_Code] = lad.LA_Name;
-        //     }
-        // })
 
         dataLoading = false;
     }
@@ -196,7 +180,7 @@
                 // const percent = totalValue > 0 ? ((total / totalValue) * 100).toFixed(2) + "%" : "0%";
                 const percent = totalValue > 0 ? ((total / totalValue) * 100).toFixed(2) : 0;
 
-                console.log("percentage", type, total, totalValue, percent);
+                // console.log("percentage", type, total, totalValue, percent);
 
                 return {
                     type,
@@ -223,7 +207,7 @@
             activeIcon = icon;
 
             renderWaffle(height, type);
-        }, 5000);
+        },6000);
 
         // On default load, show the total
         // const firstSlide = slides[0];
@@ -235,8 +219,6 @@
         activePerCapitaLabel = firstSlide.perCapitaValue;
         activePercentLabel = firstSlide.percentValue;
         renderWaffle(height, firstSlide.type);
-
-        console.log("update display", slides)
     }
 
     function renderWaffle(height: number, highlightType?: string) {
@@ -245,49 +227,76 @@
 
         waffleEl.innerHTML = "";
 
-        // waffle size
-        const unitSize = 20; // fixed size of each square in pixels
-        const gridWidth = 15; // fixed number of columns
-        const gridHeight = Math.floor(height / unitSize); // number of rows that fit in the hero height
-        const gridSize = gridWidth * gridHeight;
+        let totalSquares = 0;
+        const squaresPerUnit = 1;
+        const gridWidth = 12;
+        const positiveSquares = [];
+        const negativeSquares = [];
 
-        const total = aggregationPerBenefit.reduce((sum, d) => sum + d.total, 0);
-        const squares = [];
-
-        // grid sizes
         for (const item of aggregationPerBenefit) {
-            const absCount = Math.round((Math.abs(item.total) / total) * gridSize);
-            const isNegative = item.total < 0;
-            for (let i = 0; i < absCount; i++) {
-                squares.push({
-                    type: item.co_benefit_type,
-                    negative: isNegative
-                });
+            // squareCount: totals squares in the waffle
+            const squareCount = Math.round(Math.abs(item.total) / squaresPerUnit);
+            totalSquares += squareCount;
+            // squareData: make an array for each coben type
+            const squareData = Array.from({ length: squareCount }, () => ({
+                type: item.co_benefit_type,
+                negative: item.total < 0
+            }));      
+            // push into pos/neg arrays
+            // postiveSquares and negativeSquares: array holding coben types in their sqaure counts
+            if (item.total < 0) {
+                negativeSquares.push(...squareData);
+            } else {
+                positiveSquares.push(...squareData);
             }
         }
-        while (squares.length < gridSize) {
-            squares.push({type: "empty"});
-        }
+        const posRows = Math.ceil(positiveSquares.length / gridWidth);
+        const negRows = Math.ceil(negativeSquares.length / gridWidth);
+        const totalRows = posRows + negRows;
+        const unitSize = Math.floor(height / totalRows); 
 
-        // Sort
-        squares.sort((a, b) => {
-            // Move 'empty' to the end
-            if (a.type === "empty") return 1;
-            if (b.type === "empty") return -1;
-
-            // negative values at the end
-            if (a.negative && !b.negative) return 1;
-            if (!a.negative && b.negative) return -1;
-
-            return 0;
-        });
-
-        waffleData = squares.map((d, i) => ({
+        const posData = positiveSquares.map((d, i) => ({
             x: i % gridWidth,
             y: Math.floor(i / gridWidth),
             ...d
         }));
+        const negData = negativeSquares.map((d, i) => ({
+            x: i % gridWidth,
+            y: posRows + Math.floor(i / gridWidth),
+            ...d
+        }));
 
+        // coordinates in the waffle: x from 0 to gridWidth, y from 0 to totalRows
+        waffleData = [...posData, ...negData];
+        // console.log("waffleData", waffleData);
+
+        // text labels for right side axis
+        const labelStep = 50;
+        const maxLabel = Math.floor(posRows * gridWidth / labelStep) * labelStep;
+        const minLabel = -Math.floor(negRows * gridWidth / labelStep) * labelStep;
+
+        const labelsContainer = document.getElementById("waffleLabels");
+        if (labelsContainer) {
+        labelsContainer.innerHTML = "";
+
+        for (let value = maxLabel; value >= minLabel; value -= labelStep) {
+            const offsetSquares = posRows * gridWidth - value;  // squares from top
+            const rowIndex = offsetSquares / gridWidth;
+            const label = document.createElement("div");
+            label.textContent = `${value > 0 ? "+" : ""}${value}bn`;
+            label.style.position = "absolute";
+            label.style.left = "0";
+            const fontSize = Math.max(8, Math.floor(unitSize * 0.6));
+            const yPos = rowIndex * unitSize + unitSize / 2 - fontSize / 2 - 15;
+            label.style.top = `${yPos}px`;
+            label.style.fontSize = `${fontSize}px`;
+            label.style.lineHeight = "1";
+            labelsContainer.appendChild(label);
+            }
+        
+        labelsContainer.style.height = `${unitSize * totalRows}px`;
+        }
+        
         // for hero backeground sequence
         waffleOrderedTypes = Array.from(
             new Set(waffleData.map(d => d.type).filter(type => type !== "empty"))
@@ -295,12 +304,12 @@
 
         slides = getHeroSlides(waffleOrderedTypes);
 
-        // console.log("waffle height", height);
         const highlight = highlightType ?? null;
         const plot = Plot.plot({
-            width: unitSize * gridWidth,
-            height: unitSize * gridHeight,
+            width: unitSize * gridWidth * 1.1,
+            height: unitSize * totalRows - 30,
             margin: 0,
+            marginRight: 35,
             x: {axis: null},
             y: {axis: null},
             color: {
@@ -319,6 +328,11 @@
                     fillOpacity: d => (highlight && d.type !== highlight ? 0.15 : 1)
                 }),
 
+                Plot.ruleY([posRows * unitSize - 10], {
+                    stroke: "grey",
+                    strokeWidth: 1.2
+                }),
+
                 // Outlined rects (negative values)
                 Plot.rect(waffleData.filter(d => d.negative), {
                     x: d => d.x * unitSize,
@@ -332,10 +346,9 @@
         });
         // white background
         if (waffleBgEl) {
-            waffleBgEl.style.width = `${unitSize * gridWidth}px`;
+            waffleBgEl.style.width = `${unitSize * gridWidth + 30}px`;
             waffleBgEl.style.height = `${height}px`;
-        }
-        ;
+        };
 
         waffleEl.innerHTML = "";
         waffleEl.append(plot);
@@ -363,8 +376,15 @@
 
         loadData().then(() => {
             fetchLADData();
+
             const heroHeight = heroEl.getBoundingClientRect().height;
-            renderWaffle(heroHeight);
+            const topLabelEl = document.getElementById("waffleTopLabel");
+            const bottomLabelEl = document.getElementById("waffleBottomLabel");
+            const topHeight = topLabelEl?.offsetHeight ?? 0;
+            const bottomHeight = bottomLabelEl?.offsetHeight ?? 0;
+            const availableHeight = heroHeight - topHeight - bottomHeight;
+
+            renderWaffle(availableHeight);
             startWaffleHighlightLoop(heroHeight);
             removeSpinner(element);
         })
@@ -382,12 +402,6 @@
 
     <section class="hero-container" bind:this={heroEl}>
         {#each slides as slide, index}
-            <!-- <div
-              class="hero-slide"
-              style="background-image: url({slide.image});"
-              class:active={index === currentIndex}
-              class:previous={index === previousIndex}
-            /> -->
             <div
                     class="hero-slide"
                     class:active={index === currentIndex}
@@ -421,6 +435,7 @@
             </div>
 
             <div class="waffle-overlay">
+                
                 <div class="waffle-label" bind:this={waffleLabelEl}>
 
                     <div class="waffle-header">
@@ -480,7 +495,13 @@
                 </div>
 
                 <div class="waffle-bg" bind:this={waffleBgEl}></div>
-                <div bind:this={waffleEl}></div>
+
+                <span id="waffleTopLabel" class="waffle-text">Co-benefits</span>
+                
+                <div bind:this={waffleEl} class="waffle"></div>
+                <div id="waffleLabels" class="waffle-chart-labels"></div>
+                
+                <span id="waffleBottomLabel" class="waffle-text">Negative impacts</span>
             </div>
     </section>
 
@@ -701,7 +722,8 @@
     .waffle-overlay {
         position: absolute;
         top: 0;
-        right: 0.5rem;
+        padding-top: 0px;
+        right: 2rem;
         /* width: 150px;
         height: 150px; */
         pointer-events: none;
@@ -710,6 +732,13 @@
         align-items: start;
         justify-content: flex-start;
         /* background-color: white; */
+    }
+
+    .waffle-text {
+        padding-left: 8px;
+        font-size: 0.9rem;
+        font-style: oblique;
+        color: #333;
     }
 
     .waffle-bg {
@@ -739,6 +768,19 @@
         align-items: flex-start;
         justify-content: flex-start;
         border-radius: 12px;
+    }
+
+    .waffle-chart-labels {
+        position: absolute;
+        top: 0;
+        left: 82%; /* place it to the right of the waffle */
+        margin-left: 10px;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        font-size: 10px;
+        line-height: 1;
+        color: #444;
     }
 
     .waffle-header {
