@@ -680,7 +680,7 @@
         let data = dataNation.concat(dataAllZones)
 
         let plot = Plot.plot({
-            height: height,
+            height: height* 1.5,
             width: 800,
             ...MARGINS,
             marginRight: 0,
@@ -1053,7 +1053,7 @@ CBOverTimePerCBPLot?.append(plotPerCB); }
                 co-benefits.</p>
         </div>
         <div id="vis-block">
-            <div id="main-block" class="component column">
+            <div id="main-block" class="component-left column">
                 <div>
                     <h3 class="component-title">Total co-benefit distribution from 2025-2049 (vs. <span
                             class="nation-label">{compareTo}</span> Average)</h3>
@@ -1084,7 +1084,7 @@ CBOverTimePerCBPLot?.append(plotPerCB); }
                 <!-- </div> -->
                 <!-- </div> -->
             </div>
-            <div id="main-block" class="component column">
+            <div id="main-block" class="component-right column">
                 <div>
                     <h3 class="component-title">Co-benefit gain/loss for {NATION} over 5 year intervals</h3>
                     <p class="description" style="margin-bottom:5px">Total gains and losses are shown at five-year
@@ -1500,5 +1500,29 @@ CBOverTimePerCBPLot?.append(plotPerCB); }
     margin: 0.5em 0em;
     background-color: #f9f9f9;
     border-radius: 4px;
+}
+
+.component-left {
+    flex: 1;
+    background: #F8F8F8;
+    border: 1px solid #ECECEC;
+    border-radius: 15px;
+    padding-left: 1%;
+    padding-right: 1%;
+    padding-top: 15px;
+    padding-bottom: 10px;
+    margin: 10px 0
+}
+
+.component-right {
+    flex: 1.5;
+    background: #F8F8F8;
+    border: 1px solid #ECECEC;
+    border-radius: 15px;
+    padding-left: 1%;
+    padding-right: 1%;
+    padding-top: 15px;
+    padding-bottom: 10px;
+    margin: 10px 0
 }
 </style>
