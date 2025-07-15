@@ -508,7 +508,21 @@
 
     <section id="explore-section">
 
-        <h1 id="explore-title">Explore the Atlas</h1>
+        <div class="explore-header">
+            <h1 id="explore-title">Explore the Atlas</h1>
+            <div class="explore-block search-section">
+                <div class="search-label-and-input">
+                    <h1 class="search-label">Find My Place</h1>
+                    <div class="search-container">
+  <LADSearch
+    items={LADToName}
+    on:search={(e) => handleSearch(e.detail)}
+  />
+</div>
+                </div>
+            </div>
+        </div>
+        
         <div id="explore-section-main">
 
             <div class="explore-block">
@@ -548,7 +562,7 @@
                     <a href="{base}/map">
                         <div class="explore-page">
                             <img class="page-teaser-img" src="{base}/pages-teasers/map.png"/>
-                            <h3>1 Interactive Map</h3>
+                            <h3>Interactive Map</h3>
                             <p> The interactive map enables exploring the spatial distributions of both the co-benefits
                                 and the socio-economic factors at the datazones and local area levels.</p>
 
@@ -557,28 +571,30 @@
                 </div>
             </div>
 
-            <div class="explore-block search-section">
-                <h1>Find My Place</h1>
-                <LADSearch
-                        items={LADToName}
-                        on:search={(e) => handleSearch(e.detail)}
-                />
+
+            <div class="explore-block story-section">
+    <h1>Read Stories and Analyses</h1>
+<hr>
+    <div class="explore-pages story-pages">
+        <a href="{base}/stories/Derry_story.docx" download="story">
+            <div class="story">
+                <img class="story-teaser-img" src="{base}/stories/Derry_picture.png"/>
+                <h3>Accelerating climate financing in Derry City and Strabane District Council</h3>
+                <hr>
             </div>
+        </a>
+    </div>
 
-            <div class="explore-block">
-                <h1>Read Stories and Analyses</h1>
-
-                <div class="explore-pages">
-                    <a href="{base}/stories/Derry_story.docx" download="story">
-                        <div class="story">
-                            <img class="story-teaser-img" src="{base}/stories/Derry_picture.png"/>
-                            <h3>Accelerating climate financing in Derry City and Strabane District Council</h3>
-                            <!--                        <p> A Co-benefit page shows the spatial and temporal distribution of a given co-benefit, and its relationship with socio-economic factors. </p>-->
-                        </div>
-                    </a>
-                </div>
-
+    <div class="explore-pages story-pages">
+            <div class="story">
+                <br>
+                <h3>More to come...</h3>
+                <p>In the mean time, if you have your own ideas for stories and analysis related to co-benefits, please get in touch using the
+                    <a href="https://docs.google.com/forms/d/1w-8Lt9bESZ56PdklTIT38plec7dPgDbJtORkatoXFVY/viewform?edit_requested=true">feedback form.</a></p>
+                
             </div>
+    </div>
+</div>
 
         </div>
 
@@ -905,26 +921,27 @@
         margin-top: 2rem;
     }
 
-    .search-section {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        padding: 2rem 1rem;
-        text-align: center;
-    }
+.search-section {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start; /* Align to the left */
+    justify-content: center;
+    padding: 2rem 5rem;
+    text-align: left;
+}
 
     .search-section h1 {
         font-size: 1.5rem;
-        margin-bottom: 1rem;
+        margin-bottom: 0rem;
         font-weight: bold;
     }
 
     .explore-block {
-        padding: 10px;
-        background-color: #f9f9f9;
+        padding: 0px 15px;
+        background-color: #fdfdfd;
         border: 1px solid lightgray;
         flex-grow: 1;
+        border-radius: 8px;
 
     }
 
@@ -947,9 +964,16 @@
         gap: 2%;
     }
 
+        .story > h3 {
+        /*height: 3.5rem;*/
+        font-weight: 400;
+        line-height: 24px;
+        margin-top: 2px;
+    }
+
     .explore-page {
         /*border: 1px solid black;*/
-        background-color: #f9f9f9;
+        background-color: #fdfdfd;
         max-width: 14rem;
         /*margin-right: 1rem;*/
         display: flex;
@@ -961,7 +985,16 @@
 
     /* Need fixed height so text afterwards starts at same y position*/
     .explore-page > h3 {
-        height: 3.5rem;
+        /*height: 3.5rem;*/
+        font-weight: 500;
+    }
+
+    .explore-page p {
+        margin-top: 0rem;
+        padding-bottom: 0;
+        color: #333;
+        font-weight: 400;
+        font-size: 15px;
     }
 
     .explore-page > p {
@@ -978,16 +1011,63 @@
     .page-teaser-img {
         width: 100%;
         height: 300px;
-
+        border-color: #333;
+        border-width: 1px;
         object-fit: cover;
         object-position: center;
     }
 
-    .story-teaser-img {
-        width: 100%;
+.story-teaser-img {
+    width: 320px;
+    height: auto;
+    /*border-top: 2px solid #999;
+    border-bottom: 2px solid #999;*/
+    object-fit: cover;
+    object-position: center;
+}
 
-        object-fit: cover;
-        object-position: center;
-    }
+.explore-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 5rem;
+    flex-wrap: wrap;
+}
+
+#explore-title {
+    margin: 2rem;
+}
+
+.search-label-and-input {
+    display: flex;
+    align-items: center;
+    gap: 1.75rem;
+    max-width: 100%;
+}
+
+.search-label {
+    font-size: 1rem;
+    margin: 0rem;
+    margin-left: 2rem;
+    white-space: nowrap; /* keeps text on one line */
+}
+
+.search-container {
+  width: 600px; /* or any width you prefer */
+}
+
+.search-container * {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.story-section {
+    max-width: 320px; /* image width + padding */
+    margin: 0 auto;
+}
+
+.story-pages {
+    justify-content: center;
+}
 
 </style>
