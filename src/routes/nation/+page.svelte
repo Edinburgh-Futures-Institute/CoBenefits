@@ -102,6 +102,7 @@
         allCBAllLAD = await getTableData(getAverageCBGroupedByLAD(COBENEFS.map(d => d.id)));
 
         allCBAllLADSUM = await getTableData(getSUMCBGroupedByLADAndCB());
+        console.log("allCBAllLADSUM", allCBAllLADSUM)
 
         oneNationData = await getTableData(getTotalCBForOneNation(NATION));
         oneNationAllCbs = await getTableData(getAllCBForOneNation(NATION));
