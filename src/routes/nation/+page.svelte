@@ -1028,7 +1028,7 @@ CBOverTimePerCBPLot?.append(plotPerCB); }
 
                 <h3 class="component-title">11 types of co-benefit values (vs. <span
                         class="nation-label">{compareTo}</span> Average)</h3>
-                <p class="description">Co-benefit values for {NATION} compared to average value of benefits
+                <p class="description">Total co-benefit values for {NATION} compared to total benefits/costs
                     received across all local
                     authorities in <span class="nation-label">{compareTo}</span> (grey).</p>
                 <div class="plot" bind:this={plotPerCb}>
@@ -1036,8 +1036,8 @@ CBOverTimePerCBPLot?.append(plotPerCB); }
             </div>
 
             <div class="component column">
-                <h3 class="component-title">Total co-benefits across {NATION}</h3>
-                <p class="description">Click a region to visit the Local Authority Report Page</p>
+                <!--<h3 class="component-title">Total co-benefits across {NATION}</h3>-->
+                <p class="description">Click a region to visit a Local Authority Report Page</p>
                 <p class="description">*Scroll for zooming in and out</p>
                 <div id="map" bind:this={mapDiv}>
                 </div>
