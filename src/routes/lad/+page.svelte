@@ -233,7 +233,7 @@
 }
     .sef-link {
         text-decoration: none;
-        color: #5A5A5A;
+        color: #333;
         font-weight: 500;
         display: block;
         font-size: 1.2em;

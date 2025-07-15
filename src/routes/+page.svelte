@@ -574,13 +574,13 @@
 
             <div class="explore-block story-section">
     <h1>Read Stories and Analyses</h1>
-<hr>
+<hr class="story-teaser-hr">
     <div class="explore-pages story-pages">
         <a href="{base}/stories/Derry_story.docx" download="story">
             <div class="story">
                 <img class="story-teaser-img" src="{base}/stories/Derry_picture.png"/>
                 <h3>Accelerating climate financing in Derry City and Strabane District Council</h3>
-                <hr>
+                <hr class="story-teaser-hr">
             </div>
         </a>
     </div>
@@ -589,7 +589,7 @@
             <div class="story">
                 <br>
                 <h3>More to come...</h3>
-                <p>In the mean time, if you have your own ideas for collaboration on stories related to co-benefits, please get in touch using the
+                <p>In the mean time, if you have your own ideas for collaboration on stories related to co-benefits please get in touch using the
                     <a href="https://docs.google.com/forms/d/1w-8Lt9bESZ56PdklTIT38plec7dPgDbJtORkatoXFVY/viewform?edit_requested=true">feedback form.</a></p>
                 
             </div>
@@ -969,6 +969,8 @@
         font-weight: 400;
         line-height: 24px;
         margin-top: 2px;
+        /*background-color: #444;
+        color: #fdfdfd;*/
     }
 
     .explore-page {
@@ -1070,4 +1072,10 @@
     justify-content: center;
 }
 
+.story-teaser-hr{
+    width: 100%;
+    border: 0;
+    border-top: 2px solid #999;
+    margin: 1rem 0;
+}
 </style>
