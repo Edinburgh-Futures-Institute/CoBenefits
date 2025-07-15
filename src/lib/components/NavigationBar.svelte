@@ -3,6 +3,7 @@ import {base} from "$app/paths";
 import { page } from '$app/stores';
 import { goto } from '$app/navigation';
 import { get } from 'svelte/store';
+import { showCoBenefitsDropdown } from '$lib/components/dropdown.js';
 
 import {COBENEFS, COBENEFS_SCALE} from "../../globals";
 
@@ -37,35 +38,37 @@ async function goToSection(id: string) {
     </div>
 
     <div class="nav-center">
-      <div class="dropdown nav-item"
-          on:mouseenter={() => (showDropdown = true)}
-          on:mouseleave={() => (showDropdown = false)}
-      >
-        <div class="nav-count">11</div>
-        <span
-          class="dropdown-label"
-          class:active={$page.url.pathname.startsWith(`${base}/cobenefit`)}
-        >
-          Co-Benefits
-        </span>
-        {#if showDropdown}
-          <ul class="dropdown-menu">
-            {#each COBENEFS as coBenef}
-              <li>
-                <a
-                  href="{base}/cobenefit?cobenefit={coBenef.id}"
-                  data-sveltekit-reload
-                  style="--cobenef-color: {COBENEFS_SCALE(coBenef.id)}"
-                  class:selected={$page.url.searchParams.get('cobenefit') === coBenef.id}
-                  target="_blank"
-                >
-                  {coBenef.label}
-                </a>
-              </li>
-            {/each}
-          </ul>
-        {/if}
-      </div>
+<div
+  class="dropdown nav-item"
+  on:mouseenter={() => showCoBenefitsDropdown.set(true)}
+  on:mouseleave={() => showCoBenefitsDropdown.set(false)}
+>
+  <div class="nav-count">11</div>
+  <span
+    class="dropdown-label"
+    class:active={$page.url.pathname.startsWith(`${base}/cobenefit`)}
+  >
+    Co-Benefits
+  </span>
+
+  {#if $showCoBenefitsDropdown}
+    <ul class="dropdown-menu">
+      {#each COBENEFS as coBenef}
+        <li>
+          <a
+            href="{base}/cobenefit?cobenefit={coBenef.id}"
+            data-sveltekit-reload
+            style="--cobenef-color: {COBENEFS_SCALE(coBenef.id)}"
+            class:selected={$page.url.searchParams.get('cobenefit') === coBenef.id}
+            target="_blank"
+          >
+            {coBenef.label}
+          </a>
+        </li>
+      {/each}
+    </ul>
+  {/if}
+</div>
 
       <div class="nav-item">
         <div class="nav-count">382</div>

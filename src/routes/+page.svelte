@@ -34,6 +34,12 @@
     import Footer from "$lib/components/Footer.svelte";
     import * as d3 from "d3";
 
+      import { showCoBenefitsDropdown } from '$lib/components/dropdown.js';
+
+  function openDropdown() {
+    showCoBenefitsDropdown.set(true);
+  }
+
     // const LADEngPath = `${base}/LAD/Eng_Wales_LSOA_LADs.csv`
     // const LADNIPath = `${base}/LAD/NI_DZ_LAD.csv`
     // const LADScotlandPath = `${base}/LAD/Scotland_DZ_LA.csv`
@@ -55,6 +61,7 @@
     let minHHCoBenefValue;
     let maxHHCoBenefValue;
     let dataLoading = true;
+    
 
 
     async function loadData() {
@@ -530,14 +537,15 @@
 
                 <div class="explore-pages">
 
-                    <a href="{base}/coben">
+                    <div on:click={openDropdown} style="cursor: pointer;">
                         <div class="explore-page">
-                            <img class="page-teaser-img" src="{base}/pages-teasers/coben.png"/>
+                            <img src="{base}/pages-teasers/coben.png" alt="Open Co-Benefits Dropdown" />
                             <h3>11 Co-Benefits Pages</h3>
                             <p> A Co-benefit page shows the spatial and temporal distribution of a given co-benefit, and
                                 its relationship with socio-economic factors. </p>
+                                </div>
                         </div>
-                    </a>
+                    
 
                     <a href="{base}/lad">
 
