@@ -153,25 +153,50 @@ export function getAverageSEFbyCobenDataGroupedByLAD(sef: SEFactor) {
 
 // CAST(25.65 AS int);
 export function getAverageSEFGroupedByLAD(sef: SEFactor) {
-    const multiplyBy100 = ["Under_35", "Over_65", "Unemployment"].includes(sef);
-    const valExpression = multiplyBy100 ? `(${sef} * 100)` : sef;
+  const isCategorical = SEF_CATEGORICAL.includes(sef);
+  const multiplyBy100 = ["Under_35", "Over_65", "Unemployment"].includes(sef);
+  const valExpression = multiplyBy100 ? `(${sef} * 100)` : sef;
 
-    const query = `SELECT AVG(${valExpression}) as val, AVG(total) as total, AVG(total)/AVG(population) as total_per_capita, LAD as Lookup_Value
-             FROM ${DB_TABLE_NAME}
-             WHERE co_benefit_type = 'Total'
-             GROUP BY LAD, scenario`
-    return query
+  const aggregation = isCategorical
+    ? `MODE() WITHIN GROUP (ORDER BY ${sef})`
+    : `AVG(${valExpression})`;
+
+  const query = `
+    SELECT 
+      ${aggregation} AS val,
+      AVG(total) AS total,
+      AVG(total)/AVG(population) AS total_per_capita,
+      LAD AS Lookup_Value
+    FROM ${DB_TABLE_NAME}
+    WHERE co_benefit_type = 'Total'
+    GROUP BY LAD, scenario
+  `;
+
+  return query;
 }
 
 export function allCBgetAverageSEFGroupedByLAD(sef: SEFactor) {
-    const multiplyBy100 = ["Under_35", "Over_65", "Unemployment"].includes(sef);
-    const valExpression = multiplyBy100 ? `AVG((${sef} * 100))` : `AVG(${sef})`;
+  const isCategorical = SEF_CATEGORICAL.includes(sef);
+  const multiplyBy100 = ["Under_35", "Over_65", "Unemployment"].includes(sef);
+  const valExpression = multiplyBy100 ? `(${sef} * 100)` : sef;
 
-    const query = `SELECT ${valExpression} as val, AVG(total) as total, AVG(total)/AVG(population) as total_per_capita, LAD as Lookup_Value, co_benefit_type
-             FROM ${DB_TABLE_NAME}
-             WHERE co_benefit_type != 'Total'
-             GROUP BY LAD, scenario, co_benefit_type`
-    return query;
+  const aggregation = isCategorical
+    ? `MODE() WITHIN GROUP (ORDER BY ${sef})`
+    : `AVG(${valExpression})`;
+
+  const query = `
+    SELECT 
+      ${aggregation} AS val,
+      AVG(total) AS total,
+      AVG(total)/AVG(population) AS total_per_capita,
+      LAD AS Lookup_Value,
+      co_benefit_type
+    FROM ${DB_TABLE_NAME}
+    WHERE co_benefit_type != 'Total'
+    GROUP BY LAD, scenario, co_benefit_type
+  `;
+  
+  return query;
 }
 
 export function getModeSEFGroupedByLAD(sef: SEFactor) {
