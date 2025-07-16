@@ -3,6 +3,7 @@
     import {page} from '$app/stores';
     import {goto} from '$app/navigation';
     import {get} from 'svelte/store';
+    import {formatDate} from "../../globals.js";
 </script>
 
 <footer>
@@ -17,9 +18,15 @@
         </div>
 
     <div id="footer-text">
-        Work funded by 
-    <br>
-        <a href="https://scotland-beyond-net-zero.ac.uk/">Scotland Beyond Net Zero.</a>
+        Last updated on <br>
+        {formatDate(BUILD_DATE)}.
+
+
+<!--        Work funded by -->
+<!--    <br>-->
+<!--        <a href="https://scotland-beyond-net-zero.ac.uk/">Scotland Beyond Net Zero.</a>-->
+
+
     </div>
 
     <div>
@@ -36,8 +43,10 @@
         flex-direction: row;
         align-items: center;
         justify-content: space-between;
-        margin-left: 2em;
-        margin-right: 2em;
+        margin-left: 1em;
+        margin-right: 1em;
+
+        gap: 2rem;
 
         font-size: 14px;
         padding-top: 1rem;
@@ -53,22 +62,21 @@
     .logo {
         /*max-width: 11%;*/
         width: 100%;
-        height: auto;
-        object-fit: contain;
+        /*height: auto;*/
+        /*object-fit: contain;*/
     }
 
     #footer-text {
         /*width: 120px;*/
-        min-width: 15%;
+        min-width: 10%;
         /*max-width: 200px;*/
     }
 
 
     .logos-grid {
         display: flex;
-        flex-wrap: wrap;
-        gap: 2.2rem;
-        justify-content: flex-start;
+        /*flex-wrap: wrap;*/
+        gap: 2rem;
         align-items: center;
     }
 
@@ -76,7 +84,7 @@
         list-style-type: none; /* removes bullet points */
         padding: 0; /* removes left padding */
         margin: 0;  /* optional: removes default margin */
-        margin-right: 0.5em;
+        /*margin-right: 0.5em;*/
     }
 
     #footer-list > li {

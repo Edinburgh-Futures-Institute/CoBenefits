@@ -99,9 +99,10 @@ async function goToSection(id: string) {
         <a href="{base}/contact" class="nav-item">Contact</a>
         {#if showDropdownContact}
           <ul class="dropdown-menu" style="min-width: 150px;">
-            <li><a href="{base}/contact" on:click|preventDefault={() => goToSection("email")}>Email</a></li>
-            <li><a href="{base}/contact" on:click|preventDefault={() => goToSection("newsletter")}>Newsletter</a></li>
-            <li><a href="{base}/contact" on:click|preventDefault={() => goToSection("training")}>Training</a></li>
+              <li><a href="{base}/contact" on:click|preventDefault={() => goToSection("feedback")}>Feedback</a></li>
+              <li><a href="{base}/contact" on:click|preventDefault={() => goToSection("email")}>Email</a></li>
+              <li><a href="{base}/contact" on:click|preventDefault={() => goToSection("newsletter")}>Newsletter</a></li>
+              <li><a href="{base}/contact" on:click|preventDefault={() => goToSection("training")}>Training</a></li>
           </ul>
         {/if}
       </div>

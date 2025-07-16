@@ -24,7 +24,7 @@
         SEF_ID,
         SEF_LEVEL_LABELS,
         SEF_SCALE,
-        getIconFromCobenef
+        getIconFromCobenef, addSpinner, removeSpinner
     } from "../../globals";
 
 
@@ -83,7 +83,6 @@
     export let data;
 
     const SEF = data.SEF;
-    console.log("SEF ", SEF)
     const sefId = SEF_ID.find(d => d.id === SEF)?.id ?? SEF;
     const sefLabel = SEF_LABEL.find(d => d.id === SEF)?.label ?? SEF;
     const sefDef = SEF_DEF.find(d => d.id === SEF)?.def ?? SEF;
@@ -167,6 +166,9 @@
 
 
     onMount(() => {
+        addSpinner(element);
+
+
         window.addEventListener('scroll', handleScroll); // header scroll listener
 
         handleScroll(); // initialize
@@ -197,6 +199,7 @@
         })
 
         dataLoaded = true;
+        removeSpinner(element);
     }
 
     loadData().then(() => {

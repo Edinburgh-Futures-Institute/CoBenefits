@@ -8,6 +8,7 @@ import {
     SEF_CATEGORICAL, type Nation
 } from "../globals";
 import {browser} from '$app/environment';
+import {csv} from "d3";
 
 let db: AsyncDuckDB;
 
@@ -607,8 +608,6 @@ export function getTotalAggregation() {
         AND Population IS NOT NULL
     `;
   }
-
-
 
 
 export {initDB, getTableData}; // so we can import this elsewhere

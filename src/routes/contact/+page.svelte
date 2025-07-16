@@ -25,10 +25,17 @@
       <h1 class="title-about">Contact</h1>
     </section>
 
+    <section class="contact" id="feedback">
+      <h2>Feedback</h2>
+      <p class="intro-paragraph">
+      If you have any feedback or suggestions regarding the UK Co-Benefits Atlas, you can answer the <a href="https://docs.google.com/forms/d/1w-8Lt9bESZ56PdklTIT38plec7dPgDbJtORkatoXFVY">following from</a>.
+      </p>
+    </section>
+
     <section class="contact" id="email">
       <h2>Email</h2>
       <p class="intro-paragraph">
-      If you have any questions, feedback, or suggestions regarding the UK Co-Benefits Atlas, please email us via <a href="mailto:cobens@ed.ac.uk" style="color: #646cff">cobens@ed.ac.uk</a>.
+      If you have any questions regarding the UK Co-Benefits Atlas or want to get in touch, please email us via <a href="mailto:cobens@ed.ac.uk" style="color: #646cff">cobens@ed.ac.uk</a>.
       </p>
     </section>
 
