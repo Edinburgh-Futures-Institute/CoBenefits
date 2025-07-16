@@ -607,7 +607,6 @@
                         </div>
                     </a>
                 </div>
-
                 <div class="explore-pages story-pages">
                     <div class="story">
                         <br>
@@ -619,8 +618,8 @@
 
                     </div>
                 </div>
-            </div>
 
+            </div>
         </div>
 
 

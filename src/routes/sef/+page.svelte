@@ -325,6 +325,8 @@
             ? Object.keys(labelLookup).map(Number)
             : currentData.filter(d => d["SEFMAME"] == sefId).map(d => d.SE);
 
+        plotBar.innerHTML = ""; 
+
         plotBar?.append(
             Plot.plot({
                 height: height / 1.9,
@@ -404,7 +406,7 @@
     }
 
     function renderJitterPlot() {
-  
+        plotJitter.innerHTML = "";
         plotJitter?.append(
             Plot.plot({
                 height: height * 1.5,
@@ -540,23 +542,29 @@
         return unit === "£" ? `${unit}${value}` : `${value} ${unit}`;
     }
 
-    $: {
-        plot?.firstChild?.remove(); // remove old chart, if any
-        Object.values(plotSmallMult).forEach(multPlot => {
-            multPlot.firstChild?.remove();
-        })
+$: {
+    // Clean up existing plots
+    plot?.firstChild?.remove(); 
+    Object.values(plotSmallMult).forEach(multPlot => {
+        multPlot.firstChild?.remove();
+    });
+    Object.values(plotSmallJitter).forEach(multPlot => {
+        multPlot.firstChild?.remove();
+    });
 
-        if (dataLoaded && currentData) {
-            renderDotPlot();
+    // Render appropriate plots based on condition
+    if (dataLoaded && currentData) {
+        if (SEF_CATEGORICAL.includes(sefId)) {
             renderBarPlot();
             renderMultPlotJitter();
             renderJitterPlot();
+        } else {
+            renderDotPlot();
+            renderMultPlotDot();  
             renderDistPlot();
-            renderJitterPlot();
-            renderMultPlotDot();
-            renderMultPlotJitter();
         }
     }
+}
 </script>
 
 <NavigationBar></NavigationBar>
@@ -651,8 +659,11 @@
                             <span class="tooltip-text">This chart uses per capita values. i.e. shows the cost/benefit per person in each area.</span>
                         </div>
                     </div>
+                    {#if SEF_CATEGORICAL.includes(sefId)}
+                    <div class="plot" bind:this={plotJitter}></div>
+                    {:else}
                     <div class="plot" bind:this={plotDot}></div>
-                    
+                    {/if}
                 </div>
                 <div class="component column">
                     <h3 class="component-title">{sefLabel} at LSOA level</h3>
