@@ -38,6 +38,7 @@
         getTotalCBAllDatazones, getTotalCBForOneLAD
     } from "$lib/duckdb";
     import Footer from "$lib/components/Footer.svelte";
+    import {csv} from "d3";
 
     let sectionRefs = {
         head: null,
@@ -117,6 +118,26 @@
         totalValuePerCapitaMax = await getTableData(getTopSelectedLADs({limit: 1, sortBy: "per_capita"}));
         totalValuePerCapitaMax = totalValuePerCapitaMax[0].value_per_capita;
 
+        const LADEngPath = `/LAD/Eng_Wales_LSOA_LADs.csv`
+        const LADNIPath = `/LAD/NI_DZ_LAD.csv`
+        const LADScotlandPath = `/LAD/Scotland_DZ_LA.csv`
+        await csv(LADEngPath).then(data => {
+            for (let lad of data) {
+                LADToName[lad.LAD22CD] = lad.LAD22NM;
+            }
+        })
+        await csv(LADNIPath).then(data => {
+            for (let lad of data) {
+                LADToName[lad.LGD2014_code] = lad.LGD2014_name;
+            }
+        })
+        await csv(LADScotlandPath).then(data => {
+            for (let lad of data) {
+                LADToName[lad.LA_Code] = lad.LA_Name;
+            }
+        })
+
+
         dataLoaded = true;
         removeSpinner(element)
     }
@@ -148,9 +169,11 @@
             if (isInView) {
 
                 if (currentSection !== id) {
-                posthog.capture('section entered (lad)', {
-                    section_name: id,
-                })};
+                    posthog.capture('section entered (lad)', {
+                        section_name: id,
+                    })
+                }
+                ;
 
                 currentSection = id;
                 // console.log("currentSection", currentSection);
@@ -168,7 +191,8 @@
         return labels[id] || '';
     }
 
-    const LADToName = data.LADToName;
+    // const LADToName = data.LADToName;
+    let LADToName = {};
 
     let map: MapUK;
     let mapDiv: HTMLElement;
@@ -1051,8 +1075,8 @@
         totalCBAllZones = await getTableData(getTotalCBAllDatazones(compareTo));
 
         posthog.capture('clicked nation filter', {
-        nation: event.currentTarget.value
-        })   
+            nation: event.currentTarget.value
+        })
     }
 
 </script>
@@ -1088,7 +1112,7 @@
             <div class="radio-set">
                 Compare this Local Authority District (LAD) against:<br/>
                 <input type="radio" on:change={onChangeComparison} name="compare" value="UK" checked>
-                <label class="nation-label" for="html" >UK</label><br>
+                <label class="nation-label" for="html">UK</label><br>
                 <input type="radio" on:change={onChangeComparison} name="compare" value="England">
                 <label class="nation-label" for="html">England</label><br>
                 <input type="radio" on:change={onChangeComparison} name="compare" value="Wales">
@@ -1193,14 +1217,14 @@
             <div class="component column">
 
                 <h3 class="component-title">Distribution of the cobenefit per
-                        <span class="tooltip-term">
+                    <span class="tooltip-term">
                                 data zone
                                 <span class="tooltip-txt">
                                 Data zones are standard statitical geographies in UK that  comprise between 400 and 1200 households.
                                 </span>
                         </span>
-                        compared to <span
-                        class="nation-label">{compareTo}</span> Average)</h3>
+                    compared to <span
+                            class="nation-label">{compareTo}</span> Average)</h3>
                 <p class="description">Co-benefit values for {LADToName[LAD]} compared to average value of benefits
                     received across all local
                     authorities in <span class="nation-label">{compareTo}</span> (grey).</p>
@@ -1439,7 +1463,7 @@
                                                 Data zones are standard statitical geographies in UK that  comprise between 400 and 1200 households.
                                                 </span>
                                             </span>
-                                            distribution (vs. <span
+                                        distribution (vs. <span
                                             class="nation-label">{compareTo}</span> average)</h3>
                                     <p class="description short">The histogram shows the number of data zones
                                         distributed

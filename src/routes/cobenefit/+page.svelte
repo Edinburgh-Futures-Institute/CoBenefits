@@ -25,7 +25,7 @@
         SEF_SCALE,
         DEFINITIONS,
         SE_FACTORS,
-        SEF_LEVEL_LABELS
+        SEF_LEVEL_LABELS, removeSpinner, addSpinner
 
     } from "../../globals";
     import {
@@ -83,6 +83,7 @@
 
         map = new MapUK(LADAveragedData, "LAD", mapDiv, "total", true, "LAD", false, colorRange);
         map.initMap();
+
     });
 
     let icon = getIconFromCobenef(coBenefit)
@@ -169,6 +170,7 @@
         });
 
         dataLoaded = true;
+        removeSpinner(element);
     }
 
     let waffleData = [];
@@ -550,6 +552,9 @@
 
 
     onMount(() => {
+        addSpinner(element);
+
+
         document.querySelectorAll(".nation-button").forEach(button => {
             button.addEventListener("click", () => {
                 const nation = button.getAttribute("data-nation");

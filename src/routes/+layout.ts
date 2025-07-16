@@ -30,9 +30,9 @@ import {
 // const zonesPath = '/maps/Lower_layer_Super_Output_Areas_2021_EW_BGC_V3_-6823567593069184824.json';
 // const zonesPath = 'maps/Lower_layer_Super_Output_Areas_2021_EW_BGC_V3_-6823567593069184824.json';
 
-const LADEngPath = `${base}/LAD/Eng_Wales_LSOA_LADs.csv`
-const LADNIPath = `${base}/LAD/NI_DZ_LAD.csv`
-const LADScotlandPath = `${base}/LAD/Scotland_DZ_LA.csv`
+// const LADEngPath = `${base}/LAD/Eng_Wales_LSOA_LADs.csv`
+// const LADNIPath = `${base}/LAD/NI_DZ_LAD.csv`
+// const LADScotlandPath = `${base}/LAD/Scotland_DZ_LA.csv`
 
 
 export async function load() {
@@ -45,22 +45,22 @@ export async function load() {
 
     // const UKZones = topojson.feature(zones, zones.objects["Lower_layer_Super_Output_Areas_2021_EW_BGC_V3_-6823567593069184824"]);
 
-    let LADToName = {};
-    await csv(LADEngPath).then(data => {
-        for (let lad of data) {
-            LADToName[lad.LAD22CD] = lad.LAD22NM;
-        }
-    })
-    await csv(LADNIPath).then(data => {
-        for (let lad of data) {
-            LADToName[lad.LGD2014_code] = lad.LGD2014_name;
-        }
-    })
-    await csv(LADScotlandPath).then(data => {
-        for (let lad of data) {
-            LADToName[lad.LA_Code] = lad.LA_Name;
-        }
-    })
+    // let LADToName = {};
+    // await csv(LADEngPath).then(data => {
+    //     for (let lad of data) {
+    //         LADToName[lad.LAD22CD] = lad.LAD22NM;
+    //     }
+    // })
+    // await csv(LADNIPath).then(data => {
+    //     for (let lad of data) {
+    //         LADToName[lad.LGD2014_code] = lad.LGD2014_name;
+    //     }
+    // })
+    // await csv(LADScotlandPath).then(data => {
+    //     for (let lad of data) {
+    //         LADToName[lad.LA_Code] = lad.LA_Name;
+    //     }
+    // })
 
     // for preview datatable
     // const previewData = await getTableData(previewTableData());
@@ -82,11 +82,11 @@ export async function load() {
     // let aggregationPerCapitaPerBenefit = await getTableData(getAggregationPerCapitaPerBenefit());
     // let totalAggregation = await getTableData(getTotalAggregation());
 
-    console.log("NB OF LAD: ", await getTableData(getNbOfLAD()))
+    // console.log("NB OF LAD: ", await getTableData(getNbOfLAD()))
 
     return {
         // datazones: UKZones,
-        LADToName,
+        // LADToName,
         // aggregationPerBenefit,
         // aggregationPerCapitaPerBenefit,
         // totalAggregation

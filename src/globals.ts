@@ -16,56 +16,60 @@ import physicalActivityIcon from '$lib/icons/PhysicalActivity.png';
 
 import coBenefits from '$lib/definitions/cobenf.json'
 import seFactors from '$lib/definitions/se-factor.json'
+// import {csv} from "d3";
+
+// This will be populated at build time
+export const buildTimestamp = '__BUILD_TIMESTAMP__';
 
 
 export let CBS = coBenefits.map(f => f.id);
-export const COBENEFS = coBenefits.map(d => ({ id: d.id, label: d.label, def: d.def }));
-export let CO_BEN = coBenefits.map(d => ({ id: d.id, label: d.label, def: d.def  }));
-export const DEFINITIONS = coBenefits.map(d => ({ id: d.id, def: d.def }));
+export const COBENEFS = coBenefits.map(d => ({id: d.id, label: d.label, def: d.def}));
+export let CO_BEN = coBenefits.map(d => ({id: d.id, label: d.label, def: d.def}));
+export const DEFINITIONS = coBenefits.map(d => ({id: d.id, def: d.def}));
 
 
 export const SCENARIOS = ["BNZ", "Engagement", "Tailwinds", "Headwinds", "Innovation"]
 
-export let SE_FACTORS = seFactors.map(f => ({ id: f.id, label: f.label, def: f.def })); 
+export let SE_FACTORS = seFactors.map(f => ({id: f.id, label: f.label, def: f.def}));
 
 export let SEF = seFactors.map(f => f.id);
 
 export const SEF_ID = seFactors.map(f => f.id);
-export const SEF_LABEL = seFactors.map(d => ({ id: d.id, label: d.label }));
-export const SEF_DEF = seFactors.map(d => ({ id: d.id, def: d.def }));
-export const SEF_DESCR = seFactors.map(d => ({ id: d.id, description: d.description }));
-export const SEF_SHORT_UNITS = seFactors.map(d => ({ id: d.id, short_units: d.short_units }));
-export const SEF_UNITS2 = seFactors.map(d => ({ id: d.id, units: d.units }));
+export const SEF_LABEL = seFactors.map(d => ({id: d.id, label: d.label}));
+export const SEF_DEF = seFactors.map(d => ({id: d.id, def: d.def}));
+export const SEF_DESCR = seFactors.map(d => ({id: d.id, description: d.description}));
+export const SEF_SHORT_UNITS = seFactors.map(d => ({id: d.id, short_units: d.short_units}));
+export const SEF_UNITS2 = seFactors.map(d => ({id: d.id, units: d.units}));
 
 export let SEF_UNITS = seFactors.map(f => f.units ?? '?');
 export let SEF_CATEGORICAL = seFactors
-                                .filter(f => f.type === 'categorical')
-                                .map(f => f.id);
+    .filter(f => f.type === 'categorical')
+    .map(f => f.id);
 console.log("import seFactors", SEF, SEF_UNITS, SEF_CATEGORICAL)
 
 export const SEF_SCALE = d3.scaleOrdinal(SEF, SEF_UNITS);
 
 export const SEF_LEVEL_LABELS = {
     EPC: {
-      1: "A", 2: "B", 3: "C", 4: "D", 5: "E", 6: "F", 7: "G"
+        1: "A", 2: "B", 3: "C", 4: "D", 5: "E", 6: "F", 7: "G"
     },
     Tenure: {
-      1: "Owner", 2: "Rented (social)", 3: "Rented (private)"
+        1: "Owner", 2: "Rented (social)", 3: "Rented (private)"
     },
     Typology: {
-      1: "Semi-detached", 2: "Detached", 3: "Mid-terrace", 
-      4: "End-terrace", 5: "Enclosed end-terrace", 6: "Enclosed mid-terrace"
+        1: "Semi-detached", 2: "Detached", 3: "Mid-terrace",
+        4: "End-terrace", 5: "Enclosed end-terrace", 6: "Enclosed mid-terrace"
     },
     Fuel_Type: {
-      1: "Gas boiler", 2: "Electric heating", 3: "Oil heating"
+        1: "Gas boiler", 2: "Electric heating", 3: "Oil heating"
     },
     Gas_flag: {
-      1: "Yes", 0: "No"
+        1: "Yes", 0: "No"
     },
     Number_cars: {
         0: 0, 1: 1, 2: 2
     }
-  };
+};
 
 
 // The years labels have an Y for start otherwise it causes sql issues
@@ -89,13 +93,6 @@ export const VIS_COLOR = "#333";
 // export const AVERAGE_COLOR = "lightblue";
 // export const AVERAGE_COLOR = "#636363";
 export const AVERAGE_COLOR = "#9c9c9c";
-export const NATION_TO_COLOR = {
-    UK: "lightblue",
-    NI: "#DA6E1C",
-    Scotland: "#0065BD",
-    "Eng/Wales": "#C8102E"
-}
-
 
 export const MARGINS = {
     marginLeft: 60,
@@ -122,7 +119,7 @@ export const COBENEFS_RANGE2 = [['#71C35D', '#244a1b', '#499437', '#7cc76a', '#b
     ['#D3A029', '#554010', '#aa8121', '#ddb454', '#eed9a9']];
 export const COBENEFS_SCALE2 = d3.scaleOrdinal(COBENEFS.map(d => d.id), COBENEFS_RANGE2);
 
-export const COBENEFS_RANGE3 = [['#719634','#9FC035','#84DB82','#3FD24C'],
+export const COBENEFS_RANGE3 = [['#719634', '#9FC035', '#84DB82', '#3FD24C'],
     ['#AF2164', '#E84086', '#FF057C', '#DC0FB3'],
     ['#2CB8B2', '#00B3D0', '#00CAFF', '#0084CC'],
     ['#FF6E3F', '#C3603C', '#BE2742', '#FE1B21'],
@@ -189,7 +186,6 @@ export function getHeroSlides(waffleOrderedTypes: string[]) {
 }
 
 export function getIconFromCobenef(cobenefit: CoBenefit) {
-
     if (cobenefit == "Air quality") {
         return airQualityIcon;
     } else if (cobenefit == "Noise") {
@@ -287,3 +283,14 @@ export function removeSpinner(selection: HTMLElement): void {
         spinnerElement = null;
     }
 }
+
+export function formatDate(date: string) {
+    date = new Date(date);
+
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are zero-based
+    const year = date.getFullYear();
+
+    return `${day}/${month}/${year}`;
+}
+

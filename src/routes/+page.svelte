@@ -10,7 +10,7 @@
         COBENEFS_SCALE,
         getHeroSlides,
         getIconFromCobenef,
-        type CoBenefit, addSpinner, removeSpinner
+        type CoBenefit, addSpinner, removeSpinner, buildTimestamp
     } from "../globals";
 
     import NavigationBar from "$lib/components/NavigationBar.svelte";
@@ -34,21 +34,20 @@
     import Footer from "$lib/components/Footer.svelte";
     import * as d3 from "d3";
 
-      import { showCoBenefitsDropdown } from '$lib/components/dropdown.js';
+    import {showCoBenefitsDropdown} from '$lib/components/dropdown.js';
 
-  function openDropdown() {
-    showCoBenefitsDropdown.set(true);
-  }
+    function openDropdown() {
+        showCoBenefitsDropdown.set(true);
+    }
 
-    // const LADEngPath = `${base}/LAD/Eng_Wales_LSOA_LADs.csv`
-    // const LADNIPath = `${base}/LAD/NI_DZ_LAD.csv`
-    // const LADScotlandPath = `${base}/LAD/Scotland_DZ_LA.csv`
-
-    // let LADToName = {};
+    const LADEngPath = `${base}/LAD/Eng_Wales_LSOA_LADs.csv`
+    const LADNIPath = `${base}/LAD/NI_DZ_LAD.csv`
+    const LADScotlandPath = `${base}/LAD/Scotland_DZ_LA.csv`
+    let LADToName = {};
 
 
     export let data;
-    let LADToName = data.LADToName;
+    // let LADToName = data.LADToName;
 
     let element: HTMLElement;
 
@@ -61,7 +60,6 @@
     let minHHCoBenefValue;
     let maxHHCoBenefValue;
     let dataLoading = true;
-    
 
 
     async function loadData() {
@@ -86,6 +84,22 @@
         minCoBenefValue = Math.min(...aggregationPerCapitaPerBenefit.map(d => d.total_value));
         minHHCoBenefValue = Math.min(...aggregationPerCapitaPerBenefit.map(d => d.value_per_capita));
         maxHHCoBenefValue = Math.max(...aggregationPerCapitaPerBenefit.map(d => d.value_per_capita));
+
+        await csv(LADEngPath).then(data => {
+            for (let lad of data) {
+                LADToName[lad.LAD22CD] = lad.LAD22NM;
+            }
+        })
+        await csv(LADNIPath).then(data => {
+            for (let lad of data) {
+                LADToName[lad.LGD2014_code] = lad.LGD2014_name;
+            }
+        })
+        await csv(LADScotlandPath).then(data => {
+            for (let lad of data) {
+                LADToName[lad.LA_Code] = lad.LA_Name;
+            }
+        })
 
         dataLoading = false;
     }
@@ -214,7 +228,7 @@
             activeIcon = icon;
 
             renderWaffle(height, type);
-        },6000);
+        }, 6000);
 
         // On default load, show the total
         // const firstSlide = slides[0];
@@ -245,10 +259,10 @@
             const squareCount = Math.round(Math.abs(item.total) / squaresPerUnit);
             totalSquares += squareCount;
             // squareData: make an array for each coben type
-            const squareData = Array.from({ length: squareCount }, () => ({
+            const squareData = Array.from({length: squareCount}, () => ({
                 type: item.co_benefit_type,
                 negative: item.total < 0
-            }));      
+            }));
             // push into pos/neg arrays
             // postiveSquares and negativeSquares: array holding coben types in their sqaure counts
             if (item.total < 0) {
@@ -260,7 +274,7 @@
         const posRows = Math.ceil(positiveSquares.length / gridWidth);
         const negRows = Math.ceil(negativeSquares.length / gridWidth);
         const totalRows = posRows + negRows;
-        const unitSize = Math.floor(height / totalRows); 
+        const unitSize = Math.floor(height / totalRows);
 
         const posData = positiveSquares.map((d, i) => ({
             x: i % gridWidth,
@@ -284,26 +298,26 @@
 
         const labelsContainer = document.getElementById("waffleLabels");
         if (labelsContainer) {
-        labelsContainer.innerHTML = "";
+            labelsContainer.innerHTML = "";
 
-        for (let value = maxLabel; value >= minLabel; value -= labelStep) {
-            const offsetSquares = posRows * gridWidth - value;  // squares from top
-            const rowIndex = offsetSquares / gridWidth;
-            const label = document.createElement("div");
-            label.textContent = `${value > 0 ? "+" : ""}${value}bn`;
-            label.style.position = "absolute";
-            label.style.left = "0";
-            const fontSize = Math.max(8, Math.floor(unitSize * 0.6));
-            const yPos = rowIndex * unitSize + unitSize / 2 - fontSize / 2 - 15;
-            label.style.top = `${yPos}px`;
-            label.style.fontSize = `${fontSize}px`;
-            label.style.lineHeight = "1";
-            labelsContainer.appendChild(label);
+            for (let value = maxLabel; value >= minLabel; value -= labelStep) {
+                const offsetSquares = posRows * gridWidth - value;  // squares from top
+                const rowIndex = offsetSquares / gridWidth;
+                const label = document.createElement("div");
+                label.textContent = `${value > 0 ? "+" : ""}${value}bn`;
+                label.style.position = "absolute";
+                label.style.left = "0";
+                const fontSize = Math.max(8, Math.floor(unitSize * 0.6));
+                const yPos = rowIndex * unitSize + unitSize / 2 - fontSize / 2 - 15;
+                label.style.top = `${yPos}px`;
+                label.style.fontSize = `${fontSize}px`;
+                label.style.lineHeight = "1";
+                labelsContainer.appendChild(label);
             }
-        
-        labelsContainer.style.height = `${unitSize * totalRows}px`;
+
+            labelsContainer.style.height = `${unitSize * totalRows}px`;
         }
-        
+
         // for hero backeground sequence
         waffleOrderedTypes = Array.from(
             new Set(waffleData.map(d => d.type).filter(type => type !== "empty"))
@@ -355,7 +369,8 @@
         if (waffleBgEl) {
             waffleBgEl.style.width = `${unitSize * gridWidth + 30}px`;
             waffleBgEl.style.height = `${height}px`;
-        };
+        }
+        ;
 
         waffleEl.innerHTML = "";
         waffleEl.append(plot);
@@ -442,7 +457,7 @@
             </div>
 
             <div class="waffle-overlay">
-                
+
                 <div class="waffle-label" bind:this={waffleLabelEl}>
 
                     <div class="waffle-header">
@@ -504,10 +519,10 @@
                 <div class="waffle-bg" bind:this={waffleBgEl}></div>
 
                 <span id="waffleTopLabel" class="waffle-text">Co-benefits</span>
-                
+
                 <div bind:this={waffleEl} class="waffle"></div>
                 <div id="waffleLabels" class="waffle-chart-labels"></div>
-                
+
                 <span id="waffleBottomLabel" class="waffle-text">Negative impacts</span>
             </div>
     </section>
@@ -521,15 +536,15 @@
                 <div class="search-label-and-input">
                     <h1 class="search-label">Find My Place</h1>
                     <div class="search-container">
-  <LADSearch
-    items={LADToName}
-    on:search={(e) => handleSearch(e.detail)}
-  />
-</div>
+                        <LADSearch
+                                items={LADToName}
+                                on:search={(e) => handleSearch(e.detail)}
+                        />
+                    </div>
                 </div>
             </div>
         </div>
-        
+
         <div id="explore-section-main">
 
             <div class="explore-block">
@@ -539,13 +554,13 @@
 
                     <div on:click={openDropdown} style="cursor: pointer;">
                         <div class="explore-page">
-                            <img src="{base}/pages-teasers/coben.png" alt="Open Co-Benefits Dropdown" />
+                            <img src="{base}/pages-teasers/coben.png" alt="Open Co-Benefits Dropdown"/>
                             <h3>11 Co-Benefits Pages</h3>
                             <p> A Co-benefit page shows the spatial and temporal distribution of a given co-benefit, and
                                 its relationship with socio-economic factors. </p>
-                                </div>
                         </div>
-                    
+                    </div>
+
 
                     <a href="{base}/lad">
 
@@ -581,29 +596,30 @@
 
 
             <div class="explore-block story-section">
-    <h1>Read Stories and Analyses</h1>
-<hr class="story-teaser-hr">
-    <div class="explore-pages story-pages">
-        <a href="/stories/story.pdf" target="_blank" rel="noopener noreferrer">
-            <div class="story">
-                <img class="story-teaser-img" src="{base}/stories/Derry_picture_new.png"/>
-                <h3>Accelerating climate financing in Derry City and Strabane District Council</h3>
+                <h1>Read Stories and Analyses</h1>
                 <hr class="story-teaser-hr">
-            </div>
-        </a>
-    </div>
+                <div class="explore-pages story-pages">
+                    <a href="/stories/story.pdf" target="_blank" rel="noopener noreferrer">
+                        <div class="story">
+                            <img class="story-teaser-img" src="{base}/stories/Derry_picture_new.png"/>
+                            <h3>Accelerating climate financing in Derry City and Strabane District Council</h3>
+                            <hr class="story-teaser-hr">
+                        </div>
+                    </a>
+                </div>
+                <div class="explore-pages story-pages">
+                    <div class="story">
+                        <br>
+                        <h3>More to come...</h3>
+                        <p>In the mean time, if you have your own ideas for collaboration on stories related to
+                            co-benefits please get in touch using the
+                            <a href="https://docs.google.com/forms/d/1w-8Lt9bESZ56PdklTIT38plec7dPgDbJtORkatoXFVY/viewform?edit_requested=true">feedback
+                                form.</a></p>
 
-    <div class="explore-pages story-pages">
-            <div class="story">
-                <br>
-                <h3>More to come...</h3>
-                <p>In the meantime, if you have your own ideas for collaboration on stories related to co-benefits please get in touch using the
-                    <a href="https://docs.google.com/forms/d/1w-8Lt9bESZ56PdklTIT38plec7dPgDbJtORkatoXFVY/viewform?edit_requested=true">feedback form.</a></p>
-                
-            </div>
-    </div>
-</div>
+                    </div>
+                </div>
 
+            </div>
         </div>
 
 
@@ -929,14 +945,14 @@
         margin-top: 2rem;
     }
 
-.search-section {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start; /* Align to the left */
-    justify-content: center;
-    padding: 2rem 5rem;
-    text-align: left;
-}
+    .search-section {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start; /* Align to the left */
+        justify-content: center;
+        padding: 2rem 5rem;
+        text-align: left;
+    }
 
     .search-section h1 {
         font-size: 1.5rem;
@@ -972,7 +988,7 @@
         gap: 2%;
     }
 
-        .story > h3 {
+    .story > h3 {
         /*height: 3.5rem;*/
         font-weight: 400;
         line-height: 24px;
@@ -1027,63 +1043,63 @@
         object-position: center;
     }
 
-.story-teaser-img {
-    width: 320px;
-    height: auto;
-    /*border-top: 2px solid #999;
-    border-bottom: 2px solid #999;*/
-    object-fit: cover;
-    object-position: center;
-}
+    .story-teaser-img {
+        width: 320px;
+        height: auto;
+        /*border-top: 2px solid #999;
+        border-bottom: 2px solid #999;*/
+        object-fit: cover;
+        object-position: center;
+    }
 
-.explore-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 5rem;
-    flex-wrap: wrap;
-}
+    .explore-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 5rem;
+        flex-wrap: wrap;
+    }
 
-#explore-title {
-    margin: 2rem;
-}
+    #explore-title {
+        margin: 2rem;
+    }
 
-.search-label-and-input {
-    display: flex;
-    align-items: center;
-    gap: 1.75rem;
-    max-width: 100%;
-}
+    .search-label-and-input {
+        display: flex;
+        align-items: center;
+        gap: 1.75rem;
+        max-width: 100%;
+    }
 
-.search-label {
-    font-size: 1rem;
-    margin: 0rem;
-    margin-left: 2rem;
-    white-space: nowrap; /* keeps text on one line */
-}
+    .search-label {
+        font-size: 1rem;
+        margin: 0rem;
+        margin-left: 2rem;
+        white-space: nowrap; /* keeps text on one line */
+    }
 
-.search-container {
-  width: 600px; /* or any width you prefer */
-}
+    .search-container {
+        width: 600px; /* or any width you prefer */
+    }
 
-.search-container * {
-  width: 100%;
-  box-sizing: border-box;
-}
+    .search-container * {
+        width: 100%;
+        box-sizing: border-box;
+    }
 
-.story-section {
-    max-width: 320px; /* image width + padding */
-    margin: 0 auto;
-}
+    .story-section {
+        max-width: 320px; /* image width + padding */
+        margin: 0 auto;
+    }
 
-.story-pages {
-    justify-content: center;
-}
+    .story-pages {
+        justify-content: center;
+    }
 
-.story-teaser-hr{
-    width: 100%;
-    border: 0;
-    border-top: 2px solid #999;
-    margin: 1rem 0;
-}
+    .story-teaser-hr {
+        width: 100%;
+        border: 0;
+        border-top: 2px solid #999;
+        margin: 1rem 0;
+    }
 </style>
