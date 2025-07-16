@@ -310,11 +310,6 @@
     }
 
     function renderBarPlot() {
-        const average = d3.mode(currentData, d => d.val) ?? 0;
-        const maxY = d3.max(
-            d3.bin().thresholds(20).value(d => d.val)(currentData),
-            bin => bin.length
-        );
 
         const labelLookup = SEF_LEVEL_LABELS[sefId];
 
@@ -336,26 +331,18 @@
                         domain: fullLevels,
                         label: SEF_SCALE(sefId),
                         tickFormat: d => labelLookup?.[d] ?? d,
-                        tickRotate: sefId === "Typology" ? -10 : 0
+                        tickRotate: sefId === "Typology" ? -10 : 0,
+                        padding: 0.5
                     },
-                y: {label: 'No. of datazones', labelArrow: false},
+                y: {label: currentData === LADfullData ? 'No. of LADs' : 'No. of LSOAs', labelArrow: false},
                 style: {fontSize: "16px"},
                 marks: [
-                    Plot.barY(currentData, Plot.groupX({ y: "count" }, { x: "val", fill: "black", opacity: 0.5, tooltip: true })),
-                    //Plot.ruleX([average], {
-                    //            stroke: "#BD210E",
-                    //            strokeWidth: 4,
-                    //            channels: {average: {value: average, label: "Average"}},
-                    //            tip: {format: {average:d => `${d.toFixed(2)}`, x:false}},
-                    //        }),
-                    //Plot.dot(currentData, {
-                    //    x: {value: average, thresholds: 20},
-                    //    y: maxY + 0.1 * maxY,
-                    //    r: 5,
-                    //    fill: "#BD210E"
-                   // }),
-                    // Plot.axisX({label: `${sefUnits}`, labelArrow: false, labelAnchor: "center"}),
-                ]
+                    Plot.barY(currentData, Plot.groupX({ y: "count" }, { x: "val", fill: "black", opacity: 0.5, tooltip: true, title: d => `Count: ${d.count}` })),
+                    Plot.text(currentData, Plot.groupX({ y: "count", text: "count"}, {x: "val",
+                                                                        text: d => d.count,
+                                                                        dy: -15, // shift the text upward
+                                                                        fill: "#333" ,
+                                                                        fontWeight: 500}))]                                  
             })
         );
     }
@@ -418,11 +405,11 @@
                 marks: [
                     Plot.ruleY([0], {stroke: "#333", strokeWidth: 1.25}),
                     Plot.ruleX([0], {stroke: "#333", strokeWidth: 0.75}),
-                    Plot.boxY(currentData, {
+                    Plot.dot(currentData, {
                         x: "val",
                         y: d => d.total_per_capita * 1000,
                         fill: d => d.total_per_capita < 0 ? '#BD210E' : '#242424',
-                        r: 0.9,
+                        r: currentData === LADfullData ? 4 : 0.9,
                         fillOpacity: 0.75,
                         channels: {
                             location: { value: "Lookup_Value", label: "Location" },
@@ -589,21 +576,21 @@ $: {
             <div class="header-stats">
                 <p class="definition-stat">
                     {#if SEF_CATEGORICAL.includes(sefId)}
-                    -
+                    &nbsp;
                     {:else}
                     Max value: <strong>{formatValue(maxValue, sefShortUnits)}</strong>({maxLookupValue})
                     {/if}
                 </p>
                 <p class="definition-stat">
                     {#if SEF_CATEGORICAL.includes(sefId)}
-                        Most common category: <strong style="color: #BD210E;">{formatValue(modeValue, sefShortUnits)}</strong>
+                    &nbsp;    
                     {:else}
                         Average value: <strong style="color: #BD210E;">{formatValue(averageValue, sefShortUnits)}</strong>
                     {/if}
                 </p>
                 <p class="definition-stat">
                     {#if SEF_CATEGORICAL.includes(sefId)}
-                    -
+                    Most common category: <strong style="color: #BD210E;">{formatValue(modeValue, sefShortUnits)}</strong>
                     {:else}
                     Min value: <strong>{formatValue(minValue, sefShortUnits)}</strong>({minLookupValue})
                     {/if}
