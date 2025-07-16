@@ -337,15 +337,18 @@
                         tickRotate: sefId === "Typology" ? -10 : 0,
                         padding: 0.5
                     },
-                y: {label: currentData === LADfullData ? 'No. of LADs' : 'No. of LSOAs', labelArrow: false},
+                //y: {label: currentData === LADfullData ? 'No. of LADs' : 'No. of LSOAs', labelArrow: false},
                 style: {fontSize: "16px"},
                 marks: [
+                    Plot.ruleY([0], {stroke: "#333", strokeWidth: 0.75}),
+                    Plot.ruleX([0], {stroke: "#333", strokeWidth: 0.75}),
                     Plot.barY(currentData, Plot.groupX({ y: "count" }, { x: "val", fill: "black", opacity: 0.5, tooltip: true, title: d => `Count: ${d.count}` })),
                     Plot.text(currentData, Plot.groupX({ y: "count", text: "count"}, {x: "val",
                                                                         text: d => d.count,
                                                                         dy: -15, // shift the text upward
                                                                         fill: "#333" ,
-                                                                        fontWeight: 500}))]                                  
+                                                                        fontWeight: 500})),
+                    Plot.axisY({label: currentData === LADfullData ? 'No. of LADs' : 'No. of LSOAs', labelArrow: false})]                                  
             })
         );
     }
@@ -364,7 +367,7 @@
                 y: {grid: true},
                 style: {fontSize: "16px"},
                 marks: [
-                    Plot.ruleY([0], {stroke: "#333", strokeWidth: 1.25}),
+                    Plot.ruleY([0], {stroke: "#333", strokeWidth: 0.75}),
                     Plot.ruleX([0], {stroke: "#333", strokeWidth: 0.75}),
                     Plot.dot(currentData, {
                         x: "val",
@@ -409,7 +412,7 @@
                     Plot.ruleY([0], {stroke: "#333", strokeWidth: 1.25}),
                     Plot.ruleX([0], {stroke: "#333", strokeWidth: 0.75}),
                     Plot.dot(currentData, {
-                        x: d => d.val + (Math.random() - 0.5) * 0.1,
+                        x: currentSEFData === LADSEFData ? d => d.val + (Math.random() - 0.5) * 0.05 : d => d.val + (Math.random() - 0.5) * 0.1 ,
                         y: d => d.total_per_capita * 1000,
                         fill: d => d.total_per_capita < 0 ? '#BD210E' : '#242424',
                         r: currentData === LADfullData ? 4 : 0.9,
@@ -496,7 +499,7 @@
                     Plot.ruleY([0], {stroke: "#333", strokeWidth: 1.25}),
                     Plot.ruleX([0], {stroke: "#333", strokeWidth: 0.75}),
                     Plot.dot(currentSEFData.filter(d => d["co_benefit_type"] == CB), {
-                        x: d => d.val + (Math.random() - 0.5) * 0.2,
+                        x: currentSEFData === LADSEFData ? d => d.val + (Math.random() - 0.5) * 0.1 : d => d.val + (Math.random() - 0.5) * 0.2 ,
                         y: "total",
                         fill: COBENEFS_SCALE(CB),
                         fillOpacity: 0.5,
@@ -579,7 +582,7 @@ $: {
             <div class="header-stats">
                 <p class="definition-stat">
                     {#if SEF_CATEGORICAL.includes(sefId)}
-                    &nbsp;
+                    <h3 class="component-title">Distribution of {sefLabel} by {sefUnits.toLowerCase()} across the UK</h3>
                     {:else}
                     Max value: <strong>{formatValue(maxValue, sefShortUnits)}</strong>({maxLookupValue})
                     {/if}
