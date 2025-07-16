@@ -62,7 +62,7 @@
             <h2 class="page-title">Transport</h2>
         </div>
         <div class="sef-link-wrapper">
-        <!--<a class="sef-link" href="{base}/sef?sef=Number_cars">Number of cars</a>-->
+        <a class="sef-link" href="{base}/sef?sef=Number_cars">Number of cars</a>
     </div>
         <div class="sef-link-wrapper">
         <a class="sef-link" href="{base}/sef?sef=Urban_trips">Number of urban trips</a>
@@ -81,19 +81,19 @@
             <h2 class="page-title">Building factors</h2>
         </div>
         <div class="sef-link-wrapper">
-        <!--<a class="sef-link" href="{base}/sef?sef=EPC">Domestic energy performance certificate (EPC)</a>
+        <a class="sef-link" href="{base}/sef?sef=EPC">Domestic energy performance certificate (EPC)</a>
     </div>
         <div class="sef-link-wrapper">
-        <!--<a class="sef-link" href="{base}/sef?sef=Tenure">Housing tenure</a>-->
+        <a class="sef-link" href="{base}/sef?sef=Tenure">Housing tenure</a>
     </div>
         <div class="sef-link-wrapper">
-        <!--<a class="sef-link" href="{base}/sef?sef=Typology">Building type</a>-->
+        <a class="sef-link" href="{base}/sef?sef=Typology">Building type</a>
     </div>
         <div class="sef-link-wrapper">
-        <!--<a class="sef-link" href="{base}/sef?sef=Fuel_Type">Domestic fuel type</a>-->
+        <a class="sef-link" href="{base}/sef?sef=Fuel_Type">Domestic fuel type</a>
     </div>
         <div class="sef-link-wrapper">
-        <!--<a class="sef-link" href="{base}/sef?sef=Gas_flag">Gas grid connection</a>-->
+        <a class="sef-link" href="{base}/sef?sef=Gas_flag">Gas grid connection</a>
     </div>
         <div class="sef-link-wrapper">
         <a class="sef-link" href="{base}/sef?sef=House_value">House value</a>
