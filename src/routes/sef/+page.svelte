@@ -592,8 +592,9 @@ $: {
             <div class="header-stats">
                 <p class="definition-stat">
                     {#if SEF_CATEGORICAL.includes(sefId)}
-                    <h3 class="component-title">Distribution of {sefLabel} by {sefUnits.toLowerCase()} across the UK</h3>
+                    <h3 class="component-title">Distribution of {sefLabel.toLowerCase()} by {sefUnits.toLowerCase()} across the UK</h3>
                     {:else}
+                    <h3 class="component-title">Distribution of {sefLabel.toLowerCase()} across the UK</h3>
                     Max value: <strong>{formatValue(maxValue, sefShortUnits)}</strong>({maxLookupValue})
                     {/if}
                 </p>
