@@ -5,7 +5,8 @@ import { createEventDispatcher } from 'svelte';
   export let items: Record<string, string>;
   let term = '';
   let selectedCode: string | null = null;
-  const codes = Object.entries(items);
+  // const codes = Object.entries(items);
+  $: codes = Object.entries(items);
 
   $: suggestions = term
     ? codes
@@ -19,6 +20,7 @@ import { createEventDispatcher } from 'svelte';
     term = name;
     selectedCode = code;
     dispatch('select', code);
+    console.log(`Selected code: ${code}`, `Name: ${name}`);
   }
 
   function doSearch() {
@@ -26,6 +28,8 @@ import { createEventDispatcher } from 'svelte';
       dispatch('search', selectedCode);
     }
   }
+
+  //  $: console.log('suggestions:', suggestions);
   </script>
   
   <div class="autocomplete">
