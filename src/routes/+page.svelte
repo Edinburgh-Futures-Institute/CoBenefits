@@ -611,7 +611,7 @@
                     <div class="story">
                         <br>
                         <h3>More to come...</h3>
-                        <p>In the mean time, if you have your own ideas for collaboration on stories related to
+                        <p>In the meantime, if you have your own ideas for collaboration on stories related to
                             co-benefits please get in touch using the
                             <a href="https://docs.google.com/forms/d/1w-8Lt9bESZ56PdklTIT38plec7dPgDbJtORkatoXFVY/viewform?edit_requested=true">feedback
                                 form.</a></p>
