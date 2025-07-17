@@ -113,9 +113,13 @@
         <div class="sef-link-wrapper">
         <a class="sef-link" href="{base}/sef?sef=Rurality">Rurality</a>
         </div>
+        <br>
     </div>
+    
 </main>
+<br>
 
+<Footer></Footer>
 
 <style>
     main {

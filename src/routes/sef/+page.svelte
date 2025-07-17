@@ -64,7 +64,7 @@
     let SEFData;
     let PCData;
     let LADfullData;
-    let useLAD = false; 
+    //let useLAD = false; 
     let LADfullData_alt;
     let LADSEFData;
     let dataLoaded = false;
@@ -263,9 +263,19 @@
     })
     : "N/A";
 
-    function toggleDataSource() {
-    useLAD = !useLAD;
-        }
+  let loading = false;
+
+  function toggleDataSource() {
+    loading = true;
+
+    // Simulate async loading
+    setTimeout(() => {
+      useLAD = !useLAD;
+      loading = false;
+    }, 1000);
+  }
+
+  let useLAD = true;
 
     function renderDistPlot() {
         const average = d3.mean(fullData, d => d.val) ?? 0;
@@ -605,9 +615,14 @@ $: {
         </div>
     </div>
 
-    <button on:click={toggleDataSource}>
-        {useLAD ? 'Switch to LAD level data' : 'Switch to LSOA level data'}
-    </button>
+    <button on:click={toggleDataSource} class="switch-button" disabled={loading}>
+  {#if loading}
+    <span class="spinner"></span>
+    Loading...
+  {:else}
+    {useLAD ? 'Show data grouped by local authorities (LADs)' : 'Show data grouped by data zones (LSOAs)'}
+  {/if}
+</button>
 
     {#if scrolledPastHeader}
         <div class="mini-header">
@@ -639,9 +654,9 @@ $: {
                     <h3 class="component-title">{sefLabel} against per capita co-benefit values (£, thousand)</h3>
                     <p class="description">Each point in the chart below represents a UK 
                         {#if currentData == LADfullData}
-                        LAD. 
+                        local authority (LAD). 
                     {:else}
-                LSOA.
+                data zone (LSOA).
             {/if}</p>
                     <div class="aggregation-icon-container2">
                         <div class="tooltip-wrapper">
@@ -656,7 +671,7 @@ $: {
                     {/if}
                 </div>
                 <div class="component column">
-                    <h3 class="component-title">{sefLabel} at LSOA level</h3>
+                    <h3 class="component-title">{sefLabel} at data zone (LSOA) level</h3>
                     <p class="description">Scroll for zooming in and out.</p>
                     <div class="aggregation-icon-container2">
                         <div class="tooltip-wrapper">
@@ -1087,4 +1102,44 @@ $: {
     word-break: break-word;
     display: inline-block;
 }
+
+  .switch-button {
+    position: relative;
+    padding: 8px 14px;
+    background-color: #555;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 18px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: -5px;
+    justify-content: center; 
+    min-width: 200px; 
+  }
+
+  .switch-button:hover:not(:disabled) {
+    background-color: #333;
+  }
+
+  .switch-button:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
+
+  .spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid #fff;
+    border-top: 2px solid transparent;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
 </style>

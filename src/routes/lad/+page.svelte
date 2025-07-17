@@ -5,6 +5,8 @@
     import {csv} from "d3";
     import {onMount} from "svelte";
 
+    import Footer from "$lib/components/Footer.svelte";
+
 
     const LADEngPath = `${base}/LAD/Eng_Wales_LSOA_LADs.csv`
     const LADNIPath = `${base}/LAD/NI_DZ_LAD.csv`
@@ -117,7 +119,7 @@
     </main>
 {/if}
 
-
+<Footer></Footer>
 <style>
     main {
         padding: 2rem 4rem;
