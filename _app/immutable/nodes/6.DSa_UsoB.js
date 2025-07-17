@@ -1,0 +1,1 @@
+import"../chunks/globals.BXPqhyME.js";import"../chunks/transform.BNP73y-7.js";import{L as l}from"../chunks/layout.DYboEskp.js";async function o(){return{}}const r=Object.freeze(Object.defineProperty({__proto__:null,load:o},Symbol.toStringTag,{value:"Module"}));export{l as component,r as universal};
