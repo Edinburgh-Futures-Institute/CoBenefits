@@ -97,47 +97,83 @@
     let currentSection = '';
     const sectionIds = ['overview', 'compare'];
 
-    let LADToName = {};
-    let ladLoaded = false;
+    const LADToName: { [code: string]: string } = {};
+    const SmallAreaToLAD: Record<string, string> = {};
+    let ladLoaded: boolean = false;
 
-    async function loadLADNames() {
+async function loadLADNames() {
+  try {
+    const seenLADs: Set<string> = new Set();
+
+    // England
     const eng = await csv(LADEngPath);
-    const seenLADs = new Set();
-
     for (let row of eng) {
-        const code = row.LAD22CD?.trim();
-        const name = row.LAD22NM?.trim();
+      const ladCode = row.LAD22CD?.trim();
+      const ladName = row.LAD22NM?.trim();
+      const lsoaCode = row.LSOA11CD?.trim(); // small area
 
-        if (!seenLADs.has(code) && code && name) {
-            LADToName[code] = name;
-            seenLADs.add(code);
-        }
+      if (lsoaCode && ladCode) {
+        SmallAreaToLAD[lsoaCode] = ladCode;
+      }
+
+      if (!seenLADs.has(ladCode) && ladCode && ladName) {
+        LADToName[ladCode] = ladName;
+        seenLADs.add(ladCode);
+      }
     }
 
+    // Northern Ireland
     const ni = await csv(LADNIPath);
     for (let row of ni) {
-        const code = row.LGD2014_code;
-        const name = row.LGD2014_name;
-        if (!seenLADs.has(code) && code && name) {
-            LADToName[code] = name;
-            seenLADs.add(code);
-        }
+      const ladCode = row.LGD2014_code?.trim();
+      const ladName = row.LGD2014_name?.trim();
+      const dzCode = row.DZ2021_code?.trim(); // small area
+
+      if (dzCode && ladCode) {
+        SmallAreaToLAD[dzCode] = ladCode;
+      }
+
+      if (!seenLADs.has(ladCode) && ladCode && ladName) {
+        LADToName[ladCode] = ladName;
+        seenLADs.add(ladCode);
+      }
     }
 
+    // Scotland
     const sco = await csv(LADScotlandPath);
     for (let row of sco) {
-        const code = row.LA_Code;
-        const name = row.LA_Name;
-        if (!seenLADs.has(code) && code && name) {
-            LADToName[code] = name;
-            seenLADs.add(code);
-        }
+      const ladCode = row.LA_Code?.trim();
+      const ladName = row.LA_Name?.trim();
+      const dzCode = row.DZ2011_Code?.trim(); // small area
+
+      if (dzCode && ladCode) {
+        SmallAreaToLAD[dzCode] = ladCode;
+      }
+
+      if (!seenLADs.has(ladCode) && ladCode && ladName) {
+        LADToName[ladCode] = ladName;
+        seenLADs.add(ladCode);
+      }
     }
 
     ladLoaded = true;
+    console.log("Loaded LAD names:", Object.keys(LADToName).length, LADToName);
+    console.log("SmallArea → LAD mapping:", Object.keys(SmallAreaToLAD).length, SmallAreaToLAD);
 
-    console.log("Loaded LAD names", Object.keys(LADToName).length, LADToName);
+  } catch (error) {
+    console.error("Error loading LAD names:", error);
+  }
 }
+
+function getAreaNameFromCode(code) {
+  if (!code) return "Unknown";
+  const ladCode = SmallAreaToLAD[code];
+  if (!ladCode) return "Unknown LAD";
+  const ladName = LADToName[ladCode];
+  return ladName || "Unknown Name";
+}
+
+loadLADNames();
 
     function handleScroll() {
         const scrollY = window.scrollY;
@@ -243,8 +279,8 @@
 
     $: maxIndex = currentData ? d3.maxIndex(currentData, d => d.val) : -1;
     $: maxLookupValue = maxIndex !== -1 && currentData
-    ? currentData[maxIndex].Lookup_Value?.trim()
-    : "N/A";
+  ? currentData[maxIndex].Lookup_Value?.trim() ?? "N/A"
+  : "N/A";
     $: maxValue = maxIndex !== -1 && currentData
     ? (currentData[maxIndex].val ?? 0).toLocaleString('en-US', {
         minimumFractionDigits: 2,
@@ -254,14 +290,31 @@
 
     $: minIndex = currentData ? d3.minIndex(currentData, d => d.val) : -1;
     $: minLookupValue = minIndex !== -1 && currentData
-    ? currentData[minIndex].Lookup_Value
-    : "N/A";
+  ? currentData[minIndex].Lookup_Value?.trim() ?? "N/A"
+  : "N/A";
     $: minValue = minIndex !== -1 && currentData
     ? (currentData[minIndex].val ?? 0).toLocaleString('en-US', {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2
     })
     : "N/A";
+    
+    $: maxName = ladLoaded && maxLookupValue !== "N/A"
+  ? (currentData === LADfullData
+      ? LADToName[maxLookupValue] ?? maxLookupValue
+      : LADToName[SmallAreaToLAD[maxLookupValue]] ?? maxLookupValue)
+  : "Loading...";
+
+$: minName = ladLoaded && minLookupValue !== "N/A"
+  ? (currentData === LADfullData
+      ? LADToName[minLookupValue] ?? minLookupValue
+      : LADToName[SmallAreaToLAD[minLookupValue]] ?? minLookupValue)
+  : "Loading...";
+
+  $: console.log("🔍 maxLookupValue:", maxLookupValue);
+$: console.log("🧭 LAD name for maxLookupValue:", LADToName[maxLookupValue]);
+
+
 
   let loading = false;
 
@@ -387,7 +440,9 @@
                         r:  currentData === LADfullData ? 4 : 0.9,
                         fillOpacity: 0.75,
                         channels: {
-                            location: { value: "Lookup_Value", label: "Location" },
+                            location: { value: d => currentData === LADfullData 
+                                        ? LADToName[d.Lookup_Value] || "Unknown" 
+                                        : getAreaNameFromCode(d.Lookup_Value), label: "Location" },
                             sef: { value: "val", label: `${sefUnits}` },
                             value: { value: d => d.total_per_capita * 1000, label: "Co-Benefit Value (£, thousand)" },
                         },
@@ -469,7 +524,9 @@
                         fillOpacity: 0.5,
                         r: currentSEFData === LADSEFData ? 3.5 : 0.5,
                         channels: {
-                            location: {value: "Lookup_Value", label: "Location"},
+                            location: {value: d => currentData === LADfullData 
+                                        ? LADToName[d.Lookup_Value] || "Unknown" 
+                                        : getAreaNameFromCode(d.Lookup_Value), label: "Location" },
                             //sef: {value: "val", label: `${sefUnits}`},
                             //value: {value: d => d.total_per_capita * 1000, label: "Co-Benefit Value (£, thousand)"},
                         },
@@ -595,8 +652,8 @@ $: {
                     <h3 class="component-title">Distribution of {sefLabel.toLowerCase()} by {sefUnits.toLowerCase()} across the UK</h3>
                     {:else}
                     <h3 class="component-title">Distribution of {sefLabel.toLowerCase()} across the UK</h3>
-                    Max value: <strong>{formatValue(maxValue, sefShortUnits)}</strong>({maxLookupValue})
-                    {/if}
+                    Max value: <strong>{formatValue(maxValue, sefShortUnits)}</strong> 
+                    ({#if currentData == LADfullData}{LADToName[maxLookupValue]}{:else}{maxName}{/if}{/if})
                 </p>
                 <p class="definition-stat">
                     {#if SEF_CATEGORICAL.includes(sefId)}
@@ -609,7 +666,7 @@ $: {
                     {#if SEF_CATEGORICAL.includes(sefId)}
                     Most common category: <strong style="color: #BD210E;">{formatValue(modeValue, sefShortUnits)}</strong>
                     {:else}
-                    Min value: <strong>{formatValue(minValue, sefShortUnits)}</strong>({minLookupValue})
+                    Min value: <strong>{formatValue(minValue, sefShortUnits)}</strong> ({minName})
                     {/if}
                 </p>
             </div>
@@ -621,7 +678,9 @@ $: {
     <span class="spinner"></span>
     Loading...
   {:else}
-    {useLAD ? 'Show data grouped by local authorities (LADs)' : 'Show data grouped by data zones (LSOAs)'}
+    {useLAD ? 
+    'Currently the data is grouped by data zones (LSOAs), click here to switch to local authorities (LADs).' : 
+    'Currently the data is grouped by local authorities (LADs), click here to switch to data zones (LSOAs).'}
   {/if}
 </button>
 
@@ -739,10 +798,9 @@ $: {
                             <div class="legend-description">
                                 <div style="height: 0.8em;"></div>
                                 {CB.def} <br>
-                                <div class="link-box">
-                                Click <a class="link" href="{base}/cobenefit?cobenefit={CB.id}" target="_blank" rel="noopener noreferrer" style= "color:{COBENEFS_SCALE(CB.id)};">here</a> for the 
-                                <span style= "color:{COBENEFS_SCALE(CB.id)};">{CB.id.toLowerCase()} </span>report page.
-                                </div>
+                                
+                                <a class="link" href="{base}/cobenefit?cobenefit={CB.id}" target="_blank" rel="noopener noreferrer" style= "color:{COBENEFS_SCALE(CB.id)}; text-decoration: underline">{CB.id} report page</a>
+                                
                             </div>
                             </div>
                             {/if}
@@ -1029,13 +1087,6 @@ $: {
     margin: 0.5em 0em;
     background-color: #f9f9f9;
     border-radius: 4px;
-}
-
-.link-box {
-    margin: 0.5em 0em;
-    border-left: 2px solid #555;
-    padding-left: 0.4em;
-    padding-right: 0.1em;
 }
 
 .aggregation-icon-container2 {

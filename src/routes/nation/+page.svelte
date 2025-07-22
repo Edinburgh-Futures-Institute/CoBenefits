@@ -1140,9 +1140,9 @@ CBOverTimePerCBPLot?.append(plotPerCB); }
                             <div class="legend-description">
                                 <div style="height: 0.8em;"></div>
                                 {CB.def} <br>
-                                <div class="link-box">
+                                
                                 <a class="link" href="{base}/cobenefit?cobenefit={CB.id}" target="_blank" rel="noopener noreferrer" style= "color:{COBENEFS_SCALE(CB.id)}; text-decoration: underline">{CB.id} report page</a>
-                                </div>
+                                
                             </div>
                             </div>
                             {/if}
