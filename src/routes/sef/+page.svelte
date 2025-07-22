@@ -311,8 +311,8 @@ $: minName = ladLoaded && minLookupValue !== "N/A"
       : LADToName[SmallAreaToLAD[minLookupValue]] ?? minLookupValue)
   : "Loading...";
 
-  $: console.log("🔍 maxLookupValue:", maxLookupValue);
-$: console.log("🧭 LAD name for maxLookupValue:", LADToName[maxLookupValue]);
+  $: console.log("maxLookupValue:", maxLookupValue);
+$: console.log("LAD name for maxLookupValue:", LADToName[maxLookupValue]);
 
 
 
@@ -653,7 +653,8 @@ $: {
                     {:else}
                     <h3 class="component-title">Distribution of {sefLabel.toLowerCase()} across the UK</h3>
                     Max value: <strong>{formatValue(maxValue, sefShortUnits)}</strong> 
-                    ({#if currentData == LADfullData}{LADToName[maxLookupValue]}{:else}{maxName}{/if}{/if})
+                    ({#if currentData == LADfullData}{LADToName[maxLookupValue]}{:else}{maxName}{/if})
+                    {/if}
                 </p>
                 <p class="definition-stat">
                     {#if SEF_CATEGORICAL.includes(sefId)}
@@ -666,7 +667,12 @@ $: {
                     {#if SEF_CATEGORICAL.includes(sefId)}
                     Most common category: <strong style="color: #BD210E;">{formatValue(modeValue, sefShortUnits)}</strong>
                     {:else}
-                    Min value: <strong>{formatValue(minValue, sefShortUnits)}</strong> ({minName})
+                    Min value: <strong>{formatValue(minValue, sefShortUnits)}</strong> 
+                    ({#if currentData === LADfullData && ladLoaded && minLookupValue !== "N/A"}
+  {LADToName[minLookupValue] ?? minLookupValue}
+{:else}
+  {minName}
+{/if})
                     {/if}
                 </p>
             </div>
