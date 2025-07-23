@@ -347,7 +347,7 @@ $: console.log("LAD name for maxLookupValue:", LADToName[maxLookupValue]);
                 marginRight: 20,
                 marginBottom: 50,
                 x: {label: `${sefUnits}`},
-                y: {label: currentData === LADfullData ? 'No. of LADs' : 'No. of LSOAs', labelArrow: false, domain: currentData === LADfullData ? [0,100] : [0,10000]},
+                y: {label: currentData === LADfullData ? 'No. of LADs' : 'No. of LSOAs', labelArrow: false},
                 style: {fontSize: "16px"},
                 marks: [
                     Plot.rectY(currentData, Plot.binX({y: "count"}, {
@@ -433,7 +433,7 @@ $: console.log("LAD name for maxLookupValue:", LADToName[maxLookupValue]);
                     Plot.ruleY([0], {stroke: "#333", strokeWidth: 0.75}),
                     Plot.ruleX([0], {stroke: "#333", strokeWidth: 0.75}),
                     Plot.dot(currentData, {
-                        x: "val",
+                        x: sefId == "Rurality"? d => d.val + (Math.random() - 0.5) * 0.02 : d => d.val,
                         y: d => d.total_per_capita * 1000,
                         fill: d => d.total_per_capita < 0 ? '#BD210E'
                             : '#242424',
@@ -518,7 +518,7 @@ $: console.log("LAD name for maxLookupValue:", LADToName[maxLookupValue]);
                     Plot.ruleY([0], {stroke: "#333", strokeWidth: 1.25}),
                     Plot.ruleX([0], {stroke: "#333", strokeWidth: 0.75}),
                     Plot.dot(currentSEFData.filter(d => d["co_benefit_type"] == CB), {
-                        x: "val",
+                        x: sefId == "Rurality"? d => d.val + (Math.random() - 0.5) * 0.02 : d => d.val,
                         y: "total",
                         fill: COBENEFS_SCALE(CB),
                         fillOpacity: 0.5,
@@ -668,11 +668,7 @@ $: {
                     Most common category: <strong style="color: #BD210E;">{formatValue(modeValue, sefShortUnits)}</strong>
                     {:else}
                     Min value: <strong>{formatValue(minValue, sefShortUnits)}</strong> 
-                    ({#if currentData === LADfullData && ladLoaded && minLookupValue !== "N/A"}
-  {LADToName[minLookupValue] ?? minLookupValue}
-{:else}
-  {minName}
-{/if})
+                    ({#if currentData == LADfullData}{LADToName[minLookupValue]}{:else}{minName}{/if})
                     {/if}
                 </p>
             </div>
@@ -728,6 +724,10 @@ $: {
                         <div class="tooltip-wrapper">
                             <img class="aggregation-icon" src="{per_capita}" alt="icon"/>
                             <span class="tooltip-text">This chart uses per capita values. i.e. shows the cost/benefit per person in each area.</span>
+                            {#if useLAD}
+                            <img class="aggregation-icon" src="{negative}" alt="icon" />
+                            <span class="tooltip-text-neg">This chart includes negative values.</span>
+                            {/if}
                         </div>
                     </div>
                     {#if SEF_CATEGORICAL.includes(sefId)}
@@ -1164,7 +1164,7 @@ $: {
   .switch-button {
     position: relative;
     padding: 8px 14px;
-    background-color: #555;
+    background-color: #777;
     color: white;
     border: none;
     border-radius: 6px;
@@ -1180,7 +1180,7 @@ $: {
   }
 
   .switch-button:hover:not(:disabled) {
-    background-color: #333;
+    background-color: #555;
   }
 
   .switch-button:disabled {
