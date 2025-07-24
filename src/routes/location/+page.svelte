@@ -25,7 +25,7 @@
         addSpinner,
         SEF_SCALE,
         getIconFromCobenef, COBENEFS_SCALE2,
-        SE_FACTORS, SEF_LEVEL_LABELS
+        SE_FACTORS, SEF_LEVEL_LABELS, convertToCSV, downloadCSV
     } from "../../globals";
     import {getRandomSubarray} from "$lib/utils";
 
@@ -39,6 +39,7 @@
     } from "$lib/duckdb";
     import Footer from "$lib/components/Footer.svelte";
     import {csv} from "d3";
+    import {downloadStaticPDF} from "../../globals.js";
 
     let sectionRefs = {
         head: null,
@@ -1079,6 +1080,24 @@
         })
     }
 
+    function exportData() {
+        console.log(121212, allCBAllLADSUM);
+        let data = allCBAllLADSUM.filter(d => d.Lookup_Value == LAD);
+
+        data.push({co_benefit_type: "Total", val: data.reduce((a, b) => a + b.val, 0) })
+
+        data.forEach(d => {
+            delete d.Lookup_Value;
+
+            d["Cobenefit Value (Millions £)"] = d.val;
+            delete d["val"]
+        })
+
+        const csv = convertToCSV(data);
+        downloadCSV(csv, `cobenefits_${LADToName[LAD]}.csv`);
+        downloadStaticPDF("/Scotland_co-benefits_CB7_2045.pdf", "readme.pdf"); // <-- adjust filename/path as needed
+    }
+
 </script>
 
 
@@ -1105,7 +1124,19 @@
     <div class="section header header-row" id="head">
         <div>
             <p class="page-subtitle">Local Authority Report</p>
-            <h1 class="page-title"> {LADToName[LAD]}</h1>
+
+            <div id="title-row">
+                <h1 class="page-title"> {LADToName[LAD]}</h1>
+                <button
+
+                        type="button"
+                        class="data-btn"
+                        on:click={exportData}
+                >
+                    Download Page Data
+                </button>
+            </div>
+
             <p class="description">Explore how this local authority will benefit from achieving Net Zero and learn about
                 the characteristics of its households.</p>
 
@@ -1531,6 +1562,12 @@
         /* min-height: 70vh; */
     }
 
+    #title-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
     #main-title {
         width: 30vw;
         margin-left: 1rem;
@@ -1547,6 +1584,22 @@
         margin-right: 2rem;
         align-self: flex-start;
         /* height: fit-content; */
+    }
+
+    .data-btn {
+        padding: 0rem 1rem;
+        font-size: 0.9rem;
+        height: 30px;
+        border: none;
+        background-color: #007bff;
+        border-radius: 6px;
+        color: white;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+    }
+
+    .data-btn {
+        background-color: #0056b3;
     }
 
 

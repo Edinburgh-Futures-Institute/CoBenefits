@@ -128,7 +128,10 @@
         }
     }
 
-    loadData();
+    loadData().then(() => {
+        map = new MapUK(oneNationData, "LSOA", mapDiv, "total", true, "Lookup_Value", false);
+        map.initMap();
+    });
 
     let scrolledPastHeader = false;
     let currentSection = '';
@@ -168,15 +171,13 @@
         return labels[id] || '';
     }
 
-    const LADToName = data.LADToName;
-
     let map: MapUK;
     let mapDiv: HTMLElement;
 
     onMount(() => {
         addSpinner(element)
-        map = new MapUK(totalCBAllLAD, "LAD", mapDiv, "val", true, "Lookup_value", false);
-        map.initMap();
+
+
 
         window.addEventListener('scroll', handleScroll); // header scroll listener
 
@@ -206,13 +207,9 @@
     }
 
     function renderDistributionPlot(totalCBAllZones, oneLADData) {
-        console.log(22)
-
         if (!totalCBAllZones || !oneLADData) return;
 
         let filtered = totalCBAllZones.filter(d => d.total < 20)
-
-        console.log(232323, oneLADData)
 
         const plot = Plot.plot({
             height: height / 1.6,

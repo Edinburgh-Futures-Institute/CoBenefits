@@ -184,7 +184,7 @@ export class MapUK {
                 }
             }
         }
-        // console.log(" OK ", this.dataZoneToValue, Object.keys(this.dataZoneToValue).length)
+        // console.log("map data ", this.dataZoneToValue, Object.keys(this.dataZoneToValue).length)
 
         this.makeColorScale(justHighlightArea)
     }

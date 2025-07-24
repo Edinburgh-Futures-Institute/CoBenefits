@@ -294,3 +294,43 @@ export function formatDate(date: string) {
     return `${day}/${month}/${year}`;
 }
 
+
+// Converts array of objects to CSV string
+export function convertToCSV(data: object[]): string {
+    if (!data.length) return "";
+
+    const headers = Object.keys(data[0]).join(",");
+    const rows = data.map(row =>
+        Object.values(row)
+            .map(value => `"${String(value).replace(/"/g, '""')}"`)
+            .join(",")
+    );
+    return [headers, ...rows].join("\n");
+}
+
+// Triggers download of CSV file
+export function downloadCSV(csv: string, filename: string): void {
+    const blob = new Blob([csv], {type: "text/csv;charset=utf-8;"});
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+
+    link.setAttribute("href", url);
+    link.setAttribute("download", filename);
+    link.style.display = "none";
+
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+}
+
+// Triggers download of existing PDF file
+export function downloadStaticPDF(path: string, filename: string): void {
+  const link = document.createElement("a");
+  link.href = path;
+  link.download = filename;
+  link.style.display = "none";
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
