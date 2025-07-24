@@ -382,6 +382,7 @@
     function handleSearch(code: string) {
         // goto(`${base}/location?location=${code}`);
         window.open(`${base}/location?location=${code}`, '_blank');
+        
     }
 
     let isLoading = true;
