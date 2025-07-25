@@ -829,7 +829,7 @@ $: {
                             <div class="component-chart-title-container">
                             <img class="sm-cb-icon" src={getIconFromCobenef(CB.id)} alt="{CB.label} icon" />
                             <h3 class="chart-component-title">{CB.label}</h3>
-                            {#if CB.id == "Hassle costs"  || CB.id == "Road repairs" || CB.id == "Road safety" || CB.id == "Congestion" || CB.id == "Excess heat"}
+                            {#if CB.id == "Longer travel times"  || CB.id == "Road repairs" || CB.id == "Road safety" || CB.id == "Congestion" || CB.id == "Excess heat"}
                            
                                 <div class="tooltip-wrapper">
                                     <img class="sm-icon" src="{per_capita}" alt="icon" />
