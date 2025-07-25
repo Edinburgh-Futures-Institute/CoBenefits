@@ -198,7 +198,7 @@ export function getIconFromCobenef(cobenefit: CoBenefit) {
         return dampnessIcon;
     } else if (cobenefit == "Congestion") {
         return congestionIcon;
-    } else if (cobenefit == "Hassle costs") {
+    } else if (cobenefit == "Longer travel times") {
         return hassleCostIcon;
     } else if (cobenefit == "Road repairs") {
         return roadRepairsIcon;
