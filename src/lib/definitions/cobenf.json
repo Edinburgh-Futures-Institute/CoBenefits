@@ -30,7 +30,8 @@
    "def": "The value of reduced congestion from lower road usage due to decreased vehicle travel. The benefits are modelled based on time saved plus projected travel patterns. Negative values represent increased travel time due to factors like greater road usage via rebound effects."
  },
  {
-   "id": "Hassle costs",
+   "//id": "Hassle costs",
+   "id": "Longer travel times",
    "label": "Longer travel times",
    "def": "The costs associated with longer journey times due to shifts away from private vehicle usage."
  },
