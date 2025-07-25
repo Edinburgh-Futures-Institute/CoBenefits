@@ -1081,7 +1081,6 @@
     }
 
     function exportData() {
-        console.log(121212, allCBAllLADSUM);
         let data = allCBAllLADSUM.filter(d => d.Lookup_Value == LAD);
 
         data.push({co_benefit_type: "Total", val: data.reduce((a, b) => a + b.val, 0) })

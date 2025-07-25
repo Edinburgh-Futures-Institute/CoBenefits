@@ -186,6 +186,8 @@ export class MapUK {
         }
         // console.log("map data ", this.dataZoneToValue, Object.keys(this.dataZoneToValue).length)
 
+        this.geojson.features = this.geojson.features.filter(zone => zone.properties.value);
+
         this.makeColorScale(justHighlightArea)
     }
 
