@@ -51,6 +51,7 @@
     let element: HTMLElement
     let plotDist: HTMLElement
     let plotPerCb: HTMLElement
+    let plotPerCBPerLSOA;
     let heatmapPlot: HTMLElement
     let CBOverTimePLot: HTMLElement
     let CBOverTimePerScenarioPLot: HTMLElement
@@ -91,10 +92,18 @@
 
     let dataLoaded = false;
 
+    let selectedCoBenefit = "Noise"; // default
+    let selectedLSOA = "";
+    let allCoBenefitTypes = [];
+
+      // Search state
+  let searchInput = "";
+  let searchResults = [];
 
     async function loadData() {
         totalCBAllZones = await getTableData(getTotalCBAllDatazones());
         allCBsAllZones = await getTableData(getAllCBAllDatazones());
+        console.log("allCBAllZones", allCBsAllZones)
 
         totalCBAllZones.forEach(datazone => {
             datazone.isPageLAD = (datazone.LAD == LAD) ? true : false
@@ -107,6 +116,7 @@
         allCBAllLADSUM = await getTableData(getSUMCBGroupedByLADAndCB());
 
         oneLADData = await getTableData(getTotalCBForOneLAD(LAD));
+        console.log("oneLADData", oneLADData)
         oneLADAllCbs = await getTableData(getAllCBForOneLAD(LAD));
 
 
@@ -445,7 +455,7 @@
                         tipoffset: 10,
                         fillOpacity: 0.8
                     })),
-                    Plot.axisY({label: 'Total Co-Benefit (£million)', labelAnchor: "center", labelArrow: false}),
+                    Plot.axisY({label: 'Total Co-Benefit (£ million)', labelAnchor: "center", labelArrow: false}),
                     Plot.axisX({label: 'Co-Benefit Type', tickRotate: 25, labelAnchor: "center", labelArrow: false}),
                     Plot.ruleY([0], {stroke: "#333", strokeWidth: 0.75}),
 
@@ -465,6 +475,78 @@
             plotPerCb.append(plot)
         }
     }
+
+
+onMount(() => {
+  console.log("onMount ran");
+  console.log("oneLADAllCbs is:", oneLADAllCbs);
+
+  if (oneLADAllCbs && oneLADAllCbs.length > 0) {
+    allCoBenefitTypes = [...new Set(oneLADAllCbs.map(d => d.co_benefit_type))];
+    selectedCoBenefit = allCoBenefitTypes[0];
+    console.log("Loaded co-benefits:", oneLADAllCbs);
+  }
+});
+$: if (oneLADAllCbs && oneLADAllCbs.length > 0 && allCoBenefitTypes.length === 0) {
+  allCoBenefitTypes = [...new Set(oneLADAllCbs.map(d => d.co_benefit_type))];
+  selectedCoBenefit = allCoBenefitTypes[0];
+  console.log("Loaded co-benefits reactively:", oneLADAllCbs);
+}
+
+  function renderPerCBPerLSOA() {
+    if (!plotPerCBPerLSOA) return;
+
+    plotPerCBPerLSOA.innerHTML = ""; // Clear previous plot
+
+    const filteredData = oneLADAllCbs.filter(d => d.co_benefit_type === selectedCoBenefit);
+    const sortedData = d3.sort(filteredData, d => -d.total);
+
+    const plot = Plot.plot({
+      height: 600,
+      width: 1500,
+      marginBottom: 50,
+      marginTop: 30,
+      marginLeft: 50,
+      x: {grid: true },
+      y: {label: "LSOAs", tickFormat: () => "",domain: sortedData.map(d => d["Lookup_Value"]), axis: null},
+      style: { fontSize: "14px" },
+      color: {
+        legend: false,
+        range: COBENEFS_SCALE.range(),
+        domain: COBENEFS_SCALE.domain()
+      },
+      marks: [
+        Plot.barX(sortedData, {
+          x: "total",
+          y: "Lookup_Value",
+          //dx: -12,
+          fill: d => COBENEFS_SCALE(d["co_benefit_type"]),
+          tip: true,
+          //tipoffset: 10,
+          fillOpacity: 0.5
+        }),
+        ...(selectedLSOA?.trim()
+          ? [
+              Plot.ruleY(
+                sortedData.filter(d => d.Lookup_Value === selectedLSOA.trim()),
+                {
+                  x1: 0,
+                  x2: d => d.total,
+                  y: "Lookup_Value",
+                  stroke: d => COBENEFS_SCALE(d["co_benefit_type"]),
+                  strokeWidth: 5
+                }
+              )
+            ]
+          : []),
+        Plot.axisX({ label: "Total Co-Benefit (£ million)", labelAnchor: "center", labelArrow: false}),
+        Plot.ruleX([0], {stroke: "#333", strokeWidth: 1.75})
+      ]
+    });
+
+    plotPerCBPerLSOA.appendChild(plot);
+  }
+
 
     function renderSEFPlot() {
         SEF.forEach(sef => {
@@ -1027,6 +1109,7 @@
         if (dataLoaded && allCBAllLADSUM && totalCBAllLAD && totalCBAllZones) {
             renderPlot();
             renderPerCobenefPlot();
+            renderPerCBPerLSOA();
             renderCBOverTimePlot();
         }
     }
@@ -1097,6 +1180,22 @@
         downloadStaticPDF("/Scotland_co-benefits_CB7_2045.pdf", "readme.pdf"); // <-- adjust filename/path as needed
     }
 
+    $: if (selectedCoBenefit) {
+  renderPerCBPerLSOA();
+}
+
+  // Fuzzy match logic (simple substring, case-insensitive)
+  $: {
+    if (searchInput.length >= 2) {
+      const lsoaSet = new Set(oneLADAllCbs.map(d => d.Lookup_Value));
+      searchResults = [...lsoaSet].filter(code =>
+        code.toLowerCase().includes(searchInput.toLowerCase())
+      ).slice(0, 10); // limit results
+    } else {
+      searchResults = [];
+    }
+  }
+
 </script>
 
 
@@ -1117,16 +1216,22 @@
               >> {formatLabel(currentSection)}</span>
 
             </div>
+            <button
+
+                        type="button"
+                        class="data-btn-sticky"
+                        on:click={exportData}
+                >
+                    Download Page Data
+                </button>
         </div>
     {/if}
 
     <div class="section header header-row" id="head">
         <div>
+            <div class="header-bar">
             <p class="page-subtitle">Local Authority Report</p>
-
-            <div id="title-row">
-                <h1 class="page-title"> {LADToName[LAD]}</h1>
-                <button
+            <button
 
                         type="button"
                         class="data-btn"
@@ -1134,6 +1239,11 @@
                 >
                     Download Page Data
                 </button>
+                </div>
+
+            <div id="title-row">
+                <h1 class="page-title"> {LADToName[LAD]}</h1>
+                
             </div>
 
             <p class="description">Explore how this local authority will benefit from achieving Net Zero and learn about
@@ -1281,6 +1391,40 @@
                 </div>
             </div>
         </div>
+        <div id="vis-block">
+        <div id="main-block">
+            <h3 class="section-title">What co-benefits would the LSOAs recieve?</h3>
+            <p class="description">Here the distribution is grouped by LSOA to give a more granular insight into the co-benefits recieved throughout {LADToName[LAD]}</p>
+            <div>
+  <label for="coBenefitSelect">Select Co-Benefit Type:</label>
+  <select id="coBenefitSelect" bind:value={selectedCoBenefit}>
+    {#each allCoBenefitTypes as type}
+      <option value={type}>{type}</option>
+    {/each}
+  </select>
+
+<label>
+  Search LSOA:
+  <input
+    type="text"
+    placeholder="Enter LSOA"
+    bind:value={searchInput}
+  />
+</label>
+
+{#if searchResults.length > 0}
+  <ul class="search-results">
+    {#each searchResults as result}
+      <li on:click={() => selectLSOA(result)}>
+        {result}
+      </li>
+    {/each}
+  </ul>
+{/if}
+</div>
+            <div bind:this={plotPerCBPerLSOA}></div>
+            </div>
+        </div>
     </div>
 
     <!--    <div class="section">-->
@@ -1362,40 +1506,6 @@
                     <div id="main-legend" class="legend-box" style="margin-bottom: 5px;">
                         <strong style="margin-bottom: 0.5rem;">Legend:</strong> <br/>
                         <ul class="horizontal-legend-list" style="margin-bottom:5px">
-                            <!--                            <li><span class="legend-color" style="background-color: #D3A029"></span>-->
-                            <!--                                Diet change-->
-                            <!--                            </li>-->
-                            <!--                            <li><span class="legend-color" style="background-color: #48773E"></span>-->
-                            <!--                                Physical activity-->
-                            <!--                            </li>-->
-                            <!--                            <li><span class="legend-color" style="background-color: #183668"></span>-->
-                            <!--                                Dampness-->
-                            <!--                            </li>-->
-                            <!--                            <li><span class="legend-color" style="background-color: #00AED9"></span>-->
-                            <!--                                Excess cold-->
-                            <!--                            </li>-->
-                            <!--                            <li><span class="legend-color" style="background-color: #E11484"></span>-->
-                            <!--                                Noise-->
-                            <!--                            </li>-->
-                            <!--                            <li><span class="legend-color" style="background-color: #71C35D"></span>-->
-                            <!--                                Air quality-->
-                            <!--                            </li>-->
-                            <!--                            <li><span class="legend-color" style="background-color: #8F1838"></span>-->
-                            <!--                                Congestion-->
-                            <!--                            </li>-->
-                            <!--                            <li><span class="legend-color" style="background-color: #EF402B"></span>-->
-                            <!--                                Excess heat-->
-                            <!--                            </li>-->
-                            <!--                            <li><span class="legend-color" style="background-color: #F36D25"></span>-->
-                            <!--                                Road safety-->
-                            <!--                            </li>-->
-                            <!--                            <li><span class="legend-color" style="background-color: #F99D26"></span>-->
-                            <!--                                Road repairs-->
-                            <!--                            </li>-->
-                            <!--                            <li><span class="legend-color" style="background-color: #C31F33"></span>-->
-                            <!--                                Hassle costs-->
-                            <!--                            </li>-->
-
                             {#each COBENEFS as cobenef}
                                 <li><span class="legend-color"
                                           style="background-color: {COBENEFS_SCALE(cobenef.id)}"></span>
@@ -1587,6 +1697,7 @@
 
     .data-btn {
         padding: 0rem 1rem;
+        margin-bottom: 0.2rem;
         font-size: 0.9rem;
         height: 30px;
         border: none;
@@ -1596,9 +1707,22 @@
         cursor: pointer;
         transition: background-color 0.2s ease;
     }
+        .data-btn-sticky {
+        padding: 0rem 1rem;
+        margin-right: 5.3rem;
+        margin-top: 0.3rem;
+        font-size: 0.9rem;
+        height: 30px;
+        border: none;
+        background-color: #6280a0;
+        border-radius: 6px;
+        color: white;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+    }
 
     .data-btn {
-        background-color: #0056b3;
+        background-color: #6280a0;
     }
 
 
@@ -1758,4 +1882,31 @@
         margin-left: auto;
         /*margin-right: 10%;*/
     }
+
+    .header-bar {
+        display: flex;
+        align-items: center;
+        justify-content: gap; 
+        gap: 1rem;
+    }
+
+      .search-results {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid #ccc;
+    background: white;
+    position: absolute;
+    z-index: 1000;
+    width: 250px;
+  }
+  .search-results li {
+    padding: 5px 10px;
+    cursor: pointer;
+  }
+  .search-results li:hover {
+    background-color: #f0f0f0;
+  }
 </style>
