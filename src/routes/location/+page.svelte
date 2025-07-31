@@ -153,6 +153,8 @@
         removeSpinner(element)
     }
 
+    
+
     $: {
         if (totalCBAllLAD) {
             totalValueMean = d3.mean(totalCBAllLAD.map(d => d.val)) / 1000;
@@ -493,60 +495,63 @@ $: if (oneLADAllCbs && oneLADAllCbs.length > 0 && allCoBenefitTypes.length === 0
   console.log("Loaded co-benefits reactively:", oneLADAllCbs);
 }
 
+$: searchResults = searchInput.length > 2
+  ? oneLADAllCbs
+      .filter(d => d.co_benefit_type === selectedCoBenefit)
+      .map(d => d.Lookup_Value)
+      .filter(name => name.toLowerCase().includes(searchInput.toLowerCase()))
+  : [];
+
+function selectLSOA(name) {
+  selectedLSOA = name;
+  searchInput = "";
+  searchResults = [];
+  renderPerCBPerLSOA();
+}
+
   function renderPerCBPerLSOA() {
-    if (!plotPerCBPerLSOA) return;
+  if (!plotPerCBPerLSOA) return;
 
-    plotPerCBPerLSOA.innerHTML = ""; // Clear previous plot
+  plotPerCBPerLSOA.innerHTML = "";
 
-    const filteredData = oneLADAllCbs.filter(d => d.co_benefit_type === selectedCoBenefit);
-    const sortedData = d3.sort(filteredData, d => -d.total);
+  const filteredData = oneLADAllCbs.filter(d => d.co_benefit_type === selectedCoBenefit);
+  const sortedData = d3.sort(filteredData, d => -d.total);
 
-    const plot = Plot.plot({
-      height: 600,
-      width: 1500,
-      marginBottom: 50,
-      marginTop: 30,
-      marginLeft: 50,
-      x: {grid: true },
-      y: {label: "LSOAs", tickFormat: () => "",domain: sortedData.map(d => d["Lookup_Value"]), axis: null},
-      style: { fontSize: "14px" },
-      color: {
-        legend: false,
-        range: COBENEFS_SCALE.range(),
-        domain: COBENEFS_SCALE.domain()
-      },
-      marks: [
-        Plot.barX(sortedData, {
-          x: "total",
-          y: "Lookup_Value",
-          //dx: -12,
-          fill: d => COBENEFS_SCALE(d["co_benefit_type"]),
-          tip: true,
-          //tipoffset: 10,
-          fillOpacity: 0.5
-        }),
-        ...(selectedLSOA?.trim()
-          ? [
-              Plot.ruleY(
-                sortedData.filter(d => d.Lookup_Value === selectedLSOA.trim()),
-                {
-                  x1: 0,
-                  x2: d => d.total,
-                  y: "Lookup_Value",
-                  stroke: d => COBENEFS_SCALE(d["co_benefit_type"]),
-                  strokeWidth: 5
-                }
-              )
-            ]
-          : []),
-        Plot.axisX({ label: "Total Co-Benefit (£ million)", labelAnchor: "center", labelArrow: false}),
-        Plot.ruleX([0], {stroke: "#333", strokeWidth: 1.75})
-      ]
-    });
+  const selectedDatum = sortedData.find(d => d.Lookup_Value === selectedLSOA?.trim());
 
-    plotPerCBPerLSOA.appendChild(plot);
-  }
+  const plot = Plot.plot({
+    height: 500,
+    width: 800,
+    marginBottom: 50,
+    marginTop: 30,
+    marginLeft: 50,
+    x: { grid: true },
+    style: { fontSize: "14px" },
+    color: {
+      legend: false,
+      range: COBENEFS_SCALE.range(),
+      domain: COBENEFS_SCALE.domain()
+    },
+    marks: [
+      Plot.areaY(sortedData, Plot.binX({ y: "count" }, {
+        x: "total",
+        fill: d => COBENEFS_SCALE(d.co_benefit_type),
+        fillOpacity: 0.5
+      })),
+      ...(selectedDatum
+        ? [Plot.ruleX([selectedDatum.total], {
+            stroke: COBENEFS_SCALE(selectedDatum.co_benefit_type),
+            strokeWidth: 3,
+            strokeDasharray: "4,2"
+          })]
+        : []),
+      Plot.axisX({ label: "Total Co-Benefit (£ million)", labelAnchor: "center", labelArrow: false }),
+      Plot.ruleX([0], { stroke: "#333", strokeWidth: 1.75 })
+    ]
+  });
 
+  plotPerCBPerLSOA.appendChild(plot);
+}
 
     function renderSEFPlot() {
         SEF.forEach(sef => {
