@@ -1,30 +1,20 @@
-// MapUK Component using Maplinre
 import * as d3 from 'd3';
-import * as Plot from "@observablehq/plot";
-import {goto} from '$app/navigation';
-
 
 import * as maplibregl from "maplibre-gl"
 import "maplibre-gl/dist/maplibre-gl.css";
 import * as topojson from "topojson-client";
-import {getCustomCBData, getTableData, getTotalPerPathway} from "$lib/duckdb";
-import {type CoBenefit, COBENEFS, type Scenario} from "../../globals";
 import {Legend} from "$lib/utils";
-// import {polygonToLine} from '@turf/polygon-to-line';
 
 
-// const LSOAzonesPath = 'maps/Lower_layer_Super_Output_Areas_2021_EW_BGC_V3_-6823567593069184824.json';
+// Topojson files
 const LSOAzonesPath = 'maps/LSOA.json';
 const LADzonesPath = 'maps/LAD3.json';
 
 
 let datazones = await d3.json(LSOAzonesPath)
-// datazones = topojson.feature(datazones, datazones.objects["Lower_layer_Super_Output_Areas_2021_EW_BGC_V3_-6823567593069184824"]);
 datazones = topojson.feature(datazones, datazones.objects["LSOA"]);
 
 let LADZones = await d3.json(LADzonesPath)
-// LADZones = topojson.feature(LADZones, LADZones.objects["Local_Authority_Districts_December_2024_Boundaries_UK_BGC_-8811838383176485936"]);
-// LADZones = topojson.feature(LADZones, LADZones.objects["Local_Authority_Districts_December_2011_GB_BGC_2022_484504071141336946"]);
 LADZones = topojson.feature(LADZones, LADZones.objects["LAD_MAY_2022_UK_BFE_V3"]);
 
 // Add an id to each feature for mouse hover events later
@@ -163,7 +153,6 @@ export class MapUK {
 
                 // Put cobenef values inside the geojson for maplibre rendering
                 for (let zone of this.geojson.features) {
-                    // let zoneId = zone.properties.LAD24CD;
                     let zoneId = this.zoneName(zone)
                     zone.properties.value = this.dataZoneToValue[zoneId]
                 }
@@ -177,17 +166,13 @@ export class MapUK {
 
                 // Put cobenef values inside the geojson for maplibre rendering
                 for (let zone of this.geojson.features) {
-                    // let zoneId = zone.properties.LSOA21CD;
                     let zoneId = this.zoneName(zone);
                     zone.properties.value = this.dataZoneToValue[zoneId]
-                    // console.log(this.dataZoneToValue[zoneId], zoneId)
                 }
             }
         }
         // console.log("map data ", this.dataZoneToValue, Object.keys(this.dataZoneToValue).length)
-
         this.geojson.features = this.geojson.features.filter(zone => zone.properties.value);
-
         this.makeColorScale(justHighlightArea)
     }
 
@@ -244,16 +229,6 @@ export class MapUK {
 
         // Optional: Add border
         if (this.border) {
-            // this.map.addLayer({
-            //     id: 'state-borders',
-            //     type: 'line',
-            //     source: 'datazones',
-            //     paint: {
-            //         'line-color': '#000000',
-            //         'line-width': 0.2
-            //     }
-            // });
-
             this.map.addLayer({
                 id: 'state-borders',
                 type: 'line',
@@ -269,67 +244,6 @@ export class MapUK {
                 }
             });
         }
-
-        // this.map.addSource('outerLines', {
-        //     type: 'geojson',
-        //     data: outerLines
-        // });
-        // this.map.addLayer({
-        //     id: 'outer-stroke',
-        //     type: 'line',
-        //     source: 'outerLines',
-        //     paint: {
-        //         'line-color': '#000',
-        //         'line-width': 3
-        //     }
-        // });
-
-        // Tiles
-        // this.map.addSource('raster-tiles', {
-        //         'type': 'raster',
-        //         'tiles': [
-        //             // 'https://tiles.stadiamaps.com/tiles/stamen_watercolor/{z}/{x}/{y}.jpg'
-        //             // 	"https://tile.openstreetmap.org/{z}/{x}/{y}.png"
-        //             "https://tiles.stadiamaps.com/tiles/alidade_smooth/{z}/{x}/{y}.png?api_key=2400b8d8-5e34-491f-87b0-181af8c12f88"
-        //         ],
-        //         'tileSize': 256,
-        //         'attribution':
-        //             'MapUK tiles by <a target="_blank" href="https://stamen.com">Stamen Design</a>; Hosting by <a href="https://stadiamaps.com/" target="_blank">Stadia Maps</a>. Data &copy; <a href="https://www.openstreetmap.org/about" target="_blank">OpenStreetMap</a> contributors'
-        //     }
-        // );
-        //
-        // this.map.addLayer({
-        //         'id': 'simple-tiles',
-        //         'type': 'raster',
-        //         'source': 'raster-tiles',
-        //         paint: {
-        //             "raster-opacity": 0.35
-        //         },
-        //         // 'minzoom': 0,
-        //         // 'maxzoom': 10
-        //     }
-        // );
-
-        // this.map.addSource('vector-tiles', {
-        //         'type': 'vector',
-        //         'url':
-        //             "https://tiles.stadiamaps.com/tiles/alidade_smooth.json?api_key=2400b8d8-5e34-491f-87b0-181af8c12f88"
-        //         ,
-        //         'attribution':
-        //             'MapUK tiles by <a target="_blank" href="https://stamen.com">Stamen Design</a>; Hosting by <a href="https://stadiamaps.com/" target="_blank">Stadia Maps</a>. Data &copy; <a href="https://www.openstreetmap.org/about" target="_blank">OpenStreetMap</a> contributors'
-        //     }
-        // );
-        //
-        // this.map.addLayer({
-        //         'id': 'simple-tiles',
-        //         'type': 'fill',
-        //         'source': 'vector-tiles',
-        //         paint: {
-        //             "fill-opacity": 0.35
-        //         },
-        //     }
-        // );
-
 
         const layers = this.map.getStyle().layers;
 
@@ -366,12 +280,6 @@ export class MapUK {
                     // name of LAD or LSOA
                     let name = zone.properties.LAD22NM ?? zone.properties.LSOA21NM;
                     let cobenefValue = zone.properties.value;
-
-                 //    this.tooltip.innerHTML = `
-                 // <strong>Zone</strong>: <a href="/location?location=${this.zoneName(zone)}">${name}</a> (${this.zoneName(zone)})
-                 // <br>
-                 // <strong>${this.tooltipValueCb(cobenefValue)}</strong>
-                 // `;
 
                     this.tooltip.innerHTML = `
                  Zone: <strong>${name}</strong>
@@ -468,10 +376,6 @@ export class MapUK {
     }
 
     zoneName(zone) {
-        // return this.granularity == "LSOA" ? zone.properties.LSOA21CD : zone.properties.LAD24CD;
-        // return this.granularity == "LSOA" ? zone.properties.LSOA21CD : zone.properties.lad11cd;
-        // return this.granularity == "LSOA" ? zone.properties.DZ2021_cd : zone.properties.lad11cd;
-
         let zoneName;
         if (this.granularity == "LSOA") {
             zoneName = zone.properties.DZ2021_cd;
@@ -488,7 +392,6 @@ export class MapUK {
             zoneName = zone.properties.LAD22CD;
         }
 
-        // return this.granularity == "LSOA" ? (zone.properties.DZ2021_cd ?? zone.properties.DataZone) : zone.properties.lad11cd;
         return zoneName
     }
 }
