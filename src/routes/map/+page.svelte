@@ -1,11 +1,8 @@
 <script lang="ts" async>
     import * as d3 from 'd3';
-    import * as Plot from "@observablehq/plot";
     import {onMount} from 'svelte';
     import {base} from '$app/paths';
     import posthog from 'posthog-js';
-
-    import * as maplibregl from "maplibre-gl"
     import "maplibre-gl/dist/maplibre-gl.css";
     import {
         getCustomCBData,
@@ -23,10 +20,8 @@
         COBENEFS_SCALE2,
         SEF_SCALE, SE_FACTORS, SEF_CATEGORICAL, SEF_LEVEL_LABELS, type SEFactor
     } from "../../globals";
-    import {Legend} from "$lib/utils";
     import {MapUK} from "$lib/components/mapUK";
     import NavigationBar from "$lib/components/NavigationBar.svelte";
-    import {COBENEFS_RANGE2} from "../../globals.js";
     import Footer from "$lib/components/Footer.svelte";
 
 
@@ -46,17 +41,14 @@
     let cobenefData: Array<Record<any, any>>;
 
     let scenario: Scenario = "BNZ";
-    // let coBenefits: Set<string> = new Set(COBENEFS.map(d => d.id));
     let coBenefits: Array<CoBenefit> = COBENEFS.map(d => d.id);
 
     let timeSelected: string = "total";
     let mapStyleLoaded = false;
     let granularity: "LSOA" | "LAD" = "LAD";
-    // let granularity: "LSOA" | "LAD" = "LSOA";
 
     let selectedSef: SEFactor = "EPC";
     let fullData;
-
 
     $: {
         if (map?.loaded) {

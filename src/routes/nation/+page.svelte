@@ -129,7 +129,7 @@
     }
 
     loadData().then(() => {
-        map = new MapUK(oneNationData, "LSOA", mapDiv, "total", true, "Lookup_Value", false);
+        map = new MapUK(oneNationData, "LSOA", mapDiv, "total", false, "Lookup_Value", false);
         map.initMap();
     });
 
