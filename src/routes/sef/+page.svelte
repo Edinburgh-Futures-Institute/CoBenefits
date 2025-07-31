@@ -1177,9 +1177,10 @@ $: {
   .switch-button {
 
     padding: 8px 14px;
-    background-color: #777;
-    color: white;
-    border: none;
+    background-color: rgb(255, 255, 255);
+    color: #333;
+    border-color: #d3d3d3;
+    border-width: 0.5px;
     border-radius: 6px;
     font-size: 18px;
     cursor: pointer;
@@ -1194,6 +1195,7 @@ $: {
 
   .switch-button:hover:not(:disabled) {
     background-color: #555;
+    color: white;
   }
 
   .switch-button:disabled {
@@ -1218,6 +1220,7 @@ $: {
     justify-content: center; 
     min-width: 200px;
     margin-top: 4px; 
+    box-shadow: #d3d3d3 0px 0px 6px 0px;
   }
 
   .switch-button-sticky:hover:not(:disabled) {
