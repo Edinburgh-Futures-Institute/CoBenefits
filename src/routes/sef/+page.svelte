@@ -259,8 +259,8 @@ loadLADNames();
     }
 
     // Setting up the data switches
-    $: currentData = useLAD ? fullData : LADfullData;
-    $: currentSEFData = useLAD ? SEFData : LADSEFData;
+    $: currentData = useLAD ? LADfullData : fullData;
+    $: currentSEFData = useLAD ?  LADSEFData: SEFData;
 
     // Summary statistics
     $: averageValue = currentData
@@ -674,17 +674,19 @@ $: {
             </div>
         </div>
     </div>
-
+<div class="button-wrapper">
     <button on:click={toggleDataSource} class="switch-button" disabled={loading}>
-  {#if loading}
-    <span class="spinner"></span>
-    Loading...
-  {:else}
-    {useLAD ? 
-    'Currently the data is grouped by data zones (LSOAs), click here to switch to local authorities (LADs).' : 
-    'Currently the data is grouped by local authorities (LADs), click here to switch to data zones (LSOAs).'}
-  {/if}
-</button>
+                    {#if loading}
+                        <span class="spinner"></span>
+                        Loading...
+                    {:else}
+                        {useLAD ? 
+                        'Currently the data for this page is grouped by local authorities (LADs), click here to switch to data zones (LSOAs).':
+                        'Currently the data for this page is grouped by data zones (LSOAs), click here to switch to local authorities (LADs).'  
+                        }
+                    {/if}
+                    </button>
+</div>
 
     {#if scrolledPastHeader}
         <div class="mini-header">
@@ -692,6 +694,17 @@ $: {
         <span class="mini-header-text">
           {sefLabel} >> 
         </span>
+        <button on:click={toggleDataSource} class="switch-button-sticky" disabled={loading}>
+            {#if loading}
+                <span class="spinner"></span>
+                Loading...
+            {:else}
+                {useLAD ? 
+                'Currently the data for this page is grouped by local authorities (LADs), click here to switch to data zones (LSOAs).': 
+                'Currently the data for this page is grouped by data zones (LSOAs), click here to switch to local authorities (LADs).' 
+                }
+            {/if}
+                </button>
             </div>
         </div>
     {/if}
@@ -707,7 +720,7 @@ $: {
     </div>-->
 
     <div class="section">
-        <div id="overview">
+        <div id="overview">   
             <div class="section-header">
                 <p class="section-subtitle">Overview</p>
             </div>
@@ -1162,7 +1175,7 @@ $: {
 }
 
   .switch-button {
-    position: relative;
+
     padding: 8px 14px;
     background-color: #777;
     color: white;
@@ -1176,7 +1189,7 @@ $: {
     gap: 8px;
     margin-top: -5px;
     justify-content: center; 
-    min-width: 200px; 
+    max-width: 1000px; 
   }
 
   .switch-button:hover:not(:disabled) {
@@ -1184,6 +1197,34 @@ $: {
   }
 
   .switch-button:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
+
+    .switch-button-sticky {
+    position: relative;
+    padding: 4px 10px;
+    background-color: #777;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: -5px;
+    justify-content: center; 
+    min-width: 200px;
+    margin-top: 4px; 
+  }
+
+  .switch-button-sticky:hover:not(:disabled) {
+    background-color: #555;
+  }
+
+  .switch-button-sticky:disabled {
     opacity: 0.7;
     cursor: not-allowed;
   }
@@ -1200,4 +1241,13 @@ $: {
   @keyframes spin {
     to { transform: rotate(360deg); }
   }
+
+  .button-wrapper {
+  display: flex;
+  justify-content: left;
+  padding-left: 6rem;
+  width: 100%;
+  margin-top: 1rem; 
+  margin-bottom: 0rem;
+}
 </style>
