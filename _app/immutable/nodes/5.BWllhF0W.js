@@ -1,0 +1,1 @@
+import"../chunks/DQM_3w2p.js";import"../chunks/C4dxaJ6L.js";import{L as s}from"../chunks/CyZwl0ww.js";async function t({url:o}){return{LAD:o.searchParams.get("location")}}const a=Object.freeze(Object.defineProperty({__proto__:null,load:t},Symbol.toStringTag,{value:"Module"}));export{s as component,a as universal};
