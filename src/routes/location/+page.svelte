@@ -162,8 +162,11 @@
 
     loadData().then(() => {
         // Needs to be initialised after data loading
-        mapLSOA = new MapUK(oneLADData, "LSOA", mapLSOADiv, "total", true, "Lookup_Value", false, null, 8);
-        mapLSOA.initMap(false);
+        mapLSOA = new MapUK(oneLADData, "LSOA", mapLSOADiv, "total", false, "Lookup_Value", false, null, 8);
+
+        mapLSOA.initMap();
+        mapLSOA.setCenter(oneLADData[0].LAD)
+        // mapLSOA.setCenter(oneLADData[0].Lookup_Value)
     });
 
     let scrolledPastHeader = false;
@@ -219,8 +222,6 @@
         addSpinner(element)
         map = new MapUK(LAD, "LAD", mapDiv, "val", true, "Lookup_value", false, null, 8);
         map.initMap(false);
-
-        // mapLSOA = new MapUK(LAD, "LAD", mapLSOADiv, "val", true, "Lookup_value", false, null, 8);
 
         window.addEventListener('scroll', handleScroll); // header scroll listener
 
@@ -1405,7 +1406,7 @@
         </div>
         <div id="vis-block">
             <div id="main-block">
-                <h3 class="section-title">What co-benefits would the LSOAs recieve?</h3>
+                <h3 class="section-title" style="align">What co-benefits would the LSOAs recieve?</h3>
                 <p class="description">Here the distribution is grouped by LSOA to give a more granular insight into the
                     co-benefits recieved throughout {LADToName[LAD]}</p>
                 <div>
@@ -1438,9 +1439,10 @@
                 <div bind:this={plotPerCBPerLSOA}></div>
             </div>
 
-            <div style="flex: 1; display: flex; flex-direction: column">
-                <h4>LSOA Map</h4>
-<!--                    <p>LSOA Map</p>-->
+            <div style="flex: 1; display: flex; flex-direction: column; padding-top: 3rem;">
+                <h3 class="component-title">LSOA Map</h3>
+
+                <p class="description">This map shows the total co-benefit values (£ millions) for each LSOA of {LADToName[LAD]}</p>
                 <div id="map-lsoa" bind:this={mapLSOADiv}>
                 </div>
             </div>
@@ -1768,8 +1770,8 @@
 
     #map-lsoa {
         flex: 1;
-        width: 100%;
-        flex: 1
+        /*width: 100%;*/
+        /*height: 100%;*/
     }
 
     #multiple-comp {

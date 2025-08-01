@@ -48,7 +48,6 @@ async function loadData() {
     const response = await fetch('database.parquet');
     // const response = await fetch('database_onlyIreland.parquet');
 
-
     const arrayBuffer = await response.arrayBuffer();
     const uint8Array = new Uint8Array(arrayBuffer);
 

@@ -83,7 +83,6 @@
 
         map = new MapUK(LADAveragedData, "LAD", mapDiv, "total", true, "LAD", false, colorRange);
         map.initMap();
-
     });
 
     let icon = getIconFromCobenef(coBenefit)
