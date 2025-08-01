@@ -96,9 +96,9 @@
     let selectedLSOA = "";
     let allCoBenefitTypes = [];
 
-      // Search state
-  let searchInput = "";
-  let searchResults = [];
+    // Search state
+    let searchInput = "";
+    let searchResults = [];
 
     async function loadData() {
         totalCBAllZones = await getTableData(getTotalCBAllDatazones());
@@ -148,12 +148,10 @@
             }
         })
 
-
         dataLoaded = true;
         removeSpinner(element)
     }
 
-    
 
     $: {
         if (totalCBAllLAD) {
@@ -162,7 +160,11 @@
         }
     }
 
-    loadData();
+    loadData().then(() => {
+        // Needs to be initialised after data loading
+        mapLSOA = new MapUK(oneLADData, "LSOA", mapLSOADiv, "total", true, "Lookup_Value", false, null, 8);
+        mapLSOA.initMap(false);
+    });
 
     let scrolledPastHeader = false;
     let currentSection = '';
@@ -210,10 +212,15 @@
     let map: MapUK;
     let mapDiv: HTMLElement;
 
+    let mapLSOA: MapUK;
+    let mapLSOADiv: HTMLElement;
+
     onMount(() => {
         addSpinner(element)
         map = new MapUK(LAD, "LAD", mapDiv, "val", true, "Lookup_value", false, null, 8);
         map.initMap(false);
+
+        // mapLSOA = new MapUK(LAD, "LAD", mapLSOADiv, "val", true, "Lookup_value", false, null, 8);
 
         window.addEventListener('scroll', handleScroll); // header scroll listener
 
@@ -479,79 +486,79 @@
     }
 
 
-onMount(() => {
-  console.log("onMount ran");
-  console.log("oneLADAllCbs is:", oneLADAllCbs);
+    onMount(() => {
+        console.log("onMount ran");
+        console.log("oneLADAllCbs is:", oneLADAllCbs);
 
-  if (oneLADAllCbs && oneLADAllCbs.length > 0) {
-    allCoBenefitTypes = [...new Set(oneLADAllCbs.map(d => d.co_benefit_type))];
-    selectedCoBenefit = allCoBenefitTypes[0];
-    console.log("Loaded co-benefits:", oneLADAllCbs);
-  }
-});
-$: if (oneLADAllCbs && oneLADAllCbs.length > 0 && allCoBenefitTypes.length === 0) {
-  allCoBenefitTypes = [...new Set(oneLADAllCbs.map(d => d.co_benefit_type))];
-  selectedCoBenefit = allCoBenefitTypes[0];
-  console.log("Loaded co-benefits reactively:", oneLADAllCbs);
-}
+        if (oneLADAllCbs && oneLADAllCbs.length > 0) {
+            allCoBenefitTypes = [...new Set(oneLADAllCbs.map(d => d.co_benefit_type))];
+            selectedCoBenefit = allCoBenefitTypes[0];
+            console.log("Loaded co-benefits:", oneLADAllCbs);
+        }
+    });
+    $: if (oneLADAllCbs && oneLADAllCbs.length > 0 && allCoBenefitTypes.length === 0) {
+        allCoBenefitTypes = [...new Set(oneLADAllCbs.map(d => d.co_benefit_type))];
+        selectedCoBenefit = allCoBenefitTypes[0];
+        console.log("Loaded co-benefits reactively:", oneLADAllCbs);
+    }
 
-$: searchResults = searchInput.length > 2
-  ? oneLADAllCbs
-      .filter(d => d.co_benefit_type === selectedCoBenefit)
-      .map(d => d.Lookup_Value)
-      .filter(name => name.toLowerCase().includes(searchInput.toLowerCase()))
-  : [];
+    $: searchResults = searchInput.length > 2
+        ? oneLADAllCbs
+            .filter(d => d.co_benefit_type === selectedCoBenefit)
+            .map(d => d.Lookup_Value)
+            .filter(name => name.toLowerCase().includes(searchInput.toLowerCase()))
+        : [];
 
-function selectLSOA(name) {
-  selectedLSOA = name;
-  searchInput = "";
-  searchResults = [];
-  renderPerCBPerLSOA();
-}
+    function selectLSOA(name) {
+        selectedLSOA = name;
+        searchInput = "";
+        searchResults = [];
+        renderPerCBPerLSOA();
+    }
 
-  function renderPerCBPerLSOA() {
-  if (!plotPerCBPerLSOA) return;
+    function renderPerCBPerLSOA() {
+        if (!plotPerCBPerLSOA) return;
 
-  plotPerCBPerLSOA.innerHTML = "";
+        plotPerCBPerLSOA.innerHTML = "";
 
-  const filteredData = oneLADAllCbs.filter(d => d.co_benefit_type === selectedCoBenefit);
-  const sortedData = d3.sort(filteredData, d => -d.total);
+        const filteredData = oneLADAllCbs.filter(d => d.co_benefit_type === selectedCoBenefit);
+        const sortedData = d3.sort(filteredData, d => -d.total);
 
-  const selectedDatum = sortedData.find(d => d.Lookup_Value === selectedLSOA?.trim());
+        const selectedDatum = sortedData.find(d => d.Lookup_Value === selectedLSOA?.trim());
 
-  const plot = Plot.plot({
-    height: 500,
-    width: 800,
-    marginBottom: 50,
-    marginTop: 30,
-    marginLeft: 50,
-    x: { grid: true },
-    style: { fontSize: "14px" },
-    color: {
-      legend: false,
-      range: COBENEFS_SCALE.range(),
-      domain: COBENEFS_SCALE.domain()
-    },
-    marks: [
-      Plot.areaY(sortedData, Plot.binX({ y: "count" }, {
-        x: "total",
-        fill: d => COBENEFS_SCALE(d.co_benefit_type),
-        fillOpacity: 0.5
-      })),
-      ...(selectedDatum
-        ? [Plot.ruleX([selectedDatum.total], {
-            stroke: COBENEFS_SCALE(selectedDatum.co_benefit_type),
-            strokeWidth: 3,
-            strokeDasharray: "4,2"
-          })]
-        : []),
-      Plot.axisX({ label: "Total Co-Benefit (£ million)", labelAnchor: "center", labelArrow: false }),
-      Plot.ruleX([0], { stroke: "#333", strokeWidth: 1.75 })
-    ]
-  });
+        const plot = Plot.plot({
+            height: 500,
+            width: 800,
+            marginBottom: 50,
+            marginTop: 30,
+            marginLeft: 50,
+            x: {grid: true},
+            style: {fontSize: "14px"},
+            color: {
+                legend: false,
+                range: COBENEFS_SCALE.range(),
+                domain: COBENEFS_SCALE.domain()
+            },
+            marks: [
+                Plot.areaY(sortedData, Plot.binX({y: "count"}, {
+                    x: "total",
+                    fill: d => COBENEFS_SCALE(d.co_benefit_type),
+                    fillOpacity: 0.5
+                })),
+                ...(selectedDatum
+                    ? [Plot.ruleX([selectedDatum.total], {
+                        stroke: COBENEFS_SCALE(selectedDatum.co_benefit_type),
+                        strokeWidth: 3,
+                        strokeDasharray: "4,2"
+                    })]
+                    : []),
+                Plot.axisX({label: "Total Co-Benefit (£ million)", labelAnchor: "center", labelArrow: false}),
+                Plot.ruleX([0], {stroke: "#333", strokeWidth: 1.75})
+            ]
+        });
 
-  plotPerCBPerLSOA.appendChild(plot);
-}
+        plotPerCBPerLSOA.appendChild(plot);
+    }
 
     function renderSEFPlot() {
         SEF.forEach(sef => {
@@ -1171,7 +1178,7 @@ function selectLSOA(name) {
     function exportData() {
         let data = allCBAllLADSUM.filter(d => d.Lookup_Value == LAD);
 
-        data.push({co_benefit_type: "Total", val: data.reduce((a, b) => a + b.val, 0) })
+        data.push({co_benefit_type: "Total", val: data.reduce((a, b) => a + b.val, 0)})
 
         data.forEach(d => {
             delete d.Lookup_Value;
@@ -1186,20 +1193,20 @@ function selectLSOA(name) {
     }
 
     $: if (selectedCoBenefit) {
-  renderPerCBPerLSOA();
-}
-
-  // Fuzzy match logic (simple substring, case-insensitive)
-  $: {
-    if (searchInput.length >= 2) {
-      const lsoaSet = new Set(oneLADAllCbs.map(d => d.Lookup_Value));
-      searchResults = [...lsoaSet].filter(code =>
-        code.toLowerCase().includes(searchInput.toLowerCase())
-      ).slice(0, 10); // limit results
-    } else {
-      searchResults = [];
+        renderPerCBPerLSOA();
     }
-  }
+
+    // Fuzzy match logic (simple substring, case-insensitive)
+    $: {
+        if (searchInput.length >= 2) {
+            const lsoaSet = new Set(oneLADAllCbs.map(d => d.Lookup_Value));
+            searchResults = [...lsoaSet].filter(code =>
+                code.toLowerCase().includes(searchInput.toLowerCase())
+            ).slice(0, 10); // limit results
+        } else {
+            searchResults = [];
+        }
+    }
 
 </script>
 
@@ -1223,20 +1230,20 @@ function selectLSOA(name) {
             </div>
             <button
 
-                        type="button"
-                        class="data-btn-sticky"
-                        on:click={exportData}
-                >
-                    Download Page Data
-                </button>
+                    type="button"
+                    class="data-btn-sticky"
+                    on:click={exportData}
+            >
+                Download Page Data
+            </button>
         </div>
     {/if}
 
     <div class="section header header-row" id="head">
         <div>
             <div class="header-bar">
-            <p class="page-subtitle">Local Authority Report</p>
-            <button
+                <p class="page-subtitle">Local Authority Report</p>
+                <button
 
                         type="button"
                         class="data-btn"
@@ -1244,11 +1251,11 @@ function selectLSOA(name) {
                 >
                     Download Page Data
                 </button>
-                </div>
+            </div>
 
             <div id="title-row">
                 <h1 class="page-title"> {LADToName[LAD]}</h1>
-                
+
             </div>
 
             <p class="description">Explore how this local authority will benefit from achieving Net Zero and learn about
@@ -1397,40 +1404,54 @@ function selectLSOA(name) {
             </div>
         </div>
         <div id="vis-block">
-        <div id="main-block">
-            <h3 class="section-title">What co-benefits would the LSOAs recieve?</h3>
-            <p class="description">Here the distribution is grouped by LSOA to give a more granular insight into the co-benefits recieved throughout {LADToName[LAD]}</p>
-            <div>
-  <label for="coBenefitSelect">Select Co-Benefit Type:</label>
-  <select id="coBenefitSelect" bind:value={selectedCoBenefit}>
-    {#each allCoBenefitTypes as type}
-      <option value={type}>{type}</option>
-    {/each}
-  </select>
+            <div id="main-block">
+                <h3 class="section-title">What co-benefits would the LSOAs recieve?</h3>
+                <p class="description">Here the distribution is grouped by LSOA to give a more granular insight into the
+                    co-benefits recieved throughout {LADToName[LAD]}</p>
+                <div>
+                    <label for="coBenefitSelect">Select Co-Benefit Type:</label>
+                    <select id="coBenefitSelect" bind:value={selectedCoBenefit}>
+                        {#each allCoBenefitTypes as type}
+                            <option value={type}>{type}</option>
+                        {/each}
+                    </select>
 
-<label>
-  Search LSOA:
-  <input
-    type="text"
-    placeholder="Enter LSOA"
-    bind:value={searchInput}
-  />
-</label>
+                    <label>
+                        Search LSOA:
+                        <input
+                                type="text"
+                                placeholder="Enter LSOA"
+                                bind:value={searchInput}
+                        />
+                    </label>
 
-{#if searchResults.length > 0}
-  <ul class="search-results">
-    {#each searchResults as result}
-      <li on:click={() => selectLSOA(result)}>
-        {result}
-      </li>
-    {/each}
-  </ul>
-{/if}
-</div>
-            <div bind:this={plotPerCBPerLSOA}></div>
+                    {#if searchResults.length > 0}
+                        <ul class="search-results">
+                            {#each searchResults as result}
+                                <li on:click={() => selectLSOA(result)}>
+                                    {result}
+                                </li>
+                            {/each}
+                        </ul>
+                    {/if}
+                </div>
+                <div bind:this={plotPerCBPerLSOA}></div>
             </div>
+
+            <div style="flex: 1; display: flex; flex-direction: column">
+                <h4>LSOA Map</h4>
+<!--                    <p>LSOA Map</p>-->
+                <div id="map-lsoa" bind:this={mapLSOADiv}>
+                </div>
+            </div>
+
+
         </div>
+
+
+
     </div>
+
 
     <!--    <div class="section">-->
     <!--        <div class="section-header">-->
@@ -1712,7 +1733,8 @@ function selectLSOA(name) {
         cursor: pointer;
         transition: background-color 0.2s ease;
     }
-        .data-btn-sticky {
+
+    .data-btn-sticky {
         padding: 0rem 1rem;
         margin-right: 5.3rem;
         margin-top: 0.3rem;
@@ -1742,6 +1764,12 @@ function selectLSOA(name) {
         /*TODO: height is given by this currently but better to change at some point*/
         height: 650px;
         /*flex: 1; !* take the remaining height *!*/
+    }
+
+    #map-lsoa {
+        flex: 1;
+        width: 100%;
+        flex: 1
     }
 
     #multiple-comp {
@@ -1891,27 +1919,29 @@ function selectLSOA(name) {
     .header-bar {
         display: flex;
         align-items: center;
-        justify-content: gap; 
+        justify-content: gap;
         gap: 1rem;
     }
 
-      .search-results {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    max-height: 200px;
-    overflow-y: auto;
-    border: 1px solid #ccc;
-    background: white;
-    position: absolute;
-    z-index: 1000;
-    width: 250px;
-  }
-  .search-results li {
-    padding: 5px 10px;
-    cursor: pointer;
-  }
-  .search-results li:hover {
-    background-color: #f0f0f0;
-  }
+    .search-results {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        max-height: 200px;
+        overflow-y: auto;
+        border: 1px solid #ccc;
+        background: white;
+        position: absolute;
+        z-index: 1000;
+        width: 250px;
+    }
+
+    .search-results li {
+        padding: 5px 10px;
+        cursor: pointer;
+    }
+
+    .search-results li:hover {
+        background-color: #f0f0f0;
+    }
 </style>

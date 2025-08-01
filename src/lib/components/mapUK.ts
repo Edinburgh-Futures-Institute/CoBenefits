@@ -61,7 +61,7 @@ export class MapUK {
         this.loadData(data);
 
         this.map = new maplibregl.Map({
-            container: 'map', // container id
+            container: component.id, // container id
             // style: 'https://demotiles.maplibre.org/style.json', // style URL
             style: "https://tiles.stadiamaps.com/styles/alidade_smooth.json?api_key=2400b8d8-5e34-491f-87b0-181af8c12f88",
             // style: {version: 8, sources: {}, layers: []},
@@ -171,7 +171,7 @@ export class MapUK {
                 }
             }
         }
-        // console.log("map data ", this.dataZoneToValue, Object.keys(this.dataZoneToValue).length)
+        console.log("map data ", this.dataZoneToValue, Object.keys(this.dataZoneToValue).length)
         this.geojson.features = this.geojson.features.filter(zone => zone.properties.value);
         this.makeColorScale(justHighlightArea)
     }
@@ -354,7 +354,7 @@ export class MapUK {
 
         if (loadLayers) this.loadLayers();
 
-        // // Add data source
+        // Add data source
         this.map.getSource('datazones').setData(
             this.geojson
         );
