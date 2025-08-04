@@ -1404,7 +1404,7 @@
                 </div>
             </div>
         </div>
-        <div id="vis-block">
+        <!-- <div id="vis-block">
             <div id="main-block">
                 <h3 class="section-title" style="align">What co-benefits would the LSOAs recieve?</h3>
                 <p class="description">Here the distribution is grouped by LSOA to give a more granular insight into the
@@ -1448,7 +1448,7 @@
             </div>
 
 
-        </div>
+        </div> -->
 
 
 
