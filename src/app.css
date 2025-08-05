@@ -527,3 +527,41 @@ button:focus {
     border-bottom: 3px solid #0077cc;
     cursor: pointer;
 }
+
+   .data-btn {
+        padding: 0rem 1rem;
+        margin-bottom: 0.2rem;
+        font-size: 0.9rem;
+        height: 30px;
+        border: none;
+        background-color: #007bff;
+        border-radius: 6px;
+        color: white;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+    }
+
+    .data-btn-sticky {
+        padding: 0rem 1rem;
+        margin-right: 5.3rem;
+        margin-top: 0.3rem;
+        font-size: 0.9rem;
+        height: 30px;
+        border: none;
+        background-color: #6280a0;
+        border-radius: 6px;
+        color: white;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+    }
+
+    .data-btn {
+        background-color: #6280a0;
+    }
+
+        .header-bar {
+        display: flex;
+        align-items: center;
+        justify-content: gap;
+        gap: 1rem;
+    }

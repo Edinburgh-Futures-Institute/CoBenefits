@@ -24,7 +24,7 @@
         SEF_ID,
         SEF_LEVEL_LABELS,
         SEF_SCALE,
-        getIconFromCobenef, addSpinner, removeSpinner
+        getIconFromCobenef, addSpinner, removeSpinner, convertToCSV, downloadCSV
     } from "../../globals";
 
 
@@ -45,6 +45,7 @@
 
     import negative from '$lib/icons/negative.png';
     import Footer from "$lib/components/Footer.svelte";
+    import {downloadStaticPDF} from "../../globals.js";
 
     const LADEngPath = `${base}/LAD/Eng_Wales_LSOA_LADs.csv`;
     const LADNIPath = `${base}/LAD/NI_DZ_LAD.csv`;
@@ -599,6 +600,23 @@ $: console.log("LAD name for maxLookupValue:", LADToName[maxLookupValue]);
         return unit === "£" ? `${unit}${value}` : `${value} ${unit}`;
     }
 
+    function exportData() {
+        let data = fullData;
+
+        //data.push({co_benefit_type: "Total", val: data.reduce((a, b) => a + b.val, 0)})
+
+       data.forEach(d => {
+       delete d.scenario;
+
+       //     d["Cobenefit Value (Millions £)"] = d.val;
+       //     delete d["val"]
+       })
+
+        const csv = convertToCSV(data);
+        downloadCSV(csv, `cobenefits_${sefId}.csv`);
+        downloadStaticPDF("/Scotland_co-benefits_CB7_2045.pdf", "readme.pdf"); // <-- adjust filename/path as needed
+    }
+
 $: {
     // Clean up existing plots
     plot?.firstChild?.remove(); 
@@ -635,6 +653,15 @@ $: {
                 <div class="title-container">
                     <h1 class="page-title">{sefdescr}</h1>
                     <p class="definition">{sefDef}</p>
+                    <br>
+                    <button
+
+                        type="button"
+                        class="data-btn"
+                        on:click={exportData}
+                >
+                    Download Page Data
+                </button>
                 </div>
             </div>
 
@@ -706,6 +733,14 @@ $: {
             {/if}
                 </button>
             </div>
+            <button
+
+                    type="button"
+                    class="data-btn-sticky"
+                    on:click={exportData}
+            >
+                Download Page Data
+            </button>
         </div>
     {/if}
 
