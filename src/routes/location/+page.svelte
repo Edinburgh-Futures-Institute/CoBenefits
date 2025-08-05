@@ -45,6 +45,7 @@
         head: null,
         overview: null,
         temporal: null,
+        breakdown: null,
         households: null
     };
 
@@ -171,7 +172,7 @@
 
     let scrolledPastHeader = false;
     let currentSection = '';
-    const sectionIds = ['overview', 'temporal', 'households'];
+    const sectionIds = ['overview', 'temporal', 'households', 'breakdown'];
 
     function handleScroll() {
         const scrollY = window.scrollY;
@@ -204,6 +205,7 @@
         const labels: Record<string, string> = {
             overview: 'Overview',
             temporal: 'Temporal trends',
+            breakdown: 'Breakdown by co-benefit',
             households: 'Household benefits'
         };
         return labels[id] || '';
@@ -550,7 +552,7 @@
                     ? [Plot.ruleX([selectedDatum.total], {
                         stroke: COBENEFS_SCALE(selectedDatum.co_benefit_type),
                         strokeWidth: 3,
-                        strokeDasharray: "4,2"
+                        tip: true
                     })]
                     : []),
                 Plot.axisX({label: "Total Co-Benefit (£ million)", labelAnchor: "center", labelArrow: false}),
@@ -1177,16 +1179,16 @@
     }
 
     function exportData() {
-        let data = allCBAllLADSUM.filter(d => d.Lookup_Value == LAD);
+        let data = allCBsAllZones.filter(d => d.LAD == LAD);
 
-        data.push({co_benefit_type: "Total", val: data.reduce((a, b) => a + b.val, 0)})
+        //data.push({co_benefit_type: "Total", val: data.reduce((a, b) => a + b.val, 0)})
 
-        data.forEach(d => {
-            delete d.Lookup_Value;
+       data.forEach(d => {
+       delete d.scenario;
 
-            d["Cobenefit Value (Millions £)"] = d.val;
-            delete d["val"]
-        })
+       //     d["Cobenefit Value (Millions £)"] = d.val;
+       //     delete d["val"]
+       })
 
         const csv = convertToCSV(data);
         downloadCSV(csv, `cobenefits_${LADToName[LAD]}.csv`);
@@ -1404,51 +1406,7 @@
                 </div>
             </div>
         </div>
-        <!-- <div id="vis-block">
-            <div id="main-block">
-                <h3 class="section-title" style="align">What co-benefits would the LSOAs recieve?</h3>
-                <p class="description">Here the distribution is grouped by LSOA to give a more granular insight into the
-                    co-benefits recieved throughout {LADToName[LAD]}</p>
-                <div>
-                    <label for="coBenefitSelect">Select Co-Benefit Type:</label>
-                    <select id="coBenefitSelect" bind:value={selectedCoBenefit}>
-                        {#each allCoBenefitTypes as type}
-                            <option value={type}>{type}</option>
-                        {/each}
-                    </select>
 
-                    <label>
-                        Search LSOA:
-                        <input
-                                type="text"
-                                placeholder="Enter LSOA"
-                                bind:value={searchInput}
-                        />
-                    </label>
-
-                    {#if searchResults.length > 0}
-                        <ul class="search-results">
-                            {#each searchResults as result}
-                                <li on:click={() => selectLSOA(result)}>
-                                    {result}
-                                </li>
-                            {/each}
-                        </ul>
-                    {/if}
-                </div>
-                <div bind:this={plotPerCBPerLSOA}></div>
-            </div>
-
-            <div style="flex: 1; display: flex; flex-direction: column; padding-top: 3rem;">
-                <h3 class="component-title">LSOA Map</h3>
-
-                <p class="description">This map shows the total co-benefit values (£ millions) for each LSOA of {LADToName[LAD]}</p>
-                <div id="map-lsoa" bind:this={mapLSOADiv}>
-                </div>
-            </div>
-
-
-        </div> -->
 
 
 
@@ -1562,6 +1520,53 @@
         </div>
 
     </div>
+<div class="section" id="breakdown">
+            <div id="vis-block">
+            <div id="main-block">
+                <h3 class="section-title" style="align">What co-benefits would the LSOAs recieve?</h3>
+                <p class="description">Here the distribution is grouped by LSOA to give a more granular insight into the
+                    co-benefits recieved throughout {LADToName[LAD]}</p>
+                <div>
+                    <label for="coBenefitSelect">Select Co-Benefit Type:</label>
+                    <select id="coBenefitSelect" bind:value={selectedCoBenefit}>
+                        {#each allCoBenefitTypes as type}
+                            <option value={type}>{type}</option>
+                        {/each}
+                    </select>
+
+                    <label>
+                        Search LSOA:
+                        <input
+                                type="text"
+                                placeholder="Enter LSOA"
+                                bind:value={searchInput}
+                        />
+                    </label>
+
+                    {#if searchResults.length > 0}
+                        <ul class="search-results">
+                            {#each searchResults as result}
+                                <li on:click={() => selectLSOA(result)}>
+                                    {result}
+                                </li>
+                            {/each}
+                        </ul>
+                    {/if}
+                </div>
+                <div bind:this={plotPerCBPerLSOA}></div>
+            </div>
+
+            <div style="flex: 1; display: flex; flex-direction: column; padding-top: 3rem;">
+                <h3 class="component-title">LSOA Map</h3>
+
+                <p class="description">This map shows the total co-benefit values (£ millions) for each LSOA of {LADToName[LAD]}</p>
+                <div id="map-lsoa" bind:this={mapLSOADiv}>
+                </div>
+            </div>
+
+
+        </div>
+        </div>
 
     <div class="section" id="households">
         <div class="section-header">

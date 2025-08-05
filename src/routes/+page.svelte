@@ -592,6 +592,15 @@
 
                         </div>
                     </a>
+
+                    <a href="{base}/lad">
+                        <div class="explore-page">
+                            <img class="page-teaser-img" src="{base}/pages-teasers/nation.png"/>
+                            <h3>Nation Pages</h3>
+                            <p> The nation pages shows the different co-benefits in this nation and temporal distributions.</p>
+
+                        </div>
+                    </a>
                 </div>
             </div>
 
