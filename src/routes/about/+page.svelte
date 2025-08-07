@@ -67,7 +67,7 @@
 <div class="about-page">
     <section class="about-header">
       <h1 class="title-about">About the UK Co-Benefit Atlas</h1>
-      <h3> Read the short paper: <a href="/src/routes/about/The_UK_Co_Benefits_Atlas___Poster_Summary.pdf" target="_blank">here</a> </h3>
+      <h3> Read the short paper: <a href="{base}/The_UK_Co_Benefits_Atlas___Poster_Summary.pdf" target="_blank">here</a> </h3>
     </section>
   <hr/>
     <section class="about-intro">
