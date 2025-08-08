@@ -63,6 +63,7 @@
     let scenarioXcoBenefPLots: Record<Scenario, HTMLElement> = {};
     let chartType: "barchart" | "boxplot" | "distribution" = "barchart"
     let isSEFAggregated = false;
+    const LSOACodeToName: Record<string, string> = {};
 
     let height = 400;
 
@@ -133,20 +134,30 @@
         const LADEngPath = `/LAD/Eng_Wales_LSOA_LADs.csv`
         const LADNIPath = `/LAD/NI_DZ_LAD.csv`
         const LADScotlandPath = `/LAD/Scotland_DZ_LA.csv`
+        
         await csv(LADEngPath).then(data => {
             for (let lad of data) {
                 LADToName[lad.LAD22CD] = lad.LAD22NM;
             }
+            for (const row of data) {
+        LSOACodeToName[row.LSOA11CD] = row.LSOA11NM;
+    }
         })
         await csv(LADNIPath).then(data => {
             for (let lad of data) {
                 LADToName[lad.LGD2014_code] = lad.LGD2014_name;
             }
+            for (const row of data) {
+        LSOACodeToName[row.DZ2021_code] = row.DZ2021_name;
+    }
         })
         await csv(LADScotlandPath).then(data => {
             for (let lad of data) {
                 LADToName[lad.LA_Code] = lad.LA_Name;
             }
+            for (const row of data) {
+        LSOACodeToName[row.DZ2011_Code] = row.DZ2011_Name;
+    }
         })
 
         dataLoaded = true;
@@ -165,7 +176,7 @@
         // Needs to be initialised after data loading
         mapLSOA = new MapUK(oneLADData, "LSOA", mapLSOADiv, "total", false, "Lookup_Value", false, null, 8);
 
-        mapLSOA.initMap();
+        mapLSOA.initMap(true, false);
         mapLSOA.setCenter(oneLADData[0].LAD)
         // mapLSOA.setCenter(oneLADData[0].Lookup_Value)
     });
@@ -505,19 +516,33 @@
         console.log("Loaded co-benefits reactively:", oneLADAllCbs);
     }
 
-    $: searchResults = searchInput.length > 2
-        ? oneLADAllCbs
+$: {
+    if (searchInput.length >= 2) {
+        const lsoaSet = new Set(oneLADAllCbs
             .filter(d => d.co_benefit_type === selectedCoBenefit)
             .map(d => d.Lookup_Value)
-            .filter(name => name.toLowerCase().includes(searchInput.toLowerCase()))
-        : [];
+        );
 
-    function selectLSOA(name) {
-        selectedLSOA = name;
-        searchInput = "";
+        searchResults = [...lsoaSet]
+            .map(code => ({
+                code,
+                name: LSOACodeToName[code] || code // fallback if name not found
+            }))
+            .filter(entry =>
+                entry.name.toLowerCase().includes(searchInput.toLowerCase())
+            )
+            .slice(0, 10);
+    } else {
         searchResults = [];
-        renderPerCBPerLSOA();
     }
+}
+
+ function selectLSOA(entry) {
+    selectedLSOA = entry.code;
+    searchInput = "";
+    searchResults = [];
+    renderPerCBPerLSOA();
+}
 
     function renderPerCBPerLSOA() {
         if (!plotPerCBPerLSOA) return;
@@ -1544,14 +1569,14 @@
                     </label>
 
                     {#if searchResults.length > 0}
-                        <ul class="search-results">
-                            {#each searchResults as result}
-                                <li on:click={() => selectLSOA(result)}>
-                                    {result}
-                                </li>
-                            {/each}
-                        </ul>
-                    {/if}
+    <ul class="search-results">
+        {#each searchResults as result}
+            <li on:click={() => selectLSOA(result)}>
+                {result.name}
+            </li>
+        {/each}
+    </ul>
+{/if}
                 </div>
                 <div bind:this={plotPerCBPerLSOA}></div>
             </div>
