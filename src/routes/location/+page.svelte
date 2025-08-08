@@ -568,8 +568,9 @@ $: {
                 domain: COBENEFS_SCALE.domain()
             },
             marks: [
-                Plot.areaY(sortedData, Plot.binX({y: "count"}, {
+                Plot.rectY(sortedData, Plot.binX({y: "count"}, {
                     x: "total",
+                    thresholds: 50,
                     fill: d => COBENEFS_SCALE(d.co_benefit_type),
                     fillOpacity: 0.5
                 })),
@@ -1827,7 +1828,7 @@ $: {
         width: 100%;
 
         /*TODO: height is given by this currently but better to change at some point*/
-        height: 650px;
+        height: 750px;
         /*flex: 1; !* take the remaining height *!*/
     }
 
