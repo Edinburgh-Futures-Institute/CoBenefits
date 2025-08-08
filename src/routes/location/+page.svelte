@@ -1186,6 +1186,18 @@ $: {
         }
     }
 
+            let expanded = new Set();
+
+    function toggle(id) {
+        if (expanded.has(id)) {
+            expanded.delete(id);
+        } else {
+            expanded.add(id);
+        }
+        // Force reactivity
+        expanded = new Set(expanded);
+    }
+
     function onChange(event) {
         chartType = event.currentTarget.value;
     }
@@ -1514,23 +1526,44 @@ $: {
                         trends.</p>
 
                     <!-- Legend -->
-                    <div id="main-legend" class="legend-box" style="margin-bottom: 5px;">
-                        <strong style="margin-bottom: 0.5rem;">Legend:</strong> <br/>
-                        <ul class="horizontal-legend-list" style="margin-bottom:5px">
-                            {#each COBENEFS as cobenef}
-                                <li><span class="legend-color"
-                                          style="background-color: {COBENEFS_SCALE(cobenef.id)}"></span>
-                                    <a href="{base}/cobenefit?cobenefit={cobenef.id}"
-                                       target="_blank"
-                                       class="link">
-                                        <!--{cobenef.label.split(" ").slice(0, 2).join(" ")}-->
-                                        {cobenef.label}
-                                    </a>
-                                </li>
-                            {/each}
-
-                        </ul>
-
+                    <div id="main-legend" class="legend-box">
+                    <strong>Co-benefits:</strong><br>Expand for detailed explanation
+                    <div style="height: 0.8em;"></div>
+                    <div class="legend-items-grid">
+                        {#each COBENEFS as CB}
+                        <div class="legend-item">
+                            <div class="legend-header" on:click={() => {
+                                const wasExpanded = expanded.has(CB.id);
+                                toggle(CB.id);
+                                
+                                if (!wasExpanded) {
+                                    posthog.capture('cobenefit opened', {
+                                        cobenefit: CB.label
+                                    });
+                                } else {
+                                    posthog.capture('cobenefit closed', {
+                                        cobenefit: CB.label
+                                    });
+                                }
+                            }} style="cursor: pointer;">
+                                <span class="legend-color" style="background-color: {COBENEFS_SCALE(CB.id)};"></span>
+                                <span class="legend-text {expanded.has(CB.id) ? 'expanded' : ''}" >{CB.label}</span>
+                                <span class="toggle-icon">{expanded.has(CB.id) ? "▲" : "▼"}</span>
+                            </div>
+                            {#if expanded.has(CB.id)}
+                            <div class="legend-description-box">
+                            <div class="legend-description">
+                                <div style="height: 0.8em;"></div>
+                                {CB.def} <br>
+                                
+                                <a class="link" href="{base}/cobenefit?cobenefit={CB.id}" target="_blank" rel="noopener noreferrer" style= "color:{COBENEFS_SCALE(CB.id)}; text-decoration: underline">{CB.id} report page</a>
+                                
+                            </div>
+                            </div>
+                            {/if}
+                        </div>
+                        {/each}
+                        </div>
                     </div>
 
                 </div>
@@ -1976,4 +2009,30 @@ $: {
     .search-results li:hover {
         background-color: #f0f0f0;
     }
+
+        .legend-items-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 0rem 1.5rem; /* row gap, column gap */
+}
+
+.toggle-icon {
+    margin-left: auto;
+    font-size: 0.8em;
+    opacity: 0.6;
+}
+
+.legend-description {
+    margin-left: 0.1em;
+    margin-right: 0em;
+    padding: 1em;
+    padding-top: 0em;
+    font-size: 0.8em;
+    color: #555;
+}
+.legend-description-box {
+    margin: 0.5em 0em;
+    background-color: #f9f9f9;
+    border-radius: 4px;
+}
 </style>
