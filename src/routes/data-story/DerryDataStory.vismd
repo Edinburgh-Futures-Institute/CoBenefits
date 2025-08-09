@@ -1,0 +1,40 @@
+---
+title: Derry data story
+author: L A
+
+---
+
+<script>
+  import LineChart from 'vismark/LineChart';
+
+  import Header from 'vismark/Header';
+  import Footer from 'vismark/Footer';
+  import Image from 'vismark/Image';
+</script>
+
+<Header />
+
+# Case Study: The Impact of Co-Benefits
+
+## Accelerating climate financing in Derry City and Strabane District Council
+
+Derry City and Strabane District Council face a challenge shared by local authorities across the UK: how to meet multiple, intersecting priorities with limited resources. Making the investment case for climate action is increasingly difficult amid pressing social issues, political resistance, and tight budgets. While each local authority will follow a unique path to net-zero—shaped by its economic, social, and environmental context—the core challenge remains the same: how to align action across priority areas to achieve shared goals. In partnership with the UK Co-Benefits Atlas, Derry and Strabane are demonstrating that understanding the wider societal benefits of climate action is key to making progress on both climate and social objectives.
+
+### The UK Co-Benefits Atlas’ role in accelerating climate action
+
+By providing accessible, place and co-benefit specific data, the Atlas provides actionable information that demonstrates the connection between climate action and social and economic challenges facing Derry and Strabane. It shows that implementing net-zero actions like shifts to active travel would generate £165 million in health benefits, with air quality improvements of £110 million and reductions in noise pollution worth £134 million, valued through Green Book methodologies[^1].
+
+<Image 
+  path="vismark-files/derry_graph.png"
+  scale="70%"
+/>
+
+Per household, these values equal an average of ~£2,500 across all co-benefit types over the period 2025 – 2050 and are directly attributable to individuals as well as bodies like the NHS. These values can be used for accelerating investment in public health and help to address societal challenges present in Derry City and Strabane, such as high levels of deprivation and poor health[^2].
+
+Cathy Burns, the Council’s Climate and Biodiversity Lead, says *“The UK Co-Benefits Atlas helps us make the case that investing in climate action is also investing in society. Including co-benefits into our policymaking also strengthens the business case for climate investment – which is something we haven’t been able to do in the past.”*
+
+
+[^1]: [https://www.gov.uk/government/publications/the-green-book-appraisal-and-evaluation-in-central-government/the-green-book-2020](https://www.gov.uk/government/publications/the-green-book-appraisal-and-evaluation-in-central-government/the-green-book-2020)
+[^2]: Sudmant, A., Boyle, D., Higgins‐Lavery, R. et al. Climate policy as social policy? A comprehensive assessment of the economic impact of climate action in the UK. J Environ Stud Sci (2024). [https://doi.org/10.1007/s13412-024-00955-9](https://doi.org/10.1007/s13412-024-00955-9)
+
+<Footer />
