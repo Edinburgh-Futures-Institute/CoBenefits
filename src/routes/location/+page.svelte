@@ -64,6 +64,7 @@
     let chartType: "barchart" | "boxplot" | "distribution" = "barchart"
     let isSEFAggregated = false;
     const LSOACodeToName: Record<string, string> = {};
+    const LADToName: Record<string, string> = {};
 
     let height = 400;
 
@@ -136,29 +137,24 @@
         const LADScotlandPath = `/LAD/Scotland_DZ_LA.csv`
         
         await csv(LADEngPath).then(data => {
-            for (let lad of data) {
-                LADToName[lad.LAD22CD] = lad.LAD22NM;
+            for (let row of data) {
+                LADToName[row.LAD22CD] = row.LAD22NM
+                LSOACodeToName[row.LSOA21CD] = row.LSOA21NM;
             }
-            for (const row of data) {
-        LSOACodeToName[row.LSOA11CD] = row.LSOA11NM;
-    }
         })
         await csv(LADNIPath).then(data => {
-            for (let lad of data) {
-                LADToName[lad.LGD2014_code] = lad.LGD2014_name;
+            for (let row of data) {
+                LADToName[row.LGD2014_code] = row.LGD2014_name
+                LSOACodeToName[row.DZ2021_code] = row.DZ2021_name;
             }
-            for (const row of data) {
-        LSOACodeToName[row.DZ2021_code] = row.DZ2021_name;
-    }
         })
         await csv(LADScotlandPath).then(data => {
-            for (let lad of data) {
-                LADToName[lad.LA_Code] = lad.LA_Name;
+            for (let row of data) {
+                LADToName[row.LA_Code] = row.LA_Name
+                LSOACodeToName[row.DZ2011_Code] = row.DZ2011_Name;
             }
-            for (const row of data) {
-        LSOACodeToName[row.DZ2011_Code] = row.DZ2011_Name;
-    }
         })
+            console.log(LSOACodeToName['S01006506']);
 
         dataLoaded = true;
         removeSpinner(element)
@@ -221,9 +217,6 @@
         };
         return labels[id] || '';
     }
-
-    // const LADToName = data.LADToName;
-    let LADToName = {};
 
     let map: MapUK;
     let mapDiv: HTMLElement;
@@ -516,27 +509,26 @@
         console.log("Loaded co-benefits reactively:", oneLADAllCbs);
     }
 
-$: {
-    if (searchInput.length >= 2) {
-        const lsoaSet = new Set(oneLADAllCbs
+$: if (dataLoaded && selectedCoBenefit && searchInput.length >= 1) {
+    const lsoaSet = new Set(
+        oneLADAllCbs
             .filter(d => d.co_benefit_type === selectedCoBenefit)
             .map(d => d.Lookup_Value)
-        );
+    );
 
-        searchResults = [...lsoaSet]
-            .map(code => ({
-                code,
-                name: LSOACodeToName[code] || code // fallback if name not found
-            }))
-            .filter(entry =>
-                entry.name.toLowerCase().includes(searchInput.toLowerCase())
-            )
-            .slice(0, 10);
-    } else {
-        searchResults = [];
-    }
+    const allResults = [...lsoaSet].map(code => ({
+        code,
+        name: LSOACodeToName[code.trim()] || code
+    }));
+
+    searchResults = allResults.filter(entry =>
+        entry.name.toLowerCase().includes(searchInput.toLowerCase())
+    );
+
+    searchResults.sort((a, b) => a.name.localeCompare(b.name));
+} else {
+    searchResults = [];
 }
-
  function selectLSOA(entry) {
     selectedLSOA = entry.code;
     searchInput = "";
@@ -553,7 +545,7 @@ $: {
         const sortedData = d3.sort(filteredData, d => -d.total);
 
         const selectedDatum = sortedData.find(d => d.Lookup_Value === selectedLSOA?.trim());
-
+console.log("selectedDatum", selectedDatum)
         const plot = Plot.plot({
             height: 500,
             width: 800,
@@ -575,13 +567,29 @@ $: {
                     fillOpacity: 0.5
                 })),
                 ...(selectedDatum
-                    ? [Plot.ruleX([selectedDatum.total], {
-                        stroke: COBENEFS_SCALE(selectedDatum.co_benefit_type),
-                        strokeWidth: 3,
-                        tip: true
-                    })]
+                    ? [
+                        Plot.ruleX([selectedDatum.total], {
+                            stroke: COBENEFS_SCALE2(selectedDatum.co_benefit_type)[2],
+                            strokeWidth: 3,
+                            strokeDasharray: "5,5",
+                            tip: true
+                        }),
+                        Plot.text([selectedDatum], {
+                            x: "total",
+                            y: 0, 
+                            text: d => LSOACodeToName[d.Lookup_Value] || d.Lookup_Value,
+                            dy: -10,
+                            fill: COBENEFS_SCALE2(selectedDatum.co_benefit_type)[1],
+                            stroke: "white", // outline color
+                            strokeWidth: 2,  // outline thickness
+                            fontWeight: "bold",
+                            textAnchor: "middle"
+                        })
+                        ]
                     : []),
+                                        
                 Plot.axisX({label: "Total Co-Benefit (£ million)", labelAnchor: "center", labelArrow: false}),
+                Plot.axisY({label: "Number of Datazones",labelArrow: false}),
                 Plot.ruleX([0], {stroke: "#333", strokeWidth: 1.75})
             ]
         });
@@ -1237,17 +1245,7 @@ $: {
         renderPerCBPerLSOA();
     }
 
-    // Fuzzy match logic (simple substring, case-insensitive)
-    $: {
-        if (searchInput.length >= 2) {
-            const lsoaSet = new Set(oneLADAllCbs.map(d => d.Lookup_Value));
-            searchResults = [...lsoaSet].filter(code =>
-                code.toLowerCase().includes(searchInput.toLowerCase())
-            ).slice(0, 10); // limit results
-        } else {
-            searchResults = [];
-        }
-    }
+
 
 </script>
 
@@ -1583,35 +1581,42 @@ $: {
             <div id="vis-block">
             <div id="main-block">
                 <h3 class="section-title" style="align">What co-benefits would the LSOAs recieve?</h3>
-                <p class="description">Here the distribution is grouped by LSOA to give a more granular insight into the
-                    co-benefits recieved throughout {LADToName[LAD]}</p>
+                <p class="description">The distribution plot below shows the predicted spread of benefits recieved or costs incurred by the LSOAs across {LADToName[LAD]}. 
+                    Select a co-benefit from the dropdown menu and explore the position of different datazones by using the search box.</p>
                 <div>
+                    <div class="controls-container">
+                    <div class="control-group">
                     <label for="coBenefitSelect">Select Co-Benefit Type:</label>
                     <select id="coBenefitSelect" bind:value={selectedCoBenefit}>
                         {#each allCoBenefitTypes as type}
                             <option value={type}>{type}</option>
                         {/each}
                     </select>
-
+                    </div>
+                    <div class="control-group search-container">
                     <label>
                         Search LSOA:
                         <input
                                 type="text"
                                 placeholder="Enter LSOA"
                                 bind:value={searchInput}
+                                autocomplete="off"
                         />
                     </label>
 
                     {#if searchResults.length > 0}
-    <ul class="search-results">
-        {#each searchResults as result}
-            <li on:click={() => selectLSOA(result)}>
-                {result.name}
-            </li>
-        {/each}
-    </ul>
-{/if}
+                        <ul class="search-results">
+                            {#each searchResults as result}
+                                <li on:click={() => selectLSOA(result)}>
+                                    {result.name}
+                                </li>
+                            {/each}
+                        </ul>
+                    {/if}
                 </div>
+                </div>
+                </div>
+                <br>
                 <div bind:this={plotPerCBPerLSOA}></div>
             </div>
 
@@ -1989,21 +1994,46 @@ $: {
         gap: 1rem;
     }
 
-    .search-results {
-        list-style: none;
-        margin: 0;
-        padding: 0;
+    select,
+        input[type="text"] {
+        width: 100%;
+        padding: 4px 8px;
+        font-size: 16px;
+        font-family: inherit;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        box-sizing: border-box;
+        }
+
+        select:focus,
+        input[type="text"]:focus {
+        border-color: #007acc;
+        outline: none;
+        }
+
+    .search-container {
+        position: relative; 
+        }
+
+        .search-results {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
         max-height: 200px;
         overflow-y: auto;
-        border: 1px solid #ccc;
         background: white;
-        position: absolute;
+        border: 1px solid #ccc;
+        border-top: none;
+        margin: 0;
+        padding: 0;
+        list-style: none;
         z-index: 1000;
-        width: 250px;
-    }
+        border-radius: 0 0 4px 4px;
+        }
 
     .search-results li {
-        padding: 5px 10px;
+        padding: 4px 8px;
         cursor: pointer;
     }
 
@@ -2014,8 +2044,28 @@ $: {
         .legend-items-grid {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
-    gap: 0rem 1.5rem; /* row gap, column gap */
+    gap: 0rem 1.5rem; 
 }
+
+    .controls-container {
+        display: flex;
+        gap: 40px; 
+        align-items: flex-start;
+        flex-wrap: wrap;
+        }
+
+        .control-group {
+        display: flex;
+        flex-direction: column;
+        font-family: inherit;
+        font-size: 16px;
+        width: 300px;
+        }
+
+        .control-group label {
+        margin-bottom: 0px;
+        font-weight: 600;
+        }
 
 .toggle-icon {
     margin-left: auto;
