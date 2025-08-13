@@ -1,4 +1,6 @@
 <script lang="ts">
+    import VT from '../../VismarkTestFile.vismd';
+
     import {base} from "$app/paths";
     import NavigationBar from "$lib/components/NavigationBar.svelte";
     import {getTableData, getLADRegion} from '$lib/duckdb'
@@ -67,6 +69,8 @@
     });
 
 </script>
+
+<VT />
 
 <NavigationBar/>
 

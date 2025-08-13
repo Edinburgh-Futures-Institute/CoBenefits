@@ -1,4 +1,6 @@
 <script lang="ts">
+    import VT from '../../VismarkTestFile.vismd';
+
     import * as d3 from 'd3';
     import * as Plot from "@observablehq/plot";
     import {onMount, onDestroy} from 'svelte';
@@ -1251,6 +1253,7 @@ $: {
 
 </script>
 
+<VT />
 
 <NavigationBar></NavigationBar>
 <!-- <StickyNav sectionRefs={sectionRefs}></StickyNav> -->

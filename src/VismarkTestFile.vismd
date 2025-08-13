@@ -1,0 +1,111 @@
+<script>
+  import AreaChart from 'vismark/AreaChart';
+  import BarChart from 'vismark/BarChart';
+  import BoxPlot from 'vismark/BoxPlot';
+  import Histogram from 'vismark/Histogram';
+  import LineChart from 'vismark/LineChart';
+  import ScatterPlot from 'vismark/ScatterPlot';
+
+  import Header from 'vismark/Header';
+  import Footer from 'vismark/Footer';
+  import Grid from 'vismark/Grid';
+  import Cell from 'vismark/Cell';
+  import Widget from 'vismark/Widget';
+  import Image from 'vismark/Image';
+
+  import Dropdown from 'vismark/Dropdown';
+</script>
+
+# Manual checks for every single Vismark component
+
+## Header + Footer
+
+<Header />
+
+<Footer />
+
+## A Widget with a badge and an image within a dropdown
+
+<Widget
+  borderColour="#000000"
+  backgroundColour="#f0f0f0"
+  badgeType="relativeCB"
+>
+
+  <Dropdown
+    shownText="Reveal image below"
+  >
+
+    <Image 
+      path="logo-v2.png"
+      scale="75%"
+    />
+    
+  </Dropdown>
+
+</Widget>
+
+## Every chart within a grid
+
+<Grid
+  columns={3}
+  showGrid={true}
+>
+
+  <Cell>
+    
+  A
+
+  </Cell>
+
+<Cell>
+
+*B*
+
+</Cell>
+
+<Cell>  
+
+**C**
+
+</Cell>
+
+  <Cell>
+  
+[D](/)
+
+  </Cell>
+
+  <Cell>
+
+  # E
+
+  </Cell>
+
+  <Cell>
+
+  ## F
+
+  </Cell>
+
+</Grid>
+
+## Hide some cells
+
+<Grid
+  columns={3}
+>
+
+  <Cell
+    hideCell={true}
+  >
+
+  </Cell>
+
+  <Cell>
+
+  Something else
+  
+  </Cell>
+
+</Grid>

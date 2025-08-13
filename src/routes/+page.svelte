@@ -1,4 +1,6 @@
 <script lang="ts">
+    import VT from '../VismarkTestFile.vismd';
+
     import {base} from '$app/paths';
     import {goto} from '$app/navigation';
     import * as Plot from "@observablehq/plot";
@@ -417,6 +419,8 @@
         clearInterval(interval);
     });
 </script>
+
+<VT />
 
 <!--<div class="page-container" bind:this={element}>-->
 <div bind:this={element}>
