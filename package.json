@@ -44,6 +44,6 @@
     "papaparse": "^5.4.1",
     "posthog-js": "^1.256.1",
     "topojson-client": "^3.1.0",
-    "vismark": "^1.1.0"
+    "vismark": "^2.1.0"
   }
 }

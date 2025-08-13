@@ -1,0 +1,40 @@
+<!-- Image path: vismark-files/derry_graph.png -->
+
+<!-- <Image 
+  path="path/to/file"
+  scale="25%"
+/> -->
+
+<script>
+  import AreaChart from 'vismark/AreaChart';
+  import BarChart from 'vismark/BarChart';
+  import LineChart from 'vismark/LineChart';
+  import Histogram from 'vismark/Histogram';
+  import ScatterPlot from 'vismark/ScatterPlot';
+  import BoxPlot from 'vismark/BoxPlot';
+
+  import Header from 'vismark/Header';
+  import Footer from 'vismark/Footer';
+  import Widget from 'vismark/Widget';
+  import Image from 'vismark/Image';
+
+  import Dropdown from 'vismark/Dropdown';
+</script>
+
+<Header />
+
+# Derry and Strabane Use Case
+
+*How to accelerate climate financing in local authorities*
+
+Derry City and Strabane District Council face a challenge shared by local authorities across the UK: how to meet multiple, intersecting priorities with limited resources. Making the investment case for climate action is increasingly difficult amid pressing social issues, political resistance, and tight budgets. While each local authority will follow a unique path to net-zero—shaped by its economic, social, and environmental context—the core challenge remains the same: how to align action across priority areas to achieve shared goals. In partnership with the UK Co-Benefits Atlas, Derry and Strabane are demonstrating that understanding the wider societal benefits of climate action is key to making progress on both climate and social objectives. 
+
+<Image
+ path="vismark-files/derry_graph.png"
+ scale="80%"
+ />
+
+
+## What have climate leaders been doing in LAs so far?
+
+<Footer />

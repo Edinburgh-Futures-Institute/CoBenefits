@@ -5,11 +5,21 @@ author: L A
 ---
 
 <script>
+  import AreaChart from 'vismark/AreaChart';
+  import BarChart from 'vismark/BarChart';
+  import BoxPlot from 'vismark/BoxPlot';
+  import Histogram from 'vismark/Histogram';
   import LineChart from 'vismark/LineChart';
+  import ScatterPlot from 'vismark/ScatterPlot';
 
   import Header from 'vismark/Header';
   import Footer from 'vismark/Footer';
+  import Grid from 'vismark/Grid';
+  import Cell from 'vismark/Cell';
+  import Widget from 'vismark/Widget';
   import Image from 'vismark/Image';
+
+  import Dropdown from 'vismark/Dropdown';
 </script>
 
 <Header />
