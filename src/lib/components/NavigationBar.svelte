@@ -96,7 +96,7 @@ async function goToSection(id: string) {
           on:mouseenter={() => (showDropdownContact = true)}
           on:mouseleave={() => (showDropdownContact = false)}
           >
-        <a href="{base}/contact" class="nav-item">Contact</a>
+<!--        <a href="{base}/contact" class="nav-item">Contact</a>-->
         {#if showDropdownContact}
           <ul class="dropdown-menu" style="min-width: 150px;">
               <li><a href="{base}/contact" on:click|preventDefault={() => goToSection("feedback")}>Feedback</a></li>
@@ -106,7 +106,7 @@ async function goToSection(id: string) {
           </ul>
         {/if}
       </div>
-      <a href="{base}/about" class="nav-item" class:active={$page.url.pathname === `${base}/about`}>About</a>
+<!--      <a href="{base}/about" class="nav-item" class:active={$page.url.pathname === `${base}/about`}>About</a>-->
     </div>
   </nav>
 

@@ -8,18 +8,17 @@
 
 <footer>
         <div class="logos-grid">
-            <a href="https://vishub.net/"><img src="{base}/logos/vishub.png" alt="VISHUB" class="logo"/></a>
-            <a href="https://edinburghcentre.org/"><img src="{base}/logos/ECCI.png" alt="ECCI" class="logo"/></a>
-            <a href="https://www.inria.fr/en"><img src="{base}/logos/inria.jpg" alt="Inria" class="logo"/></a>
-            <a href="https://efi.ed.ac.uk/"><img src="{base}/logos/EFI.png" alt="UOE" class="logo"/></a>
-            <a href="https://www.designinformatics.org/"><img src="{base}/logos/DI.png" alt="DI" class="logo"/></a>
-            <a href="https://scotland-beyond-net-zero.ac.uk"><img src="{base}/logos/SBNZ.png" alt="SBNZ" class="logo"/></a>
-            <a href="https://thedatalab.com/"><img src="{base}/logos/datalab.png" alt="DataLab" class="logo"/></a>
+<!--            <a href="https://vishub.net/"><img src="{base}/logos/vishub.png" alt="VISHUB" class="logo"/></a>-->
+<!--            <a href="https://edinburghcentre.org/"><img src="{base}/logos/ECCI.png" alt="ECCI" class="logo"/></a>-->
+<!--            <a href="https://www.inria.fr/en"><img src="{base}/logos/inria.jpg" alt="Inria" class="logo"/></a>-->
+<!--            <a href="https://efi.ed.ac.uk/"><img src="{base}/logos/EFI.png" alt="UOE" class="logo"/></a>-->
+<!--            <a href="https://www.designinformatics.org/"><img src="{base}/logos/DI.png" alt="DI" class="logo"/></a>-->
+<!--            <a href="https://scotland-beyond-net-zero.ac.uk"><img src="{base}/logos/SBNZ.png" alt="SBNZ" class="logo"/></a>-->
+<!--            <a href="https://thedatalab.com/"><img src="{base}/logos/datalab.png" alt="DataLab" class="logo"/></a>-->
         </div>
 
     <div id="footer-text">
-        Last updated on <br>
-        {formatDate(BUILD_DATE)}.
+
 
 
 <!--        Work funded by -->
@@ -31,8 +30,11 @@
 
     <div>
         <ul id="footer-list">
-            <li style="margin-bottom: 10px;"><a href="https://docs.google.com/forms/d/1w-8Lt9bESZ56PdklTIT38plec7dPgDbJtORkatoXFVY/edit">Feedback</a></li>
-            <li><a href="https://github.com/Edinburgh-Futures-Institute/CoBenefits">Code</a></li>
+            Anonymized version
+            <p>Last updated on
+        {formatDate(BUILD_DATE)}.</p>
+<!--            <li style="margin-bottom: 10px;"><a href="https://docs.google.com/forms/d/1w-8Lt9bESZ56PdklTIT38plec7dPgDbJtORkatoXFVY/edit">Feedback</a></li>-->
+<!--            <li><a href="https://github.com/Edinburgh-Futures-Institute/CoBenefits">Code</a></li>-->
         </ul>
     </div>
 </footer>
