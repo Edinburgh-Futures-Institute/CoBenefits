@@ -7,7 +7,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "check": "svelte-check --tsconfig ./tsconfig.json",
-    "deploy": "npm run build && gh-pages -d build -t",
+    "deploy": "npm run build && gh-pages -d build -t"
   },
   "devDependencies": {
     "@duckdb/duckdb-wasm": "^1.29.0",
