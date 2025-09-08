@@ -450,11 +450,11 @@
                     range of
                     social, economic and environmental priorities, and drive more effective decision-making.
                 </p>
-                <p class="hero-description">
-                    To understand more about the analysis or if you would like bespoke co-benefit modelling please get
-                    in
-                    touch by emailing <a href="mailto:cobens@ed.ac.uk">cobens@ed.ac.uk</a>
-                </p>
+<!--                <p class="hero-description">-->
+<!--                    To understand more about the analysis or if you would like bespoke co-benefit modelling please get-->
+<!--                    in-->
+<!--                    touch by emailing <a href="mailto:cobens@ed.ac.uk">cobens@ed.ac.uk</a>-->
+<!--                </p>-->
             </div>
 
             <div class="waffle-overlay">
