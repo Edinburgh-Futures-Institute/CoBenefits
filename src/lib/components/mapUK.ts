@@ -129,7 +129,7 @@ export class MapUK {
 	setCenter(zoneIdCenter) {
 		// Lat Long are only in the LAD geojson
 		for (let zone of LADZones.features) {
-			let zoneId = zone.properties.LAD22CD;;
+			let zoneId = zone.properties.LAD22CD;
 
 			if (zoneId == zoneIdCenter) {
 				this.center = [zone.properties.LONG, zone.properties.LAT];
