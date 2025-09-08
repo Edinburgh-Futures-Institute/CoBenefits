@@ -609,7 +609,8 @@
                 <h1>Read Stories and Analyses</h1>
                 <hr class="story-teaser-hr">
                 <div class="explore-pages story-pages">
-                    <a href="/stories/story.pdf" target="_blank" rel="noopener noreferrer">
+<!--                    <a href="/stories/story.pdf" target="_blank" rel="noopener noreferrer">-->
+                    <a href="/stories/story_anon.pdf" target="_blank" rel="noopener noreferrer">
                         <div class="story">
                             <img class="story-teaser-img" src="{base}/stories/Derry_picture_new.png"/>
                             <h3>Accelerating climate financing in Derry City and Strabane District Council</h3>
