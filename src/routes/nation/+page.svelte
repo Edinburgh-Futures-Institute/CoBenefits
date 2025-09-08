@@ -1033,8 +1033,8 @@ CBOverTimePerCBPLot?.append(plotPerCB); }
             </div>
 
             <div class="component column">
-                <!--<h3 class="component-title">Total co-benefits across {NATION}</h3>-->
-                <p class="description">Click a region to visit a Local Authority Report Page</p>
+                <h3 class="component-title">Total co-benefits across {NATION}</h3>
+                <p class="description">Click a region to visit the Local Authority Report Page</p>
                 <p class="description">*Scroll for zooming in and out</p>
                 <div id="map" bind:this={mapDiv}>
                 </div>

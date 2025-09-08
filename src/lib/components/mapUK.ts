@@ -293,7 +293,7 @@ export class MapUK {
 		this.loaded = true;
 	}
 
-	initMap(tooltip = true) {
+	initMap(tooltip = true, click = true) {
 		this.map.on('style.load', () => {
 			this.loadLayers();
 		});
@@ -352,11 +352,13 @@ export class MapUK {
 			});
 		}
 
+		if (click) {
 		this.map.on('click', 'fill', (e) => {
 			let feature = e.features[0];
 			let lad = feature.properties.LAD22CD;
 			window.open(`/location?location=${lad}`, '_blank');
 		});
+	}
 
 		// // Listen for zoom events
 		// this.map.on('zoom',  () => {

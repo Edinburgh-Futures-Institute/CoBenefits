@@ -45,6 +45,7 @@
         head: null,
         overview: null,
         temporal: null,
+        breakdown: null,
         households: null
     };
 
@@ -62,6 +63,8 @@
     let scenarioXcoBenefPLots: Record<Scenario, HTMLElement> = {};
     let chartType: "barchart" | "boxplot" | "distribution" = "barchart"
     let isSEFAggregated = false;
+    const LSOACodeToName: Record<string, string> = {};
+    const LADToName: Record<string, string> = {};
 
     let height = 400;
 
@@ -132,21 +135,26 @@
         const LADEngPath = `/LAD/Eng_Wales_LSOA_LADs.csv`
         const LADNIPath = `/LAD/NI_DZ_LAD.csv`
         const LADScotlandPath = `/LAD/Scotland_DZ_LA.csv`
+        
         await csv(LADEngPath).then(data => {
-            for (let lad of data) {
-                LADToName[lad.LAD22CD] = lad.LAD22NM;
+            for (let row of data) {
+                LADToName[row.LAD22CD] = row.LAD22NM
+                LSOACodeToName[row.LSOA21CD] = row.LSOA21NM;
             }
         })
         await csv(LADNIPath).then(data => {
-            for (let lad of data) {
-                LADToName[lad.LGD2014_code] = lad.LGD2014_name;
+            for (let row of data) {
+                LADToName[row.LGD2014_code] = row.LGD2014_name
+                LSOACodeToName[row.DZ2021_code] = row.DZ2021_name;
             }
         })
         await csv(LADScotlandPath).then(data => {
-            for (let lad of data) {
-                LADToName[lad.LA_Code] = lad.LA_Name;
+            for (let row of data) {
+                LADToName[row.LA_Code] = row.LA_Name
+                LSOACodeToName[row.DZ2011_Code] = row.DZ2011_Name;
             }
         })
+            console.log(LSOACodeToName['S01006506']);
 
         dataLoaded = true;
         removeSpinner(element)
@@ -164,14 +172,14 @@
         // Needs to be initialised after data loading
         mapLSOA = new MapUK(oneLADData, "LSOA", mapLSOADiv, "total", false, "Lookup_Value", false, null, 8);
 
-        mapLSOA.initMap();
+        mapLSOA.initMap(true, false);
         mapLSOA.setCenter(oneLADData[0].LAD)
         // mapLSOA.setCenter(oneLADData[0].Lookup_Value)
     });
 
     let scrolledPastHeader = false;
     let currentSection = '';
-    const sectionIds = ['overview', 'temporal', 'households'];
+    const sectionIds = ['overview', 'temporal', 'households', 'breakdown'];
 
     function handleScroll() {
         const scrollY = window.scrollY;
@@ -204,13 +212,11 @@
         const labels: Record<string, string> = {
             overview: 'Overview',
             temporal: 'Temporal trends',
+            breakdown: 'Breakdown by co-benefit',
             households: 'Household benefits'
         };
         return labels[id] || '';
     }
-
-    // const LADToName = data.LADToName;
-    let LADToName = {};
 
     let map: MapUK;
     let mapDiv: HTMLElement;
@@ -503,19 +509,32 @@
         console.log("Loaded co-benefits reactively:", oneLADAllCbs);
     }
 
-    $: searchResults = searchInput.length > 2
-        ? oneLADAllCbs
+$: if (dataLoaded && selectedCoBenefit && searchInput.length >= 1) {
+    const lsoaSet = new Set(
+        oneLADAllCbs
             .filter(d => d.co_benefit_type === selectedCoBenefit)
             .map(d => d.Lookup_Value)
-            .filter(name => name.toLowerCase().includes(searchInput.toLowerCase()))
-        : [];
+    );
 
-    function selectLSOA(name) {
-        selectedLSOA = name;
-        searchInput = "";
-        searchResults = [];
-        renderPerCBPerLSOA();
-    }
+    const allResults = [...lsoaSet].map(code => ({
+        code,
+        name: LSOACodeToName[code.trim()] || code
+    }));
+
+    searchResults = allResults.filter(entry =>
+        entry.name.toLowerCase().includes(searchInput.toLowerCase())
+    );
+
+    searchResults.sort((a, b) => a.name.localeCompare(b.name));
+} else {
+    searchResults = [];
+}
+ function selectLSOA(entry) {
+    selectedLSOA = entry.code;
+    searchInput = "";
+    searchResults = [];
+    renderPerCBPerLSOA();
+}
 
     function renderPerCBPerLSOA() {
         if (!plotPerCBPerLSOA) return;
@@ -526,7 +545,7 @@
         const sortedData = d3.sort(filteredData, d => -d.total);
 
         const selectedDatum = sortedData.find(d => d.Lookup_Value === selectedLSOA?.trim());
-
+console.log("selectedDatum", selectedDatum)
         const plot = Plot.plot({
             height: 500,
             width: 800,
@@ -541,19 +560,36 @@
                 domain: COBENEFS_SCALE.domain()
             },
             marks: [
-                Plot.areaY(sortedData, Plot.binX({y: "count"}, {
+                Plot.rectY(sortedData, Plot.binX({y: "count"}, {
                     x: "total",
+                    thresholds: 50,
                     fill: d => COBENEFS_SCALE(d.co_benefit_type),
                     fillOpacity: 0.5
                 })),
                 ...(selectedDatum
-                    ? [Plot.ruleX([selectedDatum.total], {
-                        stroke: COBENEFS_SCALE(selectedDatum.co_benefit_type),
-                        strokeWidth: 3,
-                        strokeDasharray: "4,2"
-                    })]
+                    ? [
+                        Plot.ruleX([selectedDatum.total], {
+                            stroke: COBENEFS_SCALE2(selectedDatum.co_benefit_type)[2],
+                            strokeWidth: 3,
+                            strokeDasharray: "5,5",
+                            tip: true
+                        }),
+                        Plot.text([selectedDatum], {
+                            x: "total",
+                            y: 0, 
+                            text: d => LSOACodeToName[d.Lookup_Value] || d.Lookup_Value,
+                            dy: -10,
+                            fill: COBENEFS_SCALE2(selectedDatum.co_benefit_type)[1],
+                            stroke: "white", // outline color
+                            strokeWidth: 2,  // outline thickness
+                            fontWeight: "bold",
+                            textAnchor: "middle"
+                        })
+                        ]
                     : []),
+                                        
                 Plot.axisX({label: "Total Co-Benefit (£ million)", labelAnchor: "center", labelArrow: false}),
+                Plot.axisY({label: "Number of Datazones",labelArrow: false}),
                 Plot.ruleX([0], {stroke: "#333", strokeWidth: 1.75})
             ]
         });
@@ -1159,6 +1195,18 @@
         }
     }
 
+            let expanded = new Set();
+
+    function toggle(id) {
+        if (expanded.has(id)) {
+            expanded.delete(id);
+        } else {
+            expanded.add(id);
+        }
+        // Force reactivity
+        expanded = new Set(expanded);
+    }
+
     function onChange(event) {
         chartType = event.currentTarget.value;
     }
@@ -1177,16 +1225,16 @@
     }
 
     function exportData() {
-        let data = allCBAllLADSUM.filter(d => d.Lookup_Value == LAD);
+        let data = allCBsAllZones.filter(d => d.LAD == LAD);
 
-        data.push({co_benefit_type: "Total", val: data.reduce((a, b) => a + b.val, 0)})
+        //data.push({co_benefit_type: "Total", val: data.reduce((a, b) => a + b.val, 0)})
 
-        data.forEach(d => {
-            delete d.Lookup_Value;
+       data.forEach(d => {
+       delete d.scenario;
 
-            d["Cobenefit Value (Millions £)"] = d.val;
-            delete d["val"]
-        })
+       //     d["Cobenefit Value (Millions £)"] = d.val;
+       //     delete d["val"]
+       })
 
         const csv = convertToCSV(data);
         downloadCSV(csv, `cobenefits_${LADToName[LAD]}.csv`);
@@ -1197,17 +1245,7 @@
         renderPerCBPerLSOA();
     }
 
-    // Fuzzy match logic (simple substring, case-insensitive)
-    $: {
-        if (searchInput.length >= 2) {
-            const lsoaSet = new Set(oneLADAllCbs.map(d => d.Lookup_Value));
-            searchResults = [...lsoaSet].filter(code =>
-                code.toLowerCase().includes(searchInput.toLowerCase())
-            ).slice(0, 10); // limit results
-        } else {
-            searchResults = [];
-        }
-    }
+
 
 </script>
 
@@ -1404,51 +1442,7 @@
                 </div>
             </div>
         </div>
-        <div id="vis-block">
-            <div id="main-block">
-                <h3 class="section-title" style="align">What co-benefits would the LSOAs recieve?</h3>
-                <p class="description">Here the distribution is grouped by LSOA to give a more granular insight into the
-                    co-benefits recieved throughout {LADToName[LAD]}</p>
-                <div>
-                    <label for="coBenefitSelect">Select Co-Benefit Type:</label>
-                    <select id="coBenefitSelect" bind:value={selectedCoBenefit}>
-                        {#each allCoBenefitTypes as type}
-                            <option value={type}>{type}</option>
-                        {/each}
-                    </select>
 
-                    <label>
-                        Search LSOA:
-                        <input
-                                type="text"
-                                placeholder="Enter LSOA"
-                                bind:value={searchInput}
-                        />
-                    </label>
-
-                    {#if searchResults.length > 0}
-                        <ul class="search-results">
-                            {#each searchResults as result}
-                                <li on:click={() => selectLSOA(result)}>
-                                    {result}
-                                </li>
-                            {/each}
-                        </ul>
-                    {/if}
-                </div>
-                <div bind:this={plotPerCBPerLSOA}></div>
-            </div>
-
-            <div style="flex: 1; display: flex; flex-direction: column; padding-top: 3rem;">
-                <h3 class="component-title">LSOA Map</h3>
-
-                <p class="description">This map shows the total co-benefit values (£ millions) for each LSOA of {LADToName[LAD]}</p>
-                <div id="map-lsoa" bind:this={mapLSOADiv}>
-                </div>
-            </div>
-
-
-        </div>
 
 
 
@@ -1531,23 +1525,44 @@
                         trends.</p>
 
                     <!-- Legend -->
-                    <div id="main-legend" class="legend-box" style="margin-bottom: 5px;">
-                        <strong style="margin-bottom: 0.5rem;">Legend:</strong> <br/>
-                        <ul class="horizontal-legend-list" style="margin-bottom:5px">
-                            {#each COBENEFS as cobenef}
-                                <li><span class="legend-color"
-                                          style="background-color: {COBENEFS_SCALE(cobenef.id)}"></span>
-                                    <a href="{base}/cobenefit?cobenefit={cobenef.id}"
-                                       target="_blank"
-                                       class="link">
-                                        <!--{cobenef.label.split(" ").slice(0, 2).join(" ")}-->
-                                        {cobenef.label}
-                                    </a>
-                                </li>
-                            {/each}
-
-                        </ul>
-
+                    <div id="main-legend" class="legend-box">
+                    <strong>Co-benefits:</strong><br>Expand for detailed explanation
+                    <div style="height: 0.8em;"></div>
+                    <div class="legend-items-grid">
+                        {#each COBENEFS as CB}
+                        <div class="legend-item">
+                            <div class="legend-header" on:click={() => {
+                                const wasExpanded = expanded.has(CB.id);
+                                toggle(CB.id);
+                                
+                                if (!wasExpanded) {
+                                    posthog.capture('cobenefit opened', {
+                                        cobenefit: CB.label
+                                    });
+                                } else {
+                                    posthog.capture('cobenefit closed', {
+                                        cobenefit: CB.label
+                                    });
+                                }
+                            }} style="cursor: pointer;">
+                                <span class="legend-color" style="background-color: {COBENEFS_SCALE(CB.id)};"></span>
+                                <span class="legend-text {expanded.has(CB.id) ? 'expanded' : ''}" >{CB.label}</span>
+                                <span class="toggle-icon">{expanded.has(CB.id) ? "▲" : "▼"}</span>
+                            </div>
+                            {#if expanded.has(CB.id)}
+                            <div class="legend-description-box">
+                            <div class="legend-description">
+                                <div style="height: 0.8em;"></div>
+                                {CB.def} <br>
+                                
+                                <a class="link" href="{base}/cobenefit?cobenefit={CB.id}" target="_blank" rel="noopener noreferrer" style= "color:{COBENEFS_SCALE(CB.id)}; text-decoration: underline">{CB.id} report page</a>
+                                
+                            </div>
+                            </div>
+                            {/if}
+                        </div>
+                        {/each}
+                        </div>
                     </div>
 
                 </div>
@@ -1562,6 +1577,60 @@
         </div>
 
     </div>
+<div class="section" id="breakdown">
+            <div id="vis-block">
+            <div id="main-block">
+                <h3 class="section-title" style="align">What co-benefits would the LSOAs recieve?</h3>
+                <p class="description">The distribution plot below shows the predicted spread of benefits recieved or costs incurred by the LSOAs across {LADToName[LAD]}. 
+                    Select a co-benefit from the dropdown menu and explore the position of different datazones by using the search box.</p>
+                <div>
+                    <div class="controls-container">
+                    <div class="control-group">
+                    <label for="coBenefitSelect">Select Co-Benefit Type:</label>
+                    <select id="coBenefitSelect" bind:value={selectedCoBenefit}>
+                        {#each allCoBenefitTypes as type}
+                            <option value={type}>{type}</option>
+                        {/each}
+                    </select>
+                    </div>
+                    <div class="control-group search-container">
+                    <label>
+                        Search LSOA:
+                        <input
+                                type="text"
+                                placeholder="Enter LSOA"
+                                bind:value={searchInput}
+                                autocomplete="off"
+                        />
+                    </label>
+
+                    {#if searchResults.length > 0}
+                        <ul class="search-results">
+                            {#each searchResults as result}
+                                <li on:click={() => selectLSOA(result)}>
+                                    {result.name}
+                                </li>
+                            {/each}
+                        </ul>
+                    {/if}
+                </div>
+                </div>
+                </div>
+                <br>
+                <div bind:this={plotPerCBPerLSOA}></div>
+            </div>
+
+            <div style="flex: 1; display: flex; flex-direction: column; padding-top: 3rem;">
+                <h3 class="component-title">LSOA Map</h3>
+
+                <p class="description">This map shows the total co-benefit values (£ millions) for each LSOA of {LADToName[LAD]}</p>
+                <div id="map-lsoa" bind:this={mapLSOADiv}>
+                </div>
+            </div>
+
+
+        </div>
+        </div>
 
     <div class="section" id="households">
         <div class="section-header">
@@ -1764,7 +1833,7 @@
         width: 100%;
 
         /*TODO: height is given by this currently but better to change at some point*/
-        height: 650px;
+        height: 750px;
         /*flex: 1; !* take the remaining height *!*/
     }
 
@@ -1925,25 +1994,96 @@
         gap: 1rem;
     }
 
-    .search-results {
-        list-style: none;
-        margin: 0;
-        padding: 0;
+    select,
+        input[type="text"] {
+        width: 100%;
+        padding: 4px 8px;
+        font-size: 16px;
+        font-family: inherit;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        box-sizing: border-box;
+        }
+
+        select:focus,
+        input[type="text"]:focus {
+        border-color: #007acc;
+        outline: none;
+        }
+
+    .search-container {
+        position: relative; 
+        }
+
+        .search-results {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
         max-height: 200px;
         overflow-y: auto;
-        border: 1px solid #ccc;
         background: white;
-        position: absolute;
+        border: 1px solid #ccc;
+        border-top: none;
+        margin: 0;
+        padding: 0;
+        list-style: none;
         z-index: 1000;
-        width: 250px;
-    }
+        border-radius: 0 0 4px 4px;
+        }
 
     .search-results li {
-        padding: 5px 10px;
+        padding: 4px 8px;
         cursor: pointer;
     }
 
     .search-results li:hover {
         background-color: #f0f0f0;
     }
+
+        .legend-items-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 0rem 1.5rem; 
+}
+
+    .controls-container {
+        display: flex;
+        gap: 40px; 
+        align-items: flex-start;
+        flex-wrap: wrap;
+        }
+
+        .control-group {
+        display: flex;
+        flex-direction: column;
+        font-family: inherit;
+        font-size: 16px;
+        width: 300px;
+        }
+
+        .control-group label {
+        margin-bottom: 0px;
+        font-weight: 600;
+        }
+
+.toggle-icon {
+    margin-left: auto;
+    font-size: 0.8em;
+    opacity: 0.6;
+}
+
+.legend-description {
+    margin-left: 0.1em;
+    margin-right: 0em;
+    padding: 1em;
+    padding-top: 0em;
+    font-size: 0.8em;
+    color: #555;
+}
+.legend-description-box {
+    margin: 0.5em 0em;
+    background-color: #f9f9f9;
+    border-radius: 4px;
+}
 </style>

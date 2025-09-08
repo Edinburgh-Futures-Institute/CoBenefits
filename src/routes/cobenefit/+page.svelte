@@ -25,7 +25,7 @@
         SEF_SCALE,
         DEFINITIONS,
         SE_FACTORS,
-        SEF_LEVEL_LABELS, removeSpinner, addSpinner
+        SEF_LEVEL_LABELS, removeSpinner, addSpinner, convertToCSV, downloadCSV
 
     } from "../../globals";
     import {
@@ -45,6 +45,7 @@
     import per_capita from '$lib/icons/per_capita.png';
     import percentage from '$lib/icons/percentage.png';
     import Footer from "$lib/components/Footer.svelte";
+    import {downloadStaticPDF} from "../../globals.js";
 
     let element: HTMLElement
     let plotDist: HTMLElement
@@ -549,6 +550,24 @@
         selectedNation = null;
     }
 
+    function exportData() {
+        let data = fullData;
+
+        //data.push({co_benefit_type: "Total", val: data.reduce((a, b) => a + b.val, 0)})
+
+       data.forEach(d => {
+       delete d.scenario;
+
+       //     d["Cobenefit Value (Millions £)"] = d.val;
+       //     delete d["val"]
+       })
+
+        const csv = convertToCSV(data);
+        downloadCSV(csv, `cobenefits_${coBenefitLabel}.csv`);
+        downloadStaticPDF("/Scotland_co-benefits_CB7_2045.pdf", "readme.pdf"); // <-- adjust filename/path as needed
+    }
+
+
 
     onMount(() => {
         addSpinner(element);
@@ -579,7 +598,17 @@
     <div class="section header">
         <div class="header-content">
             <div class="header-text">
+                <div class="header-bar">
                 <p class="page-subtitle">Co-Benefit Report</p>
+                <button
+
+                        type="button"
+                        class="data-btn"
+                        on:click={exportData}
+                >
+                    Download Page Data
+                </button>
+                </div>
                 <div class="title-container">
                     <h1 class="page-title">
                         <img src={icon} alt="Icon" class="heading-icon"/>
@@ -664,6 +693,14 @@
                     >> {formatLabel(currentSection)}</span>
 
             </div>
+            <button
+
+                    type="button"
+                    class="data-btn-sticky"
+                    on:click={exportData}
+            >
+                Download Page Data
+            </button>
         </div>
     {/if}
 
