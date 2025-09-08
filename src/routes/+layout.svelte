@@ -76,7 +76,10 @@
 
         // Only show banner if no consent choice has been made yet
         if (!consent) {
-            showBanner = true;
+            // showBanner = true;
+
+            // Never show banner in anon version
+            showBanner = false;
         } else if (consent === 'accepted') {
 
             initPosthog();
