@@ -775,7 +775,7 @@ $: console.log("LAD name for maxLookupValue:", LADToName[maxLookupValue]);
        })
 
         const csv = convertToCSV(data);
-        downloadCSV(csv, `cobenefits_${sefId}.csv`);
+        // downloadCSV(csv, `cobenefits_${sefId}.csv`);
         downloadStaticPDF("/Scotland_co-benefits_CB7_2045.pdf", "readme.pdf"); // <-- adjust filename/path as needed
     }
 

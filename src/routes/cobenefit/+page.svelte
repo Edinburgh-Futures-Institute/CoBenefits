@@ -563,7 +563,7 @@
        })
 
         const csv = convertToCSV(data);
-        downloadCSV(csv, `cobenefits_${coBenefitLabel}.csv`);
+        // downloadCSV(csv, `cobenefits_${coBenefitLabel}.csv`);
         downloadStaticPDF("/Scotland_co-benefits_CB7_2045.pdf", "readme.pdf"); // <-- adjust filename/path as needed
     }
 
