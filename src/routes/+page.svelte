@@ -438,6 +438,7 @@
         <div class="hero-content">
             <div class="hero-text">
                 <img src="{base}/atlas-logos/logo-colored-waffle-png.png" alt="Logo" height="0px"/>
+                <div class="hero-box">
                 <h1 class="hero-title">The Co-Benefits of Reaching <br> Net Zero in the UK</h1>
                 <p class="hero-description">
                     Climate actions lower greenhouse gas (GHG) emissions but the gains for society reach further. The
@@ -455,6 +456,7 @@
                     in
                     touch by emailing <a href="mailto:cobens@ed.ac.uk">cobens@ed.ac.uk</a>
                 </p>
+                </div>
             </div>
 
             <div class="waffle-overlay">
@@ -589,7 +591,6 @@
                             <h3>Interactive Map</h3>
                             <p> The interactive map enables exploring the spatial distributions of both the co-benefits
                                 and the socio-economic factors at the datazones and local area levels.</p>
-
                         </div>
                     </a>
 
@@ -598,7 +599,6 @@
                             <img class="page-teaser-img" src="{base}/pages-teasers/nation.png"/>
                             <h3>Nation Pages</h3>
                             <p> The nation pages shows the different co-benefits in this nation and temporal distributions.</p>
-
                         </div>
                     </a>
                 </div>
@@ -606,20 +606,18 @@
 
 
             <div class="explore-block story-section">
-                <h1>Read Stories and Analyses</h1>
-                <hr class="story-teaser-hr">
+                <h2>Read Stories and Analyses</h2>
                 <div class="explore-pages story-pages">
                     <a href="/stories/story.pdf" target="_blank" rel="noopener noreferrer">
                         <div class="story">
-                            <img class="story-teaser-img" src="{base}/stories/Derry_picture_new.png"/>
-                            <h3>Accelerating climate financing in Derry City and Strabane District Council</h3>
+                            <img class="story-teaser-img" src="{base}/stories/Derry_picture.png"/>
+                            <h2 class="hover-underline">Accelerating climate financing in Derry City and Strabane District Council</h2>
                             <hr class="story-teaser-hr">
                         </div>
                     </a>
                 </div>
                 <div class="explore-pages story-pages">
                     <div class="story">
-                        <br>
                         <h3>More to come...</h3>
                         <p>In the meantime, if you have your own ideas for collaboration on stories related to
                             co-benefits please get in touch using the
@@ -704,9 +702,9 @@
     }
 
     .hero-title {
-        font-size: 2.75rem;
+        font-size: 2.2rem;
         font-weight: bold;
-        margin-bottom: 3rem;
+        margin-bottom: 2rem;
         margin-top: -1rem;
         line-height: 3rem;
     }
@@ -752,7 +750,7 @@
         height: 100%;
         object-fit: cover;
         top: 0;
-        left: 25%;
+        left: 33%;
     }
 
     .slide-map {
@@ -763,10 +761,17 @@
         position: relative;
         z-index: 2;
         display: flex;
-        align-items: center;
+        align-items: top;
         height: 100%;
-        padding: 0 2rem;
+        padding: 0 6rem;
         color: #000;
+    }
+
+    .hero-box {
+        padding: 1.5rem 1.8rem 1.5rem 1.8rem;
+        background-color: rgba(255, 255, 255, 0.4);
+        border-radius: 0px 8px 8px 0px;
+        margin-left: -6rem;
     }
 
     .waffle-overlay {
@@ -999,12 +1004,19 @@
     }
 
     .story > h3 {
-        /*height: 3.5rem;*/
         font-weight: 400;
         line-height: 24px;
         margin-top: 2px;
-        /*background-color: #444;
-        color: #fdfdfd;*/
+        margin-bottom: -6px;
+    }
+
+    .story > h2 {
+        font-size: 22px;
+        font-weight: 500;
+        line-height: 28px;
+        margin-top: 2px;
+        margin-left: 8px;
+        margin-right: 8px;
     }
 
     .explore-page {
@@ -1112,4 +1124,8 @@
         border-top: 2px solid #999;
         margin: 1rem 0;
     }
+
+    .hover-underline:hover {
+        text-decoration: underline;
+        }
 </style>
