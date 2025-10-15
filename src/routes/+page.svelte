@@ -47,7 +47,6 @@
 
 
     export let data;
-    // let LADToName = data.LADToName;
 
     let element: HTMLElement;
 
@@ -64,21 +63,14 @@
 
     async function loadData() {
         aggregationPerBenefit = await getTableData(getAggregationPerBenefit());
-        // console.log("aggregationPerBenefit", aggregationPerBenefit);
-        // for landing page LAD columns
 
         aggregationPerCapitaPerBenefit = await getTableData(getAggregationPerCapitaPerBenefit());
         totalAggregation = await getTableData(getTotalAggregation());
 
         aggregationPerBenefit = [...aggregationPerBenefit].sort((a, b) => b.total - a.total);
         aggregationPerCapitaPerBenefit = [...aggregationPerCapitaPerBenefit].sort((a, b) => b.total_value - a.total_value);
-        // console.log("aggregationPerCapitaPerBenefit", aggregationPerCapitaPerBenefit);
 
-        // aggregationPerCapita = totalAggregation[0].total_value_per_capita;
         aggregationPerCapita = d3.sum(aggregationPerCapitaPerBenefit, d => d.value_per_capita)
-
-        // console.log("aggregationPerCapita", aggregationPerCapita);
-
 
         maxCoBenefValue = Math.max(...aggregationPerCapitaPerBenefit.map(d => d.total_value));
         minCoBenefValue = Math.min(...aggregationPerCapitaPerBenefit.map(d => d.total_value));
@@ -118,7 +110,6 @@
         const sql = getTopSelectedLADs({region, sortBy});
         const rows = await getTableData(sql);
         ladData = rows;
-        // console.log("ladData", ladData);
 
         maxLADValue = Math.max(...rows.map(d => d.total_value));
         maxHHLADValue = Math.max(...rows.map(d => d.value_per_capita));
@@ -198,10 +189,8 @@
                     maximumFractionDigits: 2
                 });
 
-                // const percent = totalValue > 0 ? ((total / totalValue) * 100).toFixed(2) + "%" : "0%";
                 const percent = totalValue > 0 ? ((total / totalValue) * 100).toFixed(2) : 0;
 
-                // console.log("percentage", type, total, totalValue, percent);
 
                 return {
                     type,
@@ -289,7 +278,6 @@
 
         // coordinates in the waffle: x from 0 to gridWidth, y from 0 to totalRows
         waffleData = [...posData, ...negData];
-        // console.log("waffleData", waffleData);
 
         // text labels for right side axis
         const labelStep = 50;
@@ -418,7 +406,6 @@
     });
 </script>
 
-<!--<div class="page-container" bind:this={element}>-->
 <div bind:this={element}>
 
     <NavigationBar></NavigationBar>
@@ -439,23 +426,22 @@
             <div class="hero-text">
                 <img src="{base}/atlas-logos/logo-colored-waffle-png.png" alt="Logo" height="0px"/>
                 <div class="hero-box">
-                <h1 class="hero-title">The Co-Benefits of Reaching <br> Net Zero in the UK</h1>
-                <p class="hero-description">
-                    Climate actions lower greenhouse gas (GHG) emissions but the gains for society reach further. The
-                    CO-BENS project models 11 additional benefits based on actions recommended by the Climate Change
-                    Committee (CCC) in its Seventh Carbon Budget (2025) across 45,000 communities and regions within the
-                    UK.<br>
-                </p>
-                <p class="hero-description">
-                    Explore how, when and for whom benefits emerge to further understand connections between a wide
-                    range of
-                    social, economic and environmental priorities, and drive more effective decision-making.
-                </p>
-                <p class="hero-description">
-                    To understand more about the analysis or if you would like bespoke co-benefit modelling please get
-                    in
-                    touch by emailing <a href="mailto:cobens@ed.ac.uk">cobens@ed.ac.uk</a>
-                </p>
+                <h1 class="hero-title">The 
+                      <span class="multicolor">
+                        <span style="--clr:#71C35D;">C</span>
+                        <span style="--clr:#E11484;">o</span>
+                        <span style="--clr:#00AED9;">-</span>
+                        <span style="--clr:#EF402B;">B</span>
+                        <span style="--clr:#007DBC;">e</span>
+                        <span style="--clr:#8F1838;">n</span>
+                        <span style="--clr:#C31F33;">e</span>
+                        <span style="--clr:#CF8D2A;">f</span>
+                        <span style="--clr:#F36D25;">i</span>
+                        <span style="--clr:#48773E;">t</span>
+                        <span style="--clr:#D3A029;">s</span>
+                    </span>
+                <br> of Reaching Net Zero in the UK</h1>
+            <p> Catchy slogan. </p>
                 </div>
             </div>
 
@@ -530,6 +516,42 @@
             </div>
     </section>
 
+    <section id='guide'>
+          <div class="columns">
+            <div class="column">
+            <h2>What are co-benefits?</h2>
+            <p>
+                Climate actions lower greenhouse gas (GHG) emissions but the gains for society reach further. The
+                CO-BENS project models 11 additional benefits based on actions recommended by the Climate Change
+                Committee (CCC) in its Seventh Carbon Budget (2025) across 45,000 communities and regions within the
+                UK.
+            </p>
+            </div>
+
+            <div class="column">
+            <h2>What is the Atlas?</h2>
+            <p>
+                The Atlas is a resource that reveals how, when, and for whom benefits emerge, uncovering connections across social, 
+                economic, and environmental priorities to guide more informed and effective decisions.
+            </p>
+            To understand more about the analysis or if you would like bespoke co-benefit modelling please get
+                    in
+                    touch by emailing <a href="mailto:cobens@ed.ac.uk">cobens@ed.ac.uk</a>
+            </div>
+
+            <div class="column">
+            <h2>How to use the Atlas</h2>
+            <p>
+                View report pages on each of the 11 co-benefits, search for local areas or explore the interactive map.
+            </p>
+              <video controls width="100%">
+                <source src="{base}/media/media/atlas-demo-output.mp4" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+            </div>
+        </div>
+    </section>
+
 
     <section id="explore-section">
 
@@ -547,8 +569,34 @@
                 </div>
             </div>
         </div>
-
+        
         <div id="explore-section-main">
+
+                <div class="explore-block">
+                <h2>Read Stories and Analyses</h2>
+                <div class="explore-stories">
+                    <div class="explore-page">
+                    <a href="/stories/story.pdf" target="_blank" rel="noopener noreferrer">
+
+                            <img class="story-teaser-img" src="{base}/stories/Derry_picture.png"/>
+                            <h3 class="hover-underline">Accelerating climate financing in Derry City and Strabane District Council</h3>
+
+                    </a>
+                </div>
+                <div class="explore-page">
+     <br>
+     <br>
+     <br>
+                        <h3>More to come...</h3>
+                        <p>In the meantime, if you have your own ideas for collaboration on stories related to
+                            co-benefits please get in touch using the
+                            <a href="https://docs.google.com/forms/d/1w-8Lt9bESZ56PdklTIT38plec7dPgDbJtORkatoXFVY/viewform?edit_requested=true">feedback
+                                form.</a></p>
+
+                </div>
+</div>
+            </div>
+            </div>
 
             <div class="explore-block">
                 <h2>Browse Report Pages</h2>
@@ -604,48 +652,11 @@
                 </div>
             </div>
 
+            
 
-            <div class="explore-block story-section">
-                <h2>Read Stories and Analyses</h2>
-                <div class="explore-pages story-pages">
-                    <a href="/stories/story.pdf" target="_blank" rel="noopener noreferrer">
-                        <div class="story">
-                            <img class="story-teaser-img" src="{base}/stories/Derry_picture.png"/>
-                            <h2 class="hover-underline">Accelerating climate financing in Derry City and Strabane District Council</h2>
-                            <hr class="story-teaser-hr">
-                        </div>
-                    </a>
-                </div>
-                <div class="explore-pages story-pages">
-                    <div class="story">
-                        <h3>More to come...</h3>
-                        <p>In the meantime, if you have your own ideas for collaboration on stories related to
-                            co-benefits please get in touch using the
-                            <a href="https://docs.google.com/forms/d/1w-8Lt9bESZ56PdklTIT38plec7dPgDbJtORkatoXFVY/viewform?edit_requested=true">feedback
-                                form.</a></p>
-
-                    </div>
-                </div>
-
-            </div>
-        </div>
 
 
     </section>
-
-    <!--    <section class="search-section">-->
-    <!--        <h1>Find My Place</h1>-->
-    <!--        <LADSearch-->
-    <!--            items={LADToName}-->
-    <!--            on:search={(e) => handleSearch(e.detail)}-->
-    <!--        />-->
-    <!--        &lt;!&ndash; {#if selectedLAD}-->
-    <!--          <h2>Total Cobenefits</h2>-->
-    <!--          <h2>Cobenefits Over Time</h2>-->
-
-    <!--        {/if} &ndash;&gt;-->
-    <!--    </section>-->
-
 
     <section class="side-by-side-section">
         <div class="side-box">
@@ -702,10 +713,12 @@
     }
 
     .hero-title {
+        /*font-family: 'Montserrat', sans-serif;*/
+        font-family: 'Poppins', sans-serif;
         font-size: 2.2rem;
-        font-weight: bold;
+        font-weight: 600;
         margin-bottom: 2rem;
-        margin-top: -1rem;
+        margin-top: 1rem;
         line-height: 3rem;
     }
 
@@ -769,7 +782,7 @@
 
     .hero-box {
         padding: 1.5rem 1.8rem 1.5rem 1.8rem;
-        background-color: rgba(255, 255, 255, 0.4);
+        background-color: rgba(255, 255, 255, 0.2);
         border-radius: 0px 8px 8px 0px;
         margin-left: -6rem;
     }
@@ -976,11 +989,12 @@
     }
 
     .explore-block {
-        padding: 0px 15px;
+        padding: 10px 15px;
         background-color: #fdfdfd;
         border: 1px solid lightgray;
         flex-grow: 1;
         border-radius: 8px;
+        margin-bottom: 1rem;
 
     }
 
@@ -997,26 +1011,34 @@
     }
 
 
-    .explore-pages {
-        display: flex;
-        justify-content: space-evenly;
-        gap: 2%;
+    
+
+    .explore-stories {
+          display: flex;
+          justify-content: flex-start;
+          gap: 10%;
     }
 
-    .story > h3 {
+    .explore-stories > h3 {
         font-weight: 400;
         line-height: 24px;
         margin-top: 2px;
         margin-bottom: -6px;
     }
 
-    .story > h2 {
+    .explore-stories > h2 {
         font-size: 22px;
         font-weight: 500;
         line-height: 28px;
         margin-top: 2px;
         margin-left: 8px;
         margin-right: 8px;
+    }
+
+    .explore-pages {
+        display: flex;
+        justify-content: space-evenly;
+        gap: 2%;
     }
 
     .explore-page {
@@ -1035,6 +1057,7 @@
     .explore-page > h3 {
         /*height: 3.5rem;*/
         font-weight: 500;
+        width: 100%;
     }
 
     .explore-page p {
@@ -1051,6 +1074,10 @@
         /*height: 1000px;*/
     }
 
+    .explore-page a {
+        color: black;
+
+    }
     .explore-pages a {
         color: black;
 
@@ -1083,7 +1110,7 @@
     }
 
     #explore-title {
-        margin: 2rem;
+        margin: 2rem 2rem 2rem 0.5rem;
     }
 
     .search-label-and-input {
@@ -1128,4 +1155,35 @@
     .hover-underline:hover {
         text-decoration: underline;
         }
+
+    .columns {
+      display: flex;
+      gap: 2rem;
+      justify-content: space-between;
+      flex-wrap: wrap; 
+      padding: 0 2rem;
+    }
+
+    .column {
+      flex: 1;
+      min-width: 250px; 
+    }
+
+  .multicolor span {
+        display: inline-block;
+        color: black; /* default color */
+        transition: color 0.3s ease, transform 0.2s ease;
+        font-size: 50px;
+         letter-spacing: -10px;
+    }
+
+    /* when hovering the whole multicolor word */
+    .multicolor:hover span {
+        color: var(--clr); /* reveal each letter's color */
+    }
+
+    /* optional: individual letter hover lift */
+    .multicolor span:hover {
+        transform: translateY(-4px);
+    }
 </style>

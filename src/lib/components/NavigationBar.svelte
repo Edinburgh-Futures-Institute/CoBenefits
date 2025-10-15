@@ -91,6 +91,7 @@ async function goToSection(id: string) {
     <div class="nav-right" style="gap: 1rem;">
       <a href="{base}/" class="nav-item" class:active={$page.url.pathname === `${base}`}>Home</a>
       <a href="{base}/methods" class="nav-item" class:active={$page.url.pathname === `${base}/methods`}>Methods</a>
+      <a href="{base}/methods" class="nav-item" class:active={$page.url.pathname === `${base}/methods`}>Community</a>
       <!-- <a href="mailto:cobens@ed.ac.uk" class="nav-item">Contact</a> -->
       <div class="dropdown nav-item" style="margin-top: 0;"
           on:mouseenter={() => (showDropdownContact = true)}
