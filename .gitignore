@@ -43,6 +43,9 @@ staticNotDeployed/UK_Archetypes.xlsx
 staticNotDeployed/coBenefits
 staticNotDeployed/simulations_new/**/*
 
+
+data/Final_hassle_fix.csv
+
 Archive/
 .ipynb_checkpoints
 .svelte-kit

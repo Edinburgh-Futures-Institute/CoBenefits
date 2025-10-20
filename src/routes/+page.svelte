@@ -107,9 +107,11 @@
     // let LADToName = data.LADToName;
 
     async function fetchLADData() {
+
         const sql = getTopSelectedLADs({region, sortBy});
         const rows = await getTableData(sql);
         ladData = rows;
+
 
         maxLADValue = Math.max(...rows.map(d => d.total_value));
         maxHHLADValue = Math.max(...rows.map(d => d.value_per_capita));
