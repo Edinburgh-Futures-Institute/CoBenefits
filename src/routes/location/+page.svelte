@@ -105,8 +105,8 @@
 
     async function loadData() {
         totalCBAllZones = await getTableData(getTotalCBAllDatazones());
+
         allCBsAllZones = await getTableData(getAllCBAllDatazones());
-        console.log("allCBAllZones", allCBsAllZones)
 
         totalCBAllZones.forEach(datazone => {
             datazone.isPageLAD = (datazone.LAD == LAD) ? true : false
@@ -119,7 +119,7 @@
         allCBAllLADSUM = await getTableData(getSUMCBGroupedByLADAndCB());
 
         oneLADData = await getTableData(getTotalCBForOneLAD(LAD));
-        console.log("oneLADData", oneLADData)
+        // console.log("oneLADData", oneLADData)
         oneLADAllCbs = await getTableData(getAllCBForOneLAD(LAD));
 
 
@@ -154,7 +154,6 @@
                 LSOACodeToName[row.DZ2011_Code] = row.DZ2011_Name;
             }
         })
-            console.log(LSOACodeToName['S01006506']);
 
         dataLoaded = true;
         removeSpinner(element)
