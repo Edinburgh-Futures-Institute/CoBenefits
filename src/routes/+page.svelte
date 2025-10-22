@@ -426,7 +426,7 @@
             <div class="hero-text">
                 <img src="{base}/atlas-logos/logo-colored-waffle-png.png" alt="Logo" height="0px"/>
                 <div class="hero-box">
-                <h1 class="hero-title">The 
+                <h1 class="hero-title">The UK <br>  
                       <span class="multicolor">
                         <span style="--clr:#71C35D;">C</span>
                         <span style="--clr:#E11484;">o</span>
@@ -440,8 +440,8 @@
                         <span style="--clr:#48773E;">t</span>
                         <span style="--clr:#D3A029;">s</span>
                     </span>
-                <br> of Reaching Net Zero in the UK</h1>
-            <p> Catchy slogan. </p>
+                  &nbsp;Atlas </h1>
+                <h4>Explore and learn about co-benefits and co-costs of reaching net zero in the UK.</h4>
                 </div>
             </div>
 
@@ -544,10 +544,10 @@
             <p>
                 View report pages on each of the 11 co-benefits, search for local areas or explore the interactive map.
             </p>
-              <video controls width="100%">
+              <!--<video controls width="100%">
                 <source src="{base}/media/media/atlas-demo-output.mp4" type="video/mp4">
                     Your browser does not support the video tag.
-                </video>
+                </video> -->
             </div>
         </div>
     </section>
@@ -710,6 +710,14 @@
         position: relative;
         z-index: 1;
         max-width: 700px;
+    }
+
+    .hero-text h4 {
+        position: relative;
+        z-index: 1;
+        max-width: 400px;
+        font-weight: 400;
+        font-size: 1.5rem;
     }
 
     .hero-title {
