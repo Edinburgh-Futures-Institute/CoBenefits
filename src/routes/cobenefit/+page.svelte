@@ -82,7 +82,7 @@
         colorRange.shift()
         colorRange = colorRange.reverse()
 
-        map = new MapUK(LADAveragedData, "LAD", mapDiv, "total", true, "LAD", false, colorRange);
+        map = new MapUK(fullData, "LAD", mapDiv, "total", true, "LAD", false, colorRange);
         map.initMap();
     });
 
@@ -142,8 +142,9 @@
 
     async function loadData() {
         fullData = await getTableData(getTotalPerOneCoBenefit(coBenefit))
-
+        console.log("FULLDATA", fullData);
         SEFData = await getTableData(getSefForOneCoBenefit(coBenefit))
+        console.log("SEFDATA", SEFData);
         aggregationPerBenefit = await getTableData(getAggregationPerBenefit());
         aggregationPerBenefit = aggregationPerBenefit.sort((a, b) => b.total - a.total);
 
@@ -155,7 +156,7 @@
         // console.log("coben waffle data",aggregationPerCapitaPerBenefit);
         // console.log("coben type", coBenefit);
 
-        LADAveragedData = await getTableData(getSefForOneCoBenefitAveragedByLAD(coBenefit))
+        //LADAveragedData = await getTableData(getSefForOneCoBenefitAveragedByLAD(coBenefit))
         console.log("data", LADAveragedData);
         totalBenefits = await getTableData(getTotalAggregation())
         totalBenefitsValue = totalBenefits[0].total_value
@@ -270,8 +271,8 @@
                 x: {label: 'Total co-benefit value (£, billion)', labelArrow: 'none', labelAnchor: "center"},
                 style: {fontSize: "15px"},
                 marks: [
-                    Plot.rectY(LADAveragedData, Plot.binX({y: "count"}, {
-                        x: d => d.total * 1000,
+                    Plot.rectY(fullData, Plot.binX({y: "count"}, {
+                        x: d => d.total,
                         fill: COBENEFS_SCALE2(coBenefit)[0],
                         tip: true,
                         fillOpacity: 0.5,
