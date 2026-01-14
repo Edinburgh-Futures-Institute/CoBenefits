@@ -470,21 +470,11 @@ export function getSefForOneCoBenefitAveragedByLAD(cobenefit: CoBenefit) {
 		const isCategorical = SEF_CATEGORICAL.includes(SE);
 		const aggregation = isCategorical ? `MODE() WITHIN GROUP (ORDER BY ${SE})` : `AVG(${SE})`;
 
-		// return `
-    //     SELECT AVG(total / Households) AS total,
-    //            LAD,
-    //            ${aggregation}          AS SE,
-    //            '${SE}'                 AS SEFMAME
-    //     FROM ${DB_TABLE_NAME}
-    //     WHERE co_benefit_type = '${cobenefit}'
-    //     GROUP BY LAD
-		// `;
-
 		return `
-        SELECT AVG(total / HH) AS total, 
-               '${SE}'                 AS SEFMAME,
-                LAD,
-           			${aggregation}          AS SE,
+        SELECT AVG(total / HH) AS total,
+               LAD,
+               ${aggregation}          AS SE,
+               '${SE}'                 AS SEFMAME
         FROM ${DB_TABLE_NAME}
         WHERE co_benefit_type = '${cobenefit}'
         GROUP BY LAD
