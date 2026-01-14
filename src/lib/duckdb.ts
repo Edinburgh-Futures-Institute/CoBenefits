@@ -79,7 +79,7 @@ async function loadData() {
 	// // Close the connection to release memory
 	// await conn.close();
 
-	console.log("DB INFO: ", await getTableData(getInfo()));
+	// console.log("DB INFO: ", await getTableData(getInfo()));
 
 	const result = await conn.query(`PRAGMA table_info(${DB_TABLE_NAME})`);
 	// console.log("Table schema:", await result.toArray());
@@ -492,7 +492,6 @@ export function getSefForOneCoBenefitAveragedByLAD(cobenefit: CoBenefit) {
 	};
 
 	const query = SEF.map(oneQuery).join(' UNION ALL ');
-	console.log(999, query);
 	return query;
 }
 

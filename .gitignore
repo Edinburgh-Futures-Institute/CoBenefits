@@ -49,3 +49,5 @@ data/Final_hassle_fix.csv
 Archive/
 .ipynb_checkpoints
 .svelte-kit
+
+.virtual_documents
