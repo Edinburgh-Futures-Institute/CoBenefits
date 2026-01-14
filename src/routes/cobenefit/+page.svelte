@@ -156,7 +156,7 @@
         // console.log("coben waffle data",aggregationPerCapitaPerBenefit);
         // console.log("coben type", coBenefit);
 
-        //LADAveragedData = await getTableData(getSefForOneCoBenefitAveragedByLAD(coBenefit))
+        LADAveragedData = await getTableData(getSefForOneCoBenefitAveragedByLAD(coBenefit))
         console.log("data", LADAveragedData);
         totalBenefits = await getTableData(getTotalAggregation())
         totalBenefitsValue = totalBenefits[0].total_value
