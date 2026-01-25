@@ -10,10 +10,11 @@
         COBENEFS_SCALE,
         getHeroSlides,
         getIconFromCobenef,
-        type CoBenefit, addSpinner, removeSpinner, buildTimestamp
+        type CoBenefit, buildTimestamp
     } from "../globals";
 
     import NavigationBar from "$lib/components/NavigationBar.svelte";
+    import ChartSkeleton from "$lib/components/ChartSkeleton.svelte";
     import LADSearch from './LADSearch.svelte';
     import CoBenefitTable from './CoBenTable.svelte';
     import LADTable from './LADTable.svelte';
@@ -29,7 +30,7 @@
         getTopSelectedLADs,
         getTotalAggregation
     } from '$lib/duckdb';
-    import {getTableData} from '$lib/duckdb';
+    import {getTableData, initDB} from '$lib/duckdb';
     import {csv} from "d3";
     import Footer from "$lib/components/Footer.svelte";
     import * as d3 from "d3";
@@ -59,13 +60,52 @@
     let minHHCoBenefValue;
     let maxHHCoBenefValue;
     let dataLoading = true;
+    let ladLoading = true;
+    let waffleLoading = true;
+    let waffleSkeletonHeight = 320;
+    let waffleSkeletonTop = 0;
+    let waffleSkeletonWidth = 320;
+
+    function estimateWaffleSkeletonDims(height: number) {
+        const squaresPerUnit = 1;
+        const gridWidth = 12;
+
+        let positiveSquaresCount = 0;
+        let negativeSquaresCount = 0;
+
+        if (Array.isArray(aggregationPerBenefit)) {
+            for (const item of aggregationPerBenefit) {
+                const squareCount = Math.round(Math.abs(item.total) / squaresPerUnit);
+                if (item.total < 0) negativeSquaresCount += squareCount;
+                else positiveSquaresCount += squareCount;
+            }
+        }
+
+        const posRows = Math.ceil(positiveSquaresCount / gridWidth);
+        const negRows = Math.ceil(negativeSquaresCount / gridWidth);
+        const totalRows = Math.max(1, posRows + negRows);
+
+        const unitSize = Math.max(6, Math.floor(height / totalRows));
+        const plotHeight = Math.max(120, unitSize * totalRows - 30);
+        const bgWidth = Math.max(260, unitSize * gridWidth + 30);
+
+        return { plotHeight, bgWidth };
+    }
 
 
     async function loadData() {
-        aggregationPerBenefit = await getTableData(getAggregationPerBenefit());
+        // Init DuckDB once, then run independent queries concurrently (faster first paint).
+        await initDB();
 
-        aggregationPerCapitaPerBenefit = await getTableData(getAggregationPerCapitaPerBenefit());
-        totalAggregation = await getTableData(getTotalAggregation());
+        const [aggPerBenefit, aggPerCapitaPerBenefit, totalAgg] = await Promise.all([
+            getTableData(getAggregationPerBenefit()),
+            getTableData(getAggregationPerCapitaPerBenefit()),
+            getTableData(getTotalAggregation())
+        ]);
+
+        aggregationPerBenefit = aggPerBenefit;
+        aggregationPerCapitaPerBenefit = aggPerCapitaPerBenefit;
+        totalAggregation = totalAgg;
 
         aggregationPerBenefit = [...aggregationPerBenefit].sort((a, b) => b.total - a.total);
         aggregationPerCapitaPerBenefit = [...aggregationPerCapitaPerBenefit].sort((a, b) => b.total_value - a.total_value);
@@ -77,21 +117,21 @@
         minHHCoBenefValue = Math.min(...aggregationPerCapitaPerBenefit.map(d => d.value_per_capita));
         maxHHCoBenefValue = Math.max(...aggregationPerCapitaPerBenefit.map(d => d.value_per_capita));
 
-        await csv(LADEngPath).then(data => {
-            for (let lad of data) {
-                LADToName[lad.LAD22CD] = lad.LAD22NM;
-            }
-        })
-        await csv(LADNIPath).then(data => {
-            for (let lad of data) {
-                LADToName[lad.LGD2014_code] = lad.LGD2014_name;
-            }
-        })
-        await csv(LADScotlandPath).then(data => {
-            for (let lad of data) {
-                LADToName[lad.LA_Code] = lad.LA_Name;
-            }
-        })
+        const [engRows, niRows, scotRows] = await Promise.all([
+            csv(LADEngPath),
+            csv(LADNIPath),
+            csv(LADScotlandPath)
+        ]);
+
+        for (let lad of engRows) {
+            LADToName[lad.LAD22CD] = lad.LAD22NM;
+        }
+        for (let lad of niRows) {
+            LADToName[lad.LGD2014_code] = lad.LGD2014_name;
+        }
+        for (let lad of scotRows) {
+            LADToName[lad.LA_Code] = lad.LA_Name;
+        }
 
         dataLoading = false;
     }
@@ -107,14 +147,17 @@
     // let LADToName = data.LADToName;
 
     async function fetchLADData() {
+        ladLoading = true;
+        try {
+            const sql = getTopSelectedLADs({region, sortBy});
+            const rows = await getTableData(sql);
+            ladData = rows;
 
-        const sql = getTopSelectedLADs({region, sortBy});
-        const rows = await getTableData(sql);
-        ladData = rows;
-
-
-        maxLADValue = Math.max(...rows.map(d => d.total_value));
-        maxHHLADValue = Math.max(...rows.map(d => d.value_per_capita));
+            maxLADValue = Math.max(...rows.map(d => d.total_value));
+            maxHHLADValue = Math.max(...rows.map(d => d.value_per_capita));
+        } finally {
+            ladLoading = false;
+        }
     }
 
     function handleFilterChange(event) {
@@ -146,6 +189,13 @@
     let currentIndex = 0;
     let previousIndex = 0;
     let interval;
+
+    // Show the static hero/map imagery immediately (before DuckDB/data is loaded).
+    slides = getHeroSlides(COBENEFS.map(d => d.id));
+
+    function slidesKey(nextSlides: any[]) {
+        return nextSlides.map(s => s?.type ?? 'total').join('|');
+    }
 
 
     function startWaffleHighlightLoop(height: number) {
@@ -289,6 +339,9 @@
         const labelsContainer = document.getElementById("waffleLabels");
         if (labelsContainer) {
             labelsContainer.innerHTML = "";
+            // Position the label column relative to the actual waffle grid width (avoid % drift).
+            labelsContainer.style.left = `${gridWidth * unitSize - 12}px`;
+            labelsContainer.style.marginLeft = `0px`;
 
             for (let value = maxLabel; value >= minLabel; value -= labelStep) {
                 const offsetSquares = posRows * gridWidth - value;  // squares from top
@@ -313,7 +366,10 @@
             new Set(waffleData.map(d => d.type).filter(type => type !== "empty"))
         );
 
-        slides = getHeroSlides(waffleOrderedTypes);
+        const nextSlides = getHeroSlides(waffleOrderedTypes);
+        if (slidesKey(slides) !== slidesKey(nextSlides)) {
+            slides = nextSlides;
+        }
 
         const highlight = highlightType ?? null;
         const plot = Plot.plot({
@@ -372,7 +428,7 @@
     function handleSearch(code: string) {
         // goto(`${base}/location?location=${code}`);
         window.open(`${base}/location?location=${code}`, '_blank');
-        
+
     }
 
     let isLoading = true;
@@ -385,22 +441,37 @@
 
 
     onMount(() => {
-        addSpinner(element);
+        // Avoid a full-page blocking spinner; keep UI responsive and show skeletons in-place.
+        loadData()
+            .then(async () => {
+                // Kick off LAD table data (separate loading flag so the rest of the page can show).
+                void fetchLADData();
 
-        loadData().then(() => {
-            fetchLADData();
+                const heroHeight = heroEl.getBoundingClientRect().height;
+                const topLabelEl = document.getElementById("waffleTopLabel");
+                const bottomLabelEl = document.getElementById("waffleBottomLabel");
+                const topHeight = topLabelEl?.offsetHeight ?? 0;
+                const bottomHeight = bottomLabelEl?.offsetHeight ?? 0;
+                const availableHeight = heroHeight - topHeight - bottomHeight;
 
-            const heroHeight = heroEl.getBoundingClientRect().height;
-            const topLabelEl = document.getElementById("waffleTopLabel");
-            const bottomLabelEl = document.getElementById("waffleBottomLabel");
-            const topHeight = topLabelEl?.offsetHeight ?? 0;
-            const bottomHeight = bottomLabelEl?.offsetHeight ?? 0;
-            const availableHeight = heroHeight - topHeight - bottomHeight;
+                waffleSkeletonTop = topHeight;
+                const { plotHeight, bgWidth } = estimateWaffleSkeletonDims(availableHeight);
+                waffleSkeletonHeight = plotHeight;
+                waffleSkeletonWidth = bgWidth;
 
-            renderWaffle(availableHeight);
-            startWaffleHighlightLoop(heroHeight);
-            removeSpinner(element);
-        })
+                try {
+                    renderWaffle(availableHeight);
+                    startWaffleHighlightLoop(heroHeight);
+                } finally {
+                    waffleLoading = false;
+                }
+            })
+            .catch((err) => {
+                console.error("Homepage load failed", err);
+                dataLoading = false;
+                ladLoading = false;
+                waffleLoading = false;
+            });
     });
 
     onDestroy(() => {
@@ -428,7 +499,7 @@
             <div class="hero-text">
                 <img src="{base}/atlas-logos/logo-colored-waffle-png.png" alt="Logo" height="0px"/>
                 <div class="hero-box">
-                <h1 class="hero-title">The UK <br>  
+                <h1 class="hero-title">The UK <br>
                       <span class="multicolor">
                         <span style="--clr:#71C35D;">C</span>
                         <span style="--clr:#E11484;">o</span>
@@ -447,7 +518,7 @@
                 </div>
             </div>
 
-            <div class="waffle-overlay">
+            <div class="waffle-overlay" style="width: {waffleSkeletonWidth}px;">
 
                 <div class="waffle-label" bind:this={waffleLabelEl}>
 
@@ -457,7 +528,7 @@
                                 <img src="{activeIcon}" alt="Icon"/>
                             </div>
                         {/if}
-                        <div class="waffle-title">{activeTypeLabel}</div>
+                        <div class="waffle-title">{(dataLoading || waffleLoading) ? "Loading…" : activeTypeLabel}</div>
                     </div>
 
                     <div class="waffle-stats">
@@ -465,13 +536,13 @@
                             <div class="waffle-value-container">
                                 <img class="aggregation-icon-small" src="{total}" alt="icon"/>
                                 <div class="waffle-value">
-                                    <span class="waffle-big">£{activeValueLabel}</span>
+                                    <span class="waffle-big">{(dataLoading || waffleLoading) ? "—" : `£${activeValueLabel}`}</span>
                                     <span class="small">billion</span>
                                 </div>
                             </div>
-                            {#if activeValueLabel > 0}
+                            {#if !(dataLoading || waffleLoading) && activeValueLabel > 0}
                                 <div class="waffle-caption">National benefits</div>
-                            {:else}
+                            {:else if !(dataLoading || waffleLoading)}
                                 <div class="waffle-caption">National costs</div>
                             {/if}
                         </div>
@@ -479,17 +550,17 @@
                             <div class="waffle-value-container">
                                 <img class="aggregation-icon-small" src="{per_capita}" alt="icon"/>
                                 <div class="waffle-value">
-                                    <span class="waffle-big">£{activePerCapitaLabel}</span>
+                                    <span class="waffle-big">{(dataLoading || waffleLoading) ? "—" : `£${activePerCapitaLabel}`}</span>
                                     <!-- <span class="small">thousand</span> -->
                                 </div>
                             </div>
-                            {#if activePerCapitaLabel > 0}
+                            {#if !(dataLoading || waffleLoading) && activePerCapitaLabel > 0}
                                 <div class="waffle-caption">Per capita benefits</div>
-                            {:else}
+                            {:else if !(dataLoading || waffleLoading)}
                                 <div class="waffle-caption">Per capita costs</div>
                             {/if}
                         </div>
-                        {#if activeType !== null}
+                        {#if !(dataLoading || waffleLoading) && activeType !== null}
                             <div class="waffle-stat">
                                 <div class="waffle-value-container">
                                     <img class="aggregation-icon-small" src="{percentage}" alt="icon"/>
@@ -515,6 +586,14 @@
                 <div id="waffleLabels" class="waffle-chart-labels"></div>
 
                 <span id="waffleBottomLabel" class="waffle-text">Negative impacts</span>
+
+                {#if dataLoading || waffleLoading}
+                    <div class="waffle-loading" style="top: {waffleSkeletonTop}px;" aria-hidden="true">
+                        <div class="waffle-loading-inner" style="height: {waffleSkeletonHeight}px; width: {waffleSkeletonWidth}px;">
+                            <ChartSkeleton height={waffleSkeletonHeight}/>
+                        </div>
+                    </div>
+                {/if}
             </div>
     </section>
 
@@ -533,7 +612,7 @@
             <div class="column">
             <h2>What is the Atlas?</h2>
             <p>
-                The Atlas is a resource that reveals how, when, and for whom benefits emerge, uncovering connections across social, 
+                The Atlas is a resource that reveals how, when, and for whom benefits emerge, uncovering connections across social,
                 economic, and environmental priorities to guide more informed and effective decisions.
             </p>
             To understand more about the analysis or if you would like bespoke co-benefit modelling please get
@@ -571,14 +650,14 @@
                 </div>
             </div>
         </div>
-        
+
         <div id="explore-section-main">
 
                 <div class="explore-block">
                 <h2>Read Stories and Analyses</h2>
                 <div class="explore-stories">
                     <div class="explore-page">
-                    <a href="/stories/story.pdf" target="_blank" rel="noopener noreferrer">
+                    <a href="{base}/stories/story.pdf" target="_blank" rel="noopener noreferrer">
 
                             <img class="story-teaser-img" src="{base}/stories/Derry_picture.png"/>
                             <h3 class="hover-underline">Accelerating climate financing in Derry City and Strabane District Council</h3>
@@ -654,7 +733,7 @@
                 </div>
             </div>
 
-            
+
 
 
 
@@ -665,7 +744,11 @@
             <h2>Explore by Local Authority</h2>
             <p>Click to see local authority data report.</p>
 
-            {#if !dataLoading}
+            {#if dataLoading || ladLoading}
+                <div class="table-skeleton" aria-hidden="true">
+                    <ChartSkeleton height={420}/>
+                </div>
+            {:else}
                 <LADTable
                         {ladData}
                         {region}
@@ -681,7 +764,11 @@
         <div class="side-box">
             <h2>Explore by Co-Benefit</h2>
             <p>Click to see each co-benefit data report.</p>
-            {#if !dataLoading}
+            {#if dataLoading}
+                <div class="table-skeleton" aria-hidden="true">
+                    <ChartSkeleton height={420}/>
+                </div>
+            {:else}
                 <CoBenefitTable
                         {aggregationPerCapitaPerBenefit}
                         {minCoBenefValue}
@@ -827,6 +914,18 @@
         z-index: -1;
     }
 
+    .waffle-loading {
+        position: absolute;
+        left: 0;
+        z-index: 0;
+        pointer-events: none;
+    }
+
+    .waffle-loading-inner {
+        position: relative;
+        width: 100%;
+    }
+
     .waffle-label {
         position: absolute;
         top: 50%;
@@ -851,7 +950,7 @@
     .waffle-chart-labels {
         position: absolute;
         top: 0;
-        left: 82%; /* place it to the right of the waffle */
+        left: 0px;
         margin-left: 10px;
         display: flex;
         flex-direction: column;
@@ -962,6 +1061,12 @@
         flex-direction: column;
     }
 
+    .table-skeleton {
+        position: relative;
+        width: 100%;
+        height: 420px;
+    }
+
 
     .side-box h2 {
         margin-bottom: 0rem;
@@ -1021,7 +1126,7 @@
     }
 
 
-    
+
 
     .explore-stories {
           display: flex;
@@ -1170,13 +1275,13 @@
       display: flex;
       gap: 2rem;
       justify-content: space-between;
-      flex-wrap: wrap; 
+      flex-wrap: wrap;
       padding: 0 2rem;
     }
 
     .column {
       flex: 1;
-      min-width: 250px; 
+      min-width: 250px;
     }
 
   .multicolor span {

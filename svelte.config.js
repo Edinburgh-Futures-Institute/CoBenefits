@@ -18,11 +18,15 @@ const config = {
         // See https://kit.svelte.dev/docs/adapters for more information about adapters.
         adapter: adapter({
             assets: "build",
-            pages: "build"
+            pages: "build",
+            // GitHub Pages serves `404.html` on unknown routes; this lets client-side routing still work.
+            fallback: "404.html",
         }),
 
         paths: {
-            base: "",
+            // For GitHub Pages "project sites", set BASE_PATH="/<repo-name>" at build time.
+            // For normal hosting (or local dev), leave BASE_PATH unset to use root ("").
+            base: process.env.BASE_PATH ?? "",
         }
     },
 }

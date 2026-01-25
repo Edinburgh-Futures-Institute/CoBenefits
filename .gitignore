@@ -50,4 +50,6 @@ Archive/
 .ipynb_checkpoints
 .svelte-kit
 
-.virtual_documents
+posthog/posthog.env
+posthog/.venv-posthog-export/
+posthog/exports/

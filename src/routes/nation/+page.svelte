@@ -21,15 +21,29 @@
         COBENEFS_RANGE,
         COBENEFS,
         COBENEFS_SCALE,
-        removeSpinner,
-        addSpinner,
+        // removeSpinner,
+        // addSpinner,
         SEF_SCALE,
         getIconFromCobenef, COBENEFS_SCALE2,
-        SE_FACTORS, SEF_LEVEL_LABELS, type Nation
+        SE_FACTORS, SEF_LEVEL_LABELS, type Nation,
+        convertToCSV,
+        downloadCSV
     } from "../../globals";
     import {getRandomSubarray} from "$lib/utils";
 
     import NavigationBar from "$lib/components/NavigationBar.svelte";
+    import ChartSkeleton from "$lib/components/ChartSkeleton.svelte";
+    import Badge from '$lib/badge/Badge.svelte';
+    import {
+        BACKGROUND_READING_BADGE,
+        COMPARISON_AVERAGE_BADGE,
+        INTERACTIVE_BADGE,
+        INVISIBLE_SMALL_AREAS_BADGE,
+        MODELLED_DATA_BADGE,
+        OPEN_DATA_BADGE,
+        RAW_DATA_AVAILABLE_BADGE,
+        SMOOTHED_DATA_BADGE
+    } from '$lib/badge/badges';
     import {
         getAllCBAllDatazones, getAllCBForOneLAD, getAllCBForOneNation,
         getAverageCBGroupedByLAD,
@@ -88,6 +102,10 @@
 
     let dataLoaded = false;
 
+    const DIST_PLOT_HEIGHT = Math.round(height / 1.6);
+    const PER_CB_PLOT_HEIGHT = Math.round(height / 1.0);
+    const TEMP_PLOT_HEIGHT = Math.round(height * 1.5);
+
     async function loadData() {
         totalCBAllZones = await getTableData(getTotalCBAllDatazones());
         allCBsAllZones = await getTableData(getAllCBAllDatazones());
@@ -118,7 +136,6 @@
         totalValuePerCapitaMax = totalValuePerCapitaMax[0].value_per_capita;
 
         dataLoaded = true;
-        removeSpinner(element)
     }
 
     $: {
@@ -127,11 +144,6 @@
             totalValuePerCapitaMean = d3.mean(totalCBAllLAD.map(d => d.value_per_capita)) * 100000;
         }
     }
-
-    loadData().then(() => {
-        map = new MapUK(oneNationData, "LSOA", mapDiv, "total", false, "Lookup_Value", false);
-        map.initMap();
-    });
 
     let scrolledPastHeader = false;
     let currentSection = '';
@@ -175,9 +187,13 @@
     let mapDiv: HTMLElement;
 
     onMount(() => {
-        addSpinner(element)
-
-
+        // Start loading in the background (non-blocking).
+        void loadData().then(() => {
+            if (mapDiv && oneNationData) {
+                map = new MapUK(oneNationData, "LSOA", mapDiv, "total", false, "Lookup_Value", false);
+                map.initMap();
+            }
+        });
 
         window.addEventListener('scroll', handleScroll); // header scroll listener
 
@@ -881,7 +897,17 @@ CBOverTimePerCBPLot?.append(plotPerCB); }
 
         posthog.capture('clicked nation filter', {
         nation: compareTo
-        })   
+        })
+    }
+
+    function exportData() {
+        if (!allCBsAllZones) return;
+        const rows = allCBsAllZones.filter((d) => d.Nation === NATION);
+        rows.forEach((d) => {
+            delete d.scenario;
+        });
+        const csv = convertToCSV(rows);
+        downloadCSV(csv, `cobenefits_${NATION}.csv`);
     }
 
 </script>
@@ -910,89 +936,125 @@ CBOverTimePerCBPLot?.append(plotPerCB); }
             <h1 class="page-title"> {NATION}</h1>
             <p class="description">Explore how this nation will benefit from achieving Net Zero and learn about
                 the characteristics of its households.</p>
+            <div class="header-badges" aria-label="Page information badges">
+                <Badge badge={BACKGROUND_READING_BADGE} onClick={{ href: '/methods', hint: { icon: 'info', text: 'Click for more information' } }} />
+                <Badge badge={OPEN_DATA_BADGE} />
+                <Badge
+                    badge={RAW_DATA_AVAILABLE_BADGE}
+                    onClick={{ action: exportData, hint: { icon: 'download', text: 'Click to download the data' } }}
+                />
+                <Badge badge={MODELLED_DATA_BADGE} />
+            </div>
 
                 <div class="radio-set">
-                    Compare {NATION} against:<br/>
-                  
+                    Compare {NATION} against:
+
                     {#if NATION !== 'UK'}
-                      <input type="radio" on:change={onChangeComparison} name="compare" value="UK" checked>
-                      <label class="nation-label">UK</label><br>
+                      <div class="radio-row">
+                        <input type="radio" on:change={onChangeComparison} name="compare" value="UK" checked>
+                        <label class="nation-label">UK</label>
+                      </div>
                     {/if}
-                  
+
                     {#if NATION !== 'England'}
-                      <input type="radio" on:change={onChangeComparison} name="compare" value="England">
-                      <label class="nation-label">England</label><br>
+                      <div class="radio-row">
+                        <input type="radio" on:change={onChangeComparison} name="compare" value="England">
+                        <label class="nation-label">England</label>
+                      </div>
                     {/if}
-                  
+
                     {#if NATION !== 'Wales'}
-                      <input type="radio" on:change={onChangeComparison} name="compare" value="Wales">
-                      <label class="nation-label">Wales</label><br>
+                      <div class="radio-row">
+                        <input type="radio" on:change={onChangeComparison} name="compare" value="Wales">
+                        <label class="nation-label">Wales</label>
+                      </div>
                     {/if}
-                  
+
                     {#if NATION !== 'Scotland'}
-                      <input type="radio" on:change={onChangeComparison} name="compare" value="Scotland">
-                      <label class="nation-label">Scotland</label><br>
+                      <div class="radio-row">
+                        <input type="radio" on:change={onChangeComparison} name="compare" value="Scotland">
+                        <label class="nation-label">Scotland</label>
+                      </div>
                     {/if}
-                  
+
                     {#if NATION !== 'NI'}
-                      <input type="radio" on:change={onChangeComparison} name="compare" value="NI">
-                      <label class="nation-label">Northern Ireland</label><br>
+                      <div class="radio-row">
+                        <input type="radio" on:change={onChangeComparison} name="compare" value="NI">
+                        <label class="nation-label">Northern Ireland</label>
+                      </div>
                     {/if}
                   </div>
         </div>
 
 
         <div>
-            {#if totalValue}
+            <div class="waffle-stats-shell" aria-busy={!dataLoaded} aria-live="polite">
                 <div class="waffle-stats">
                     <div class="waffle-stat">
                         <div class="waffle-value">
-                            {@html
-                                makeLADBarSVG(totalValue, totalValueMax, VIS_COLOR)
-                            }
-                            <span class="waffle-big">£{totalValue.toLocaleString()}</span>
+                            {#if dataLoaded}
+                                {@html makeLADBarSVG(totalValue, totalValueMax, VIS_COLOR)}
+                            {/if}
+                            <span class="waffle-big">
+                                {dataLoaded ? `£${totalValue.toLocaleString()}` : "—"}
+                            </span>
                             <span class="small">billion</span>
                         </div>
 
                         <div class="waffle-value">
-                            {@html
-                                makeLADBarSVG(totalValueMean, totalValueMax, AVERAGE_COLOR)
-                            }
+                            {#if dataLoaded}
+                                {@html makeLADBarSVG(totalValueMean, totalValueMax, AVERAGE_COLOR)}
+                            {/if}
 
-                            {#if totalValue > 0}
-                                <span class="waffle-caption">Local area benefits</span>
-                            {:else}
-                                <span class="waffle-caption">Local area costs</span>
+                            {#if dataLoaded}
+                                {#if totalValue > 0}
+                                    <span class="waffle-caption">Local area benefits</span>
+                                {:else}
+                                    <span class="waffle-caption">Local area costs</span>
+                                {/if}
                             {/if}
                         </div>
                     </div>
+
                     <div class="waffle-stat">
                         <div class="waffle-value">
-                            {@html
-                                makeLADBarSVG(totalValuePerCapita, totalValuePerCapitaMax, VIS_COLOR)
-                            }
-                            <span class="waffle-big">£{totalValuePerCapita.toLocaleString()}</span>
+                            {#if dataLoaded}
+                                {@html makeLADBarSVG(totalValuePerCapita, totalValuePerCapitaMax, VIS_COLOR)}
+                            {/if}
+                            <span class="waffle-big">
+                                {dataLoaded ? `£${totalValuePerCapita.toLocaleString()}` : "—"}
+                            </span>
                             <span class="small"></span>
                         </div>
 
                         <div class="waffle-value">
+                            {#if dataLoaded}
+                                {@html makeLADBarSVG(totalValuePerCapitaMean, totalValuePerCapitaMax, AVERAGE_COLOR)}
+                            {/if}
 
-                            {@html
-                                makeLADBarSVG(totalValuePerCapitaMean, totalValuePerCapitaMax, AVERAGE_COLOR)
-                            }
-
-                            {#if totalValue > 0}
-                                <span class="waffle-caption">Per capita benefits</span>
-                            {:else}
-                                <span class="waffle-caption">Per capita costs</span>
+                            {#if dataLoaded}
+                                {#if totalValue > 0}
+                                    <span class="waffle-caption">Per capita benefits</span>
+                                {:else}
+                                    <span class="waffle-caption">Per capita costs</span>
+                                {/if}
                             {/if}
                         </div>
-                        <span class="waffle-caption"><i>Grey bars indicate average value for <span
-                                class="nation-label">{compareTo}</span></i></span>
 
+                        {#if dataLoaded}
+                            <div class="waffle-caption">
+                                <Badge badge={COMPARISON_AVERAGE_BADGE} variant="filled" />
+                            </div>
+                        {/if}
                     </div>
                 </div>
-            {/if}
+
+                {#if !dataLoaded}
+                    <div class="waffle-stats-loading" aria-hidden="true">
+                        <ChartSkeleton width="180px" height={180} radius={12}/>
+                    </div>
+                {/if}
+            </div>
         </div>
 
     </div>
@@ -1021,22 +1083,44 @@ CBOverTimePerCBPLot?.append(plotPerCB); }
                     received across all local
                     authorities in <span class="nation-label">{compareTo}</span> (grey).</p>
                 <br>
-                {@html renderDistributionPlot(totalCBAllZones, oneNationData) }
+                <div class="chart-shell with-bottom-badges" style={!dataLoaded ? `height: ${DIST_PLOT_HEIGHT}px;` : ''}>
+                    {#if !dataLoaded}
+                        <ChartSkeleton height={DIST_PLOT_HEIGHT}/>
+                    {:else}
+                        {@html renderDistributionPlot(totalCBAllZones, oneNationData) }
+                    {/if}
+                    <div class="chart-badge-bottom-right" aria-label="Chart information badges">
+                        <Badge badge={COMPARISON_AVERAGE_BADGE} variant="filled" />
+                    </div>
+                </div>
 
                 <h3 class="component-title">11 types of co-benefit values (vs. <span
                         class="nation-label">{compareTo}</span> Average)</h3>
                 <p class="description">Total co-benefit values for {NATION} compared to total benefits/costs
                     received across all local
                     authorities in <span class="nation-label">{compareTo}</span> (grey).</p>
-                <div class="plot" bind:this={plotPerCb}>
+                <div class="chart-shell with-bottom-badges" style={!dataLoaded ? `height: ${PER_CB_PLOT_HEIGHT}px;` : ''}>
+                    {#if !dataLoaded}
+                        <ChartSkeleton height={PER_CB_PLOT_HEIGHT}/>
+                    {/if}
+                    <div class="plot {dataLoaded ? '' : 'chart-hidden'}" bind:this={plotPerCb}></div>
+                    <div class="chart-badge-bottom-right" aria-label="Chart information badges">
+                        <Badge badge={COMPARISON_AVERAGE_BADGE} variant="filled" />
+                    </div>
                 </div>
             </div>
 
             <div class="component column">
                 <h3 class="component-title">Total co-benefits across {NATION}</h3>
                 <p class="description">Click a region to visit the Local Authority Report Page</p>
-                <p class="description">*Scroll for zooming in and out</p>
-                <div id="map" bind:this={mapDiv}>
+                <div class="chart-shell" style={!dataLoaded ? 'height: 650px;' : ''}>
+                    {#if !dataLoaded}
+                        <ChartSkeleton height={650}/>
+                    {/if}
+                    <div id="map" class="{dataLoaded ? '' : 'chart-hidden'}" bind:this={mapDiv}></div>
+                </div>
+                <div class="chart-badges map-info-badges" aria-label="Map information badges">
+                    <Badge badge={INTERACTIVE_BADGE} variant="filled" />
                 </div>
             </div>
         </div>
@@ -1071,7 +1155,15 @@ CBOverTimePerCBPLot?.append(plotPerCB); }
                     </div>
                 </div>
 
-                <div class="plot side" bind:this={CBOverTimePLot}></div>
+                <div class="chart-shell with-bottom-badges" style={!dataLoaded ? `height: ${TEMP_PLOT_HEIGHT}px;` : ''}>
+                    {#if !dataLoaded}
+                        <ChartSkeleton height={TEMP_PLOT_HEIGHT}/>
+                    {/if}
+                    <div class="plot side {dataLoaded ? '' : 'chart-hidden'}" bind:this={CBOverTimePLot}></div>
+                    <div class="chart-badge-bottom-right" aria-label="Chart information badges">
+                        <Badge badge={COMPARISON_AVERAGE_BADGE} variant="filled" />
+                    </div>
+                </div>
 
 
                 <!-- <div class="row"> -->
@@ -1089,7 +1181,7 @@ CBOverTimePerCBPLot?.append(plotPerCB); }
                         intervals for each co-benefit. The curve between points is smoothed to show the general
                         trends.</p>
 
-                    <!-- Legend 
+                    <!-- Legend
                     <div id="main-legend" class="legend-box" style="margin-bottom: 5px;">
                         <strong style="margin-bottom: 0.5rem;">Legend:</strong> <br/>
                         <ul class="horizontal-legend-list" style="margin-bottom:5px">
@@ -1117,7 +1209,7 @@ CBOverTimePerCBPLot?.append(plotPerCB); }
                             <div class="legend-header" on:click={() => {
                                 const wasExpanded = expanded.has(CB.id);
                                 toggle(CB.id);
-                                
+
                                 if (!wasExpanded) {
                                     posthog.capture('cobenefit opened', {
                                         cobenefit: CB.label
@@ -1137,9 +1229,9 @@ CBOverTimePerCBPLot?.append(plotPerCB); }
                             <div class="legend-description">
                                 <div style="height: 0.8em;"></div>
                                 {CB.def} <br>
-                                
+
                                 <a class="link" href="{base}/cobenefit?cobenefit={CB.id}" target="_blank" rel="noopener noreferrer" style= "color:{COBENEFS_SCALE(CB.id)}; text-decoration: underline">{CB.id} report page</a>
-                                
+
                             </div>
                             </div>
                             {/if}
@@ -1149,12 +1241,15 @@ CBOverTimePerCBPLot?.append(plotPerCB); }
                     </div>
 
                 </div>
-                <div class="plot side" bind:this={CBOverTimePerCBPLot}></div>
-                <!-- Disclaimer -->
-                <div id="main-disclaimer" class="disclaimer-box">
-                    <p style="margin: 0;"><strong>Some areas too small:</strong> Due to the nature of the
-                        co-benefits some values are very small in comparison
-                        to larger values so therefore are not visable on this plot. </p>
+                <div class="chart-shell with-bottom-badges" style={!dataLoaded ? `height: ${PER_CB_PLOT_HEIGHT}px;` : ''}>
+                    {#if !dataLoaded}
+                        <ChartSkeleton height={PER_CB_PLOT_HEIGHT}/>
+                    {/if}
+                    <div class="plot side {dataLoaded ? '' : 'chart-hidden'}" bind:this={CBOverTimePerCBPLot}></div>
+                    <div class="chart-badge-bottom-right" aria-label="Warnings">
+                        <Badge badge={INVISIBLE_SMALL_AREAS_BADGE} variant="outlined" />
+                        <Badge badge={SMOOTHED_DATA_BADGE} variant="outlined" />
+                    </div>
                 </div>
             </div>
         </div>
@@ -1176,7 +1271,7 @@ CBOverTimePerCBPLot?.append(plotPerCB); }
                 <br>-->
 
 
-                <!-- Legend 
+                <!-- Legend
                 <div id="se-legend" class="legend-box">
                     <strong style="margin-bottom: 1rem;">Legend:</strong> <br/>
                     <ul class="legend-list">
@@ -1187,7 +1282,7 @@ CBOverTimePerCBPLot?.append(plotPerCB); }
                     </ul>
                 </div>-->
 
-                <!-- Interpretation  
+                <!-- Interpretation
                 <div id="se-legend" class="legend-box">
                     <strong style="margin-bottom: 1rem;">Interpreting the charts:</strong> <br/>
                     <p><strong>Barchart:</strong> Each bar represents the normalized frequency of datazones linked to a
@@ -1196,7 +1291,7 @@ CBOverTimePerCBPLot?.append(plotPerCB); }
                         shows the distribution for {compareTo}. </p>
                 </div>-->
 
-                <!-- Disclaimer 
+                <!-- Disclaimer
                 <div id="se-disclaimer" class="disclaimer-box">
                     <p style="margin: 0 0 1rem 0;"><strong>Correlation ≠ Causation:</strong> The scatter plots represent
                         modelled associations and should not be interpreted as direct causal relationships. </p>
@@ -1271,6 +1366,68 @@ CBOverTimePerCBPLot?.append(plotPerCB); }
 <Footer></Footer>
 
 <style>
+    .chart-shell {
+        position: relative;
+        width: 100%;
+    }
+
+    .chart-hidden {
+        opacity: 0;
+    }
+
+    .chart-badge-bottom-right {
+        position: absolute;
+        right: -10px;
+        bottom: 0px;
+        z-index: 3;
+        pointer-events: auto;
+        display: flex;
+        gap: 6px;
+    }
+
+    .map-info-badges {
+        gap: 3px;
+    }
+
+    .header-badges {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-top: 8px;
+        margin-bottom: 2px;
+    }
+
+    .radio-set {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .radio-row {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .radio-row input[type="radio"] {
+        margin: 0;
+    }
+
+    /* Match co-benefit/local-authority pages: map badges aligned to bottom-right under the map */
+    .chart-badges.map-info-badges {
+        display: flex;
+        justify-content: flex-end;
+        margin-top: 6px;
+        pointer-events: auto;
+        opacity: 0.98;
+    }
+
+    /* Reserve space so bottom-right badges don't overlap axis labels */
+    .chart-shell.with-bottom-badges {
+        padding-bottom: 35px;
+    }
+
     .header-row {
         display: flex;
         flex-direction: row;
@@ -1446,6 +1603,19 @@ CBOverTimePerCBPLot?.append(plotPerCB); }
         display: flex;
         flex-direction: column;
         align-items: flex-start;
+    }
+
+    .waffle-stats-shell {
+        position: relative;
+        min-height: 180px;
+    }
+
+    .waffle-stats-loading {
+        position: absolute;
+        inset: 0px;
+        border-radius: 12px;
+        transform: translateX(-100px);
+        pointer-events: none;
     }
 
     .waffle-value {

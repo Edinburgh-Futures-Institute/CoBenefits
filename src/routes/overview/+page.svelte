@@ -3,6 +3,8 @@
     import * as Plot from "@observablehq/plot";
 
     import MapCanvas from "$lib/components/old/MapCanvas.svelte";
+    import Badge from '$lib/badge/Badge.svelte';
+    import { MAJOR_FINDING_BADGE } from '$lib/badge/badges';
 
     let element: HTMLElement
     let plot: HTMLElement
@@ -22,6 +24,8 @@
     const dataPerCb = data.dataPerCb;
 
     const zones = data.UKZones;
+
+    // Keep this badge definition in one place (see $lib/badge/badges).
 
     // TODO: compute extent of variables
     $: {
@@ -159,9 +163,6 @@
         <label for="css">Violin</label><br>
         <input type="radio" on:change={onChange} name="visType" value="distribution">
         <label for="javascript">Distribution</label>
-
-        <div class="plot" bind:this={plot}>
-        </div>
     </div>
 
 <!--    <div>map</div>-->
@@ -195,4 +196,5 @@
         width: 97vw;
         /*height: 50vh;*/
     }
+
 </style>

@@ -3,6 +3,7 @@
     import { base } from "$app/paths";
     import Modal from "$lib/components/Modal.svelte"
     import posthog from "posthog-js";
+    import participationSheetUrl from "./Participation_Information_Sheet.pdf?url";
   
     const CONSENT_KEY = 'cookie-consent';
     const CONTACT_CONSENT_KEY = 'contact-consent';
@@ -168,7 +169,7 @@ Visualization atlases are online platforms making large and complex data sets ac
 
 <h2>Interaction Logging</h2>
 <p class="intro-paragraph">
-  This atlas anonymously logs your interactive activity (e.g., session duration, page navigation, and interaction with visualizations) for research purposes. Our goal is to create a better user experience, develop more useful Atlas features, and advance information visualization techniques. Participation is voluntary, fully anonymous unless you provide your email (optional), and users can opt in or out of logging at any time. <a href="/src/routes/about/Participation_Information_Sheet.pdf" target="_blank" rel="noopener noreferrer">Learn more about how we use your data</a>. For more information, please contact Gwennan Drouillet (<a href="mailto:s2747627@ed.ac.uk" target="_blank" rel="noopener noreferrer">
+  This atlas anonymously logs your interactive activity (e.g., session duration, page navigation, and interaction with visualizations) for research purposes. Our goal is to create a better user experience, develop more useful Atlas features, and advance information visualization techniques. Participation is voluntary, fully anonymous unless you provide your email (optional), and users can opt in or out of logging at any time. <a href="{participationSheetUrl}" target="_blank" rel="noopener noreferrer">Learn more about how we use your data</a>. For more information, please contact Gwennan Drouillet (<a href="mailto:s2747627@ed.ac.uk" target="_blank" rel="noopener noreferrer">
     s2747627@ed.ac.uk</a>) or Benjamin Bach (<a href="mailto:bbach@exseed.ed.ac.uk" target="_blank" rel="noopener noreferrer">bbach@exseed.ed.ac.uk</a>). </p>
     
     {#if !trackingDisabled}

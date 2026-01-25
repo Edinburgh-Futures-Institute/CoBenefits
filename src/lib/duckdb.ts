@@ -1,6 +1,8 @@
 import * as duckdb from '@duckdb/duckdb-wasm';
-import duckdb_wasm from '/node_modules/@duckdb/duckdb-wasm/dist/duckdb-mvp.wasm?url';
-import duckdb_worker from '/node_modules/@duckdb/duckdb-wasm/dist/duckdb-browser-mvp.worker.js?worker';
+import mvp_wasm from '@duckdb/duckdb-wasm/dist/duckdb-mvp.wasm?url';
+import mvp_worker from '@duckdb/duckdb-wasm/dist/duckdb-browser-mvp.worker.js?url';
+import eh_wasm from '@duckdb/duckdb-wasm/dist/duckdb-eh.wasm?url';
+import eh_worker from '@duckdb/duckdb-wasm/dist/duckdb-browser-eh.worker.js?url';
 import type { AsyncDuckDB } from '@duckdb/duckdb-wasm';
 
 import {
@@ -14,6 +16,7 @@ import {
 	type Nation
 } from '../globals';
 import { browser } from '$app/environment';
+import { base } from '$app/paths';
 import { csv } from 'd3';
 
 let db: AsyncDuckDB;
@@ -34,13 +37,24 @@ const initDB = async () => {
 
 	console.log('INIT DB');
 
-	// Instantiate worker
 	const logger = new duckdb.ConsoleLogger();
-	const worker = new duckdb_worker();
+	const bundle = await duckdb.selectBundle({
+		mvp: {
+			mainModule: mvp_wasm,
+			mainWorker: mvp_worker
+		},
+		eh: {
+			mainModule: eh_wasm,
+			mainWorker: eh_worker
+		}
+	});
+
+	// Instantiate worker (DuckDB recommends loading the worker by URL string for bundlers like Vite)
+	const worker = new Worker(bundle.mainWorker);
 
 	// and asynchronous database
 	db = new duckdb.AsyncDuckDB(logger, worker);
-	await db.instantiate(duckdb_wasm);
+	await db.instantiate(bundle.mainModule);
 
 	await loadData();
 	return db;
@@ -49,8 +63,11 @@ const initDB = async () => {
 async function loadData() {
 	console.log('loading parqet file in db');
 
-	const response = await fetch('database.parquet');
+	const response = await fetch(`${base}/database.parquet`);
 	// const response = await fetch('database_onlyIreland.parquet');
+	if (!response.ok) {
+		throw new Error(`Failed to fetch ${base}/database.parquet (${response.status} ${response.statusText})`);
+	}
 
 	const arrayBuffer = await response.arrayBuffer();
 	const uint8Array = new Uint8Array(arrayBuffer);
@@ -67,7 +84,7 @@ async function loadData() {
 	console.log('Table created from parquet');
 
 	// Load socio economic table (currenlty merged)
-	// const response2 = await fetch('tableSocio.parquet');
+	// const response2 = await fetch(`${base}/tableSocio.parquet`);
 	// const arrayBuffer2 = await response2.arrayBuffer();
 	// const uint8Array2 = new Uint8Array(arrayBuffer2);
 	//
@@ -471,7 +488,7 @@ export function getSefForOneCoBenefitAveragedByLAD(cobenefit: CoBenefit) {
 		const aggregation = isCategorical ? `MODE() WITHIN GROUP (ORDER BY ${SE})` : `AVG(${SE})`;
 
 		return `
-        SELECT AVG(total / HH) AS total,
+        SELECT AVG(total / NULLIF(TRY_CAST(REPLACE(CAST(HH AS TEXT), 'n', '') AS DOUBLE), 0)) AS total,
                LAD,
                ${aggregation}          AS SE,
                '${SE}'                 AS SEFMAME
@@ -533,9 +550,9 @@ export function getTopSeletedLADsByTotal(n: number) {
 // preview the household data,  {HHs: 249n}, 249n being obj type
 export function getDistinctHHsValues() {
 	return `
-      SELECT DISTINCT Households
+      SELECT DISTINCT HH
       FROM ${DB_TABLE_NAME}
-      WHERE Households IS NOT NULL LIMIT 50
+      WHERE HH IS NOT NULL LIMIT 50
 	`;
 }
 
@@ -577,11 +594,11 @@ export function getTotalPerHouseholdByLAD() {
 	return `
       SELECT LAD,
              SUM(total)                                                                       AS total_value,
-             SUM(TRY_CAST(REPLACE(CAST(Households AS TEXT), 'n', '') AS DOUBLE))              AS total_HHs,
-             SUM(total) / SUM(TRY_CAST(REPLACE(CAST(Households AS TEXT), 'n', '') AS DOUBLE)) AS value_per_household
+             SUM(TRY_CAST(REPLACE(CAST(HH AS TEXT), 'n', '') AS DOUBLE))                      AS total_HHs,
+             SUM(total) / SUM(TRY_CAST(REPLACE(CAST(HH AS TEXT), 'n', '') AS DOUBLE))         AS value_per_household
       FROM ${DB_TABLE_NAME}
       WHERE co_benefit_type = 'Total'
-        AND Households IS NOT NULL
+        AND HH IS NOT NULL
       GROUP BY LAD
       ORDER BY value_per_household DESC
 	`;
@@ -593,12 +610,12 @@ export function getTopSelectedLADsPerHousehold(n: number) {
 	return `
       SELECT LAD,
              SUM(total)                                                                              AS total_value,
-             SUM(TRY_CAST(REPLACE(CAST(Households AS TEXT), 'n', '') AS DOUBLE))                     AS total_HHs,
-             SUM(total) / SUM(TRY_CAST(REPLACE(CAST(Households AS TEXT), 'n', '') AS DOUBLE)) *
+             SUM(TRY_CAST(REPLACE(CAST(HH AS TEXT), 'n', '') AS DOUBLE))                             AS total_HHs,
+             SUM(total) / SUM(TRY_CAST(REPLACE(CAST(HH AS TEXT), 'n', '') AS DOUBLE)) *
              1000                                                                                    AS value_per_household
       FROM ${DB_TABLE_NAME}
       WHERE co_benefit_type = 'Total'
-        AND Households IS NOT NULL
+        AND HH IS NOT NULL
       GROUP BY LAD
       ORDER BY total_value DESC
           LIMIT ${n}

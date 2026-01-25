@@ -21,15 +21,34 @@
         COBENEFS_RANGE,
         COBENEFS,
         COBENEFS_SCALE,
-        removeSpinner,
-        addSpinner,
+        // removeSpinner,
+        // addSpinner,
         SEF_SCALE,
-        getIconFromCobenef, COBENEFS_SCALE2,
+        getIconFromCobenef,
+        COBENEFS_SCALE2,
         SE_FACTORS, SEF_LEVEL_LABELS, convertToCSV, downloadCSV
     } from "../../globals";
     import {getRandomSubarray} from "$lib/utils";
 
     import NavigationBar from "$lib/components/NavigationBar.svelte";
+    import ChartSkeleton from "$lib/components/ChartSkeleton.svelte";
+    import Badge from '$lib/badge/Badge.svelte';
+    import {
+        BACKGROUND_READING_BADGE,
+        CAN_FILTER_BADGE,
+        COMPARISON_AVERAGE_BADGE,
+        CORRELATION_NOT_CAUSATION_BADGE,
+        DISCRETE_SCALES_BADGE,
+        INTERACTIVE_BADGE,
+        INVISIBLE_SMALL_AREAS_BADGE,
+        makeSEFChartBadge,
+        MODELLED_DATA_BADGE,
+        OPEN_DATA_BADGE,
+        RAW_DATA_AVAILABLE_BADGE,
+        SEF_BARCHART_BADGE,
+        SMOOTHED_DATA_BADGE
+    } from '$lib/badge/badges';
+    // (Chart badges currently shown only on the co-benefit pages)
     import {
         getAllCBAllDatazones, getAllCBForOneLAD,
         getAverageCBGroupedByLAD,
@@ -85,12 +104,12 @@
     let oneLADData;
     let oneLADAllCbs;
 
-    let totalValue: number;
-    let totalValuePerCapita: number;
-    let totalValueMax: number;
-    let totalValuePerCapitaMax: number;
-    let totalValueMean: number;
-    let totalValuePerCapitaMean: number;
+    let totalValue: number | null = null;
+    let totalValuePerCapita: number | null = null;
+    let totalValueMax: number | null = null;
+    let totalValuePerCapitaMax: number | null = null;
+    let totalValueMean: number | null = null;
+    let totalValuePerCapitaMean: number | null = null;
 
 
     let dataLoaded = false;
@@ -102,6 +121,11 @@
     // Search state
     let searchInput = "";
     let searchResults = [];
+    $: areaNameForBadges = LADToName[LAD] ?? LAD;
+
+    const DIST_PLOT_HEIGHT = Math.round(height / 1.6);
+    const STANDARD_PLOT_HEIGHT = Math.round(height / 1.0);
+    const TALL_PLOT_HEIGHT = Math.round(height);
 
     async function loadData() {
         totalCBAllZones = await getTableData(getTotalCBAllDatazones());
@@ -123,58 +147,63 @@
         oneLADAllCbs = await getTableData(getAllCBForOneLAD(LAD));
 
 
-        totalValue = (d3.sum(oneLADData, d => d.total) / 1000).toFixed(3);
-        totalValueMax = d3.max(totalCBAllLAD, d => d.val) / 1000;
+        // Total co-benefits in £ billions (rounded for display)
+        const totalBillions = d3.sum(oneLADData, (d) => d.total) / 1000;
+        totalValue = Number(totalBillions.toFixed(3));
+
+        totalValueMax = (d3.max(totalCBAllLAD, (d) => d.val) ?? 0) / 1000;
 
         // This is an approximation
-        totalValuePerCapita = (d3.mean(oneLADData, d => d.totalPerCapita) * 1000000).toFixed(1);
+        const perCapita = (d3.mean(oneLADData, (d) => d.totalPerCapita) ?? 0) * 1000000;
+        totalValuePerCapita = Number(perCapita.toFixed(1));
 
         totalValuePerCapitaMax = await getTableData(getTopSelectedLADs({limit: 1, sortBy: "per_capita"}));
-        totalValuePerCapitaMax = totalValuePerCapitaMax[0].value_per_capita;
+        totalValuePerCapitaMax = Number(totalValuePerCapitaMax?.[0]?.value_per_capita ?? 0);
 
-        const LADEngPath = `/LAD/Eng_Wales_LSOA_LADs.csv`
-        const LADNIPath = `/LAD/NI_DZ_LAD.csv`
-        const LADScotlandPath = `/LAD/Scotland_DZ_LA.csv`
-        
-        await csv(LADEngPath).then(data => {
-            for (let row of data) {
-                LADToName[row.LAD22CD] = row.LAD22NM
+        const LADEngPath = `${base}/LAD/Eng_Wales_LSOA_LADs.csv`;
+        const LADNIPath = `${base}/LAD/NI_DZ_LAD.csv`;
+        const LADScotlandPath = `${base}/LAD/Scotland_DZ_LA.csv`;
+
+        try {
+            const eng = await csv(LADEngPath);
+            eng.forEach((row: any) => {
+                LADToName[row.LAD22CD] = row.LAD22NM;
                 LSOACodeToName[row.LSOA21CD] = row.LSOA21NM;
-            }
-        })
-        await csv(LADNIPath).then(data => {
-            for (let row of data) {
-                LADToName[row.LGD2014_code] = row.LGD2014_name
+            });
+
+            const ni = await csv(LADNIPath);
+            ni.forEach((row: any) => {
+                LADToName[row.LGD2014_code] = row.LGD2014_name;
                 LSOACodeToName[row.DZ2021_code] = row.DZ2021_name;
-            }
-        })
-        await csv(LADScotlandPath).then(data => {
-            for (let row of data) {
-                LADToName[row.LA_Code] = row.LA_Name
+            });
+
+            const sco = await csv(LADScotlandPath);
+            sco.forEach((row: any) => {
+                LADToName[row.LA_Code] = row.LA_Name;
                 LSOACodeToName[row.DZ2011_Code] = row.DZ2011_Name;
-            }
-        })
+            });
+        } catch (e) {
+            console.error('Failed to load LAD/LSOA name CSVs', e);
+        }
 
         dataLoaded = true;
-        removeSpinner(element)
     }
 
 
     $: {
         if (totalCBAllLAD) {
-            totalValueMean = d3.mean(totalCBAllLAD.map(d => d.val)) / 1000;
-            totalValuePerCapitaMean = d3.mean(totalCBAllLAD.map(d => d.value_per_capita)) * 100000;
+            totalValueMean = (d3.mean(totalCBAllLAD.map(d => d.val)) ?? 0) / 1000;
+            totalValuePerCapitaMean = (d3.mean(totalCBAllLAD.map(d => d.value_per_capita)) ?? 0) * 100000;
         }
     }
 
-    loadData().then(() => {
-        // Needs to be initialised after data loading
+    async function initLSOAMapAfterLoad() {
+        if (!mapLSOADiv) return;
+        if (!oneLADData || !Array.isArray(oneLADData) || oneLADData.length === 0) return;
         mapLSOA = new MapUK(oneLADData, "LSOA", mapLSOADiv, "total", false, "Lookup_Value", false, null, 8);
-
         mapLSOA.initMap(true, false);
-        mapLSOA.setCenter(oneLADData[0].LAD)
-        // mapLSOA.setCenter(oneLADData[0].Lookup_Value)
-    });
+        mapLSOA.setCenter(oneLADData[0].LAD);
+    }
 
     let scrolledPastHeader = false;
     let currentSection = '';
@@ -224,9 +253,14 @@
     let mapLSOADiv: HTMLElement;
 
     onMount(() => {
-        addSpinner(element)
         map = new MapUK(LAD, "LAD", mapDiv, "val", true, "Lookup_value", false, null, 8);
         map.initMap(false);
+
+        // Start loading in the background (non-blocking).
+        void loadData().then(() => {
+            // Needs to be initialised after data loading
+            void initLSOAMapAfterLoad();
+        });
 
         window.addEventListener('scroll', handleScroll); // header scroll listener
 
@@ -238,14 +272,17 @@
         window.removeEventListener('scroll', handleScroll); // remove listener
     })
 
-    function makeLADBarSVG(value, max, fill = "black") {
+    function makeLADBarSVG(value: number, max: number, fill = "black") {
+        const v = Number.isFinite(value) ? value : 0;
+        const m = Number.isFinite(max) ? max : 0;
+        const safeMax = m > 0 ? m : Math.max(v, 1);
         const plot = Plot.plot({
             width: 80,
             height: 20,
             margin: 0,
-            x: {domain: [0, max], axis: null},
+            x: {domain: [0, safeMax], axis: null},
             marks: [
-                Plot.barX([value], {
+                Plot.barX([v], {
                     x: d => d,
                     y: 0,
                     fill: fill
@@ -575,7 +612,7 @@ console.log("selectedDatum", selectedDatum)
                         }),
                         Plot.text([selectedDatum], {
                             x: "total",
-                            y: 0, 
+                            y: 0,
                             text: d => LSOACodeToName[d.Lookup_Value] || d.Lookup_Value,
                             dy: -10,
                             fill: COBENEFS_SCALE2(selectedDatum.co_benefit_type)[1],
@@ -586,7 +623,7 @@ console.log("selectedDatum", selectedDatum)
                         })
                         ]
                     : []),
-                                        
+
                 Plot.axisX({label: "Total Co-Benefit (£ million)", labelAnchor: "center", labelArrow: false}),
                 Plot.axisY({label: "Number of Datazones",labelArrow: false}),
                 Plot.ruleX([0], {stroke: "#333", strokeWidth: 1.75})
@@ -1237,7 +1274,7 @@ console.log("selectedDatum", selectedDatum)
 
         const csv = convertToCSV(data);
         downloadCSV(csv, `cobenefits_${LADToName[LAD]}.csv`);
-        downloadStaticPDF("/Scotland_co-benefits_CB7_2045.pdf", "readme.pdf"); // <-- adjust filename/path as needed
+        downloadStaticPDF(`${base}/Scotland_co-benefits_CB7_2045.pdf`, "readme.pdf"); // <-- adjust filename/path as needed
     }
 
     $: if (selectedCoBenefit) {
@@ -1252,28 +1289,19 @@ console.log("selectedDatum", selectedDatum)
 <NavigationBar></NavigationBar>
 <!-- <StickyNav sectionRefs={sectionRefs}></StickyNav> -->
 
-
 <div class="page-container" bind:this={element}>
 
     {#if scrolledPastHeader}
         <div class="mini-header">
             <div class="mini-header-content">
           <span class="mini-header-text">
-            {LADToName[LAD]}
-              {#if totalValue}
+            {LADToName[LAD] ?? 'Loading…'}
+              {#if dataLoaded && totalValue !== null}
             <span class="mini-header-value">(Total: £{totalValue.toLocaleString()} billion)</span>
             {/if}
               >> {formatLabel(currentSection)}</span>
 
             </div>
-            <button
-
-                    type="button"
-                    class="data-btn-sticky"
-                    on:click={exportData}
-            >
-                Download Page Data
-            </button>
         </div>
     {/if}
 
@@ -1281,93 +1309,119 @@ console.log("selectedDatum", selectedDatum)
         <div>
             <div class="header-bar">
                 <p class="page-subtitle">Local Authority Report</p>
-                <button
-
-                        type="button"
-                        class="data-btn"
-                        on:click={exportData}
-                >
-                    Download Page Data
-                </button>
             </div>
 
             <div id="title-row">
-                <h1 class="page-title"> {LADToName[LAD]}</h1>
+                <h1 class="page-title"> {LADToName[LAD] ?? 'Loading…'}</h1>
 
             </div>
 
             <p class="description">Explore how this local authority will benefit from achieving Net Zero and learn about
                 the characteristics of its households.</p>
+            <div class="header-badges" aria-label="Page information badges">
+                <Badge badge={BACKGROUND_READING_BADGE} onClick={{ href: '/methods', hint: { icon: 'info', text: 'Click for more information' } }} />
+                <Badge badge={OPEN_DATA_BADGE} />
+                <Badge
+                    badge={RAW_DATA_AVAILABLE_BADGE}
+                    onClick={{ action: exportData, hint: { icon: 'download', text: 'Click to download the data' } }}
+                />
+                <Badge badge={MODELLED_DATA_BADGE} />
+            </div>
 
             <div class="radio-set">
-                Compare this Local Authority District (LAD) against:<br/>
-                <input type="radio" on:change={onChangeComparison} name="compare" value="UK" checked>
-                <label class="nation-label" for="html">UK</label><br>
-                <input type="radio" on:change={onChangeComparison} name="compare" value="England">
-                <label class="nation-label" for="html">England</label><br>
-                <input type="radio" on:change={onChangeComparison} name="compare" value="Wales">
-                <label class="nation-label" for="html">Wales</label><br>
-                <input type="radio" on:change={onChangeComparison} name="compare" value="Scotland">
-                <label class="nation-label" for="javascript">Scotland</label>
-                <input type="radio" on:change={onChangeComparison} name="compare" value="NI">
-                <label class="nation-label" for="javascript">Northern Ireland</label>
+                Compare this Local Authority District (LAD) against:
+                <div class="radio-row">
+                    <input type="radio" on:change={onChangeComparison} name="compare" value="UK" checked>
+                    <label class="nation-label">UK</label>
+                </div>
+                <div class="radio-row">
+                    <input type="radio" on:change={onChangeComparison} name="compare" value="England">
+                    <label class="nation-label">England</label>
+                </div>
+                <div class="radio-row">
+                    <input type="radio" on:change={onChangeComparison} name="compare" value="Wales">
+                    <label class="nation-label">Wales</label>
+                </div>
+                <div class="radio-row">
+                    <input type="radio" on:change={onChangeComparison} name="compare" value="Scotland">
+                    <label class="nation-label">Scotland</label>
+                </div>
+                <div class="radio-row">
+                    <input type="radio" on:change={onChangeComparison} name="compare" value="NI">
+                    <label class="nation-label">Northern Ireland</label>
+                </div>
             </div>
         </div>
 
 
         <div>
             <!--{d3.sum(totalCBAllZones.map(d => d.total))}-->
-            {#if totalValue}
-
+            <div class="waffle-stats-shell" aria-busy={!dataLoaded} aria-live="polite">
                 <div class="waffle-stats">
                     <div class="waffle-stat">
                         <div class="waffle-value">
-                            {@html
-                                makeLADBarSVG(totalValue, totalValueMax, VIS_COLOR)
-                            }
-                            <span class="waffle-big">£{totalValue.toLocaleString()}</span>
+                            {#if dataLoaded && totalValue !== null}
+                                {@html makeLADBarSVG(totalValue, totalValueMax ?? 0, VIS_COLOR)}
+                            {/if}
+                            <span class="waffle-big">
+                                {dataLoaded && totalValue !== null ? `£${totalValue.toLocaleString()}` : "—"}
+                            </span>
                             <span class="small">billion</span>
                         </div>
 
                         <div class="waffle-value">
-                            {@html
-                                makeLADBarSVG(totalValueMean, totalValueMax, AVERAGE_COLOR)
-                            }
+                            {#if dataLoaded && totalValueMean !== null}
+                                {@html makeLADBarSVG(totalValueMean, totalValueMax ?? 0, AVERAGE_COLOR)}
+                            {/if}
 
-                            {#if totalValue > 0}
-                                <span class="waffle-caption">Local area benefits</span>
-                            {:else}
-                                <span class="waffle-caption">Local area costs</span>
+                            {#if dataLoaded && totalValue !== null}
+                                {#if totalValue > 0}
+                                    <span class="waffle-caption">Local area benefits</span>
+                                {:else}
+                                    <span class="waffle-caption">Local area costs</span>
+                                {/if}
                             {/if}
                         </div>
                     </div>
+
                     <div class="waffle-stat">
                         <div class="waffle-value">
-                            {@html
-                                makeLADBarSVG(totalValuePerCapita, totalValuePerCapitaMax, VIS_COLOR)
-                            }
-                            <span class="waffle-big">£{totalValuePerCapita.toLocaleString()}</span>
+                            {#if dataLoaded && totalValuePerCapita !== null}
+                                {@html makeLADBarSVG(totalValuePerCapita, totalValuePerCapitaMax ?? 0, VIS_COLOR)}
+                            {/if}
+                            <span class="waffle-big">
+                                {dataLoaded && totalValuePerCapita !== null ? `£${totalValuePerCapita.toLocaleString()}` : "—"}
+                            </span>
                             <span class="small"></span>
                         </div>
 
                         <div class="waffle-value">
+                            {#if dataLoaded && totalValuePerCapitaMean !== null}
+                                {@html makeLADBarSVG(totalValuePerCapitaMean, totalValuePerCapitaMax ?? 0, AVERAGE_COLOR)}
+                            {/if}
 
-                            {@html
-                                makeLADBarSVG(totalValuePerCapitaMean, totalValuePerCapitaMax, AVERAGE_COLOR)
-                            }
-
-                            {#if totalValue > 0}
-                                <span class="waffle-caption">Per capita benefits</span>
-                            {:else}
-                                <span class="waffle-caption">Per capita costs</span>
+                            {#if dataLoaded && totalValue !== null}
+                                {#if totalValue > 0}
+                                    <span class="waffle-caption">Per capita benefits</span>
+                                {:else}
+                                    <span class="waffle-caption">Per capita costs</span>
+                                {/if}
                             {/if}
                         </div>
-                        <span class="waffle-caption"><i>Grey bars indicate average value for <span
-                                class="nation-label">{compareTo}</span></i></span>
 
+                        {#if dataLoaded}
+                            <div class="waffle-caption">
+                                <Badge badge={COMPARISON_AVERAGE_BADGE} variant="filled" />
+                            </div>
+                        {/if}
                     </div>
                 </div>
-            {/if}
+                {#if !dataLoaded}
+                    <div class="waffle-stats-loading" aria-hidden="true">
+                        <ChartSkeleton height={140} radius={12}/>
+                    </div>
+                {/if}
+            </div>
 
 
         </div>
@@ -1419,25 +1473,45 @@ console.log("selectedDatum", selectedDatum)
                     received across all local
                     authorities in <span class="nation-label">{compareTo}</span> (grey).</p>
                 <br>
-                {@html renderDistributionPlot(totalCBAllZones, oneLADData)}
+                <div class="chart-shell with-bottom-badges" style={!dataLoaded ? `height: ${DIST_PLOT_HEIGHT}px;` : ''}>
+                    {#if !dataLoaded}
+                        <ChartSkeleton height={DIST_PLOT_HEIGHT}/>
+                    {:else}
+                        {@html renderDistributionPlot(totalCBAllZones, oneLADData)}
+                    {/if}
+                    <div class="chart-badge-bottom-right" aria-label="Chart information badges">
+                        <Badge badge={COMPARISON_AVERAGE_BADGE} variant="filled" />
+                    </div>
+                </div>
 
                 <h3 class="component-title">11 types of co-benefit values (vs. <span
                         class="nation-label">{compareTo}</span> Average)</h3>
                 <p class="description">Co-benefit values for {LADToName[LAD]} compared to average value of benefits
                     received across all local
                     authorities in <span class="nation-label">{compareTo}</span> (grey).</p>
-                <div class="plot" bind:this={plotPerCb}>
+                <div class="chart-shell with-bottom-badges" style={!dataLoaded ? `height: ${TALL_PLOT_HEIGHT}px;` : ''}>
+                    {#if !dataLoaded}
+                        <ChartSkeleton height={TALL_PLOT_HEIGHT}/>
+                    {/if}
+                    <div class="plot {dataLoaded ? '' : 'chart-hidden'}" bind:this={plotPerCb}></div>
+                    <div class="chart-badge-bottom-right" aria-label="Chart information badges">
+                        <Badge badge={COMPARISON_AVERAGE_BADGE} variant="filled" />
+                    </div>
                 </div>
             </div>
 
             <div class="component column">
                 <h3 class="component-title">Where is {LADToName[LAD]}?</h3>
                 <p class="description">{LADToName[LAD]} has been highlighted in dark grey on this UK map.</p>
-                <p class="description">*Scroll for zooming in and out</p>
-                <div id="map" bind:this={mapDiv}>
-                    <!--                    <div class="badge-container">-->
-                    <!--                        <img class="badge" src={zoomBadge} />-->
-                    <!--                    </div>-->
+                <div class="map-shell">
+                    <div id="map" bind:this={mapDiv}>
+                        <!--                    <div class="badge-container">-->
+                        <!--                        <img class="badge" src={zoomBadge} />-->
+                        <!--                    </div>-->
+                    </div>
+                </div>
+                <div class="chart-badges map-info-badges" aria-label="Map information badges">
+                    <Badge badge={INTERACTIVE_BADGE} variant="filled" />
                 </div>
             </div>
         </div>
@@ -1505,7 +1579,15 @@ console.log("selectedDatum", selectedDatum)
                     </div>
                 </div>
 
-                <div class="plot side" bind:this={CBOverTimePLot}></div>
+                <div class="chart-shell with-bottom-badges" style={!dataLoaded ? `height: ${TALL_PLOT_HEIGHT}px;` : ''}>
+                    {#if !dataLoaded}
+                        <ChartSkeleton height={TALL_PLOT_HEIGHT}/>
+                    {/if}
+                    <div class="plot side {dataLoaded ? '' : 'chart-hidden'}" bind:this={CBOverTimePLot}></div>
+                    <div class="chart-badge-bottom-right" aria-label="Chart information badges">
+                        <Badge badge={COMPARISON_AVERAGE_BADGE} variant="filled" />
+                    </div>
+                </div>
 
 
                 <!-- <div class="row"> -->
@@ -1533,7 +1615,7 @@ console.log("selectedDatum", selectedDatum)
                             <div class="legend-header" on:click={() => {
                                 const wasExpanded = expanded.has(CB.id);
                                 toggle(CB.id);
-                                
+
                                 if (!wasExpanded) {
                                     posthog.capture('cobenefit opened', {
                                         cobenefit: CB.label
@@ -1553,9 +1635,9 @@ console.log("selectedDatum", selectedDatum)
                             <div class="legend-description">
                                 <div style="height: 0.8em;"></div>
                                 {CB.def} <br>
-                                
+
                                 <a class="link" href="{base}/cobenefit?cobenefit={CB.id}" target="_blank" rel="noopener noreferrer" style= "color:{COBENEFS_SCALE(CB.id)}; text-decoration: underline">{CB.id} report page</a>
-                                
+
                             </div>
                             </div>
                             {/if}
@@ -1565,12 +1647,15 @@ console.log("selectedDatum", selectedDatum)
                     </div>
 
                 </div>
-                <div class="plot side" bind:this={CBOverTimePerCBPLot}></div>
-                <!-- Disclaimer -->
-                <div id="main-disclaimer" class="disclaimer-box">
-                    <p style="margin: 0;"><strong>Some areas too small:</strong> Due to the nature of the
-                        co-benefits some values are very small in comparison
-                        to larger values so therefore are not visable on this plot. </p>
+                <div class="chart-shell with-bottom-badges" style={!dataLoaded ? `height: ${TALL_PLOT_HEIGHT}px;` : ''}>
+                    {#if !dataLoaded}
+                        <ChartSkeleton height={TALL_PLOT_HEIGHT}/>
+                    {/if}
+                    <div class="plot side {dataLoaded ? '' : 'chart-hidden'}" bind:this={CBOverTimePerCBPLot}></div>
+                    <div class="chart-badge-bottom-right" aria-label="Warnings">
+                        <Badge badge={INVISIBLE_SMALL_AREAS_BADGE} variant="outlined" />
+                        <Badge badge={SMOOTHED_DATA_BADGE} variant="outlined" />
+                    </div>
                 </div>
             </div>
         </div>
@@ -1578,9 +1663,13 @@ console.log("selectedDatum", selectedDatum)
     </div>
 <div class="section" id="breakdown">
             <div id="vis-block">
+            <div class="chart-badges map-info-badges bottom-right" aria-label="Interaction badges">
+                <Badge badge={CAN_FILTER_BADGE} variant="filled" />
+                <Badge badge={INTERACTIVE_BADGE} variant="filled" />
+            </div>
             <div id="main-block">
                 <h3 class="section-title" style="align">What co-benefits would the LSOAs recieve?</h3>
-                <p class="description">The distribution plot below shows the predicted spread of benefits recieved or costs incurred by the LSOAs across {LADToName[LAD]}. 
+                <p class="description">The distribution plot below shows the predicted spread of benefits recieved or costs incurred by the LSOAs across {LADToName[LAD]}.
                     Select a co-benefit from the dropdown menu and explore the position of different datazones by using the search box.</p>
                 <div>
                     <div class="controls-container">
@@ -1623,7 +1712,11 @@ console.log("selectedDatum", selectedDatum)
                 <h3 class="component-title">LSOA Map</h3>
 
                 <p class="description">This map shows the total co-benefit values (£ millions) for each LSOA of {LADToName[LAD]}</p>
-                <div id="map-lsoa" bind:this={mapLSOADiv}>
+                <div class="chart-shell" style={!dataLoaded ? 'height: 520px;' : ''}>
+                    {#if !dataLoaded}
+                        <ChartSkeleton height={520}/>
+                    {/if}
+                    <div id="map-lsoa" style="height: 520px;" class="{dataLoaded ? '' : 'chart-hidden'}" bind:this={mapLSOADiv}></div>
                 </div>
             </div>
 
@@ -1666,13 +1759,9 @@ console.log("selectedDatum", selectedDatum)
                         shows the distribution for {compareTo}. </p>
                 </div>
 
-                <!-- Disclaimer -->
-                <div id="se-disclaimer" class="disclaimer-box">
-                    <p style="margin: 0 0 1rem 0;"><strong>Correlation ≠ Causation:</strong> The scatter plots represent
-                        modelled associations and should not be interpreted as direct causal relationships. </p>
-                    <p style="margin: 0 0 1rem 0;"><strong>Discrete scales:</strong> The first set of socio-economic
-                        factors are using categorical values where the x-axis is non-linear: EPC, Tenure, Typology, Fuel
-                        type, Gas flag, Number of cars.</p>
+                <div class="chart-badges disclaimer-badges" aria-label="Disclaimers">
+                    <Badge badge={CORRELATION_NOT_CAUSATION_BADGE} variant="outlined" />
+                    <Badge badge={DISCRETE_SCALES_BADGE} variant="outlined" />
                 </div>
             </div>
 
@@ -1705,7 +1794,15 @@ console.log("selectedDatum", selectedDatum)
                                         distributed
                                         across
                                         different household social economic factors.</p>
-                                    <div class="plot" bind:this={SEFPlotLAD[sef.id]}>
+                                    <div class="sef-card-with-badge">
+                                        <div class="plot" bind:this={SEFPlotLAD[sef.id]}></div>
+                                        <div class="sef-badge-bottom-right" aria-label="Chart information badges">
+                                            {#if SEF_CATEGORICAL.includes(sef.id)}
+                                                <Badge badge={SEF_BARCHART_BADGE} variant="outlined" type="mini" />
+                                            {:else}
+                                                <Badge badge={makeSEFChartBadge('distribution', areaNameForBadges, compareTo)} variant="outlined" type="mini" />
+                                            {/if}
+                                        </div>
                                     </div>
                                 </div>
 
@@ -1722,8 +1819,14 @@ console.log("selectedDatum", selectedDatum)
                                     </div>
 
                                     <div>
-                                        <div class="plot" bind:this={SEFPlotPerCB[sef.id]}>
+                                        <div class="sef-card-with-badge">
+                                            <div class="plot" bind:this={SEFPlotPerCB[sef.id]}></div>
+                                            <div class="sef-badge-bottom-right" aria-label="Chart information badges">
+                                                <Badge badge={CORRELATION_NOT_CAUSATION_BADGE} variant="outlined" type="mini" />
+                                                <Badge badge={makeSEFChartBadge('scatterplot', areaNameForBadges, compareTo)} variant="outlined" type="mini" />
+                                            </div>
                                         </div>
+                                        <!-- chart badges intentionally disabled on this page -->
                                     </div>
                                 </div>
                             {/if}
@@ -1740,6 +1843,101 @@ console.log("selectedDatum", selectedDatum)
 <Footer></Footer>
 
 <style>
+    .chart-shell {
+        position: relative;
+        width: 100%;
+    }
+
+    .chart-hidden {
+        opacity: 0;
+    }
+
+    .chart-badges {
+        display: flex;
+        justify-content: flex-end;
+        gap: 0px;
+        margin-top: 6px;
+        pointer-events: auto;
+        opacity: 0.98;
+    }
+
+    .disclaimer-badges {
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: flex-start;
+        gap: 8px;
+    }
+
+    .chart-badge-bottom-right {
+        position: absolute;
+        right: 12px;
+        bottom: 12px;
+        z-index: 3;
+        pointer-events: auto;
+        opacity: 0.98;
+        display: flex;
+        gap: 6px;
+    }
+
+    .map-info-badges {
+        gap: 3px;
+    }
+
+    .chart-badges.bottom-right {
+        position: absolute;
+        right: 12px;
+        bottom: 12px;
+        margin-top: 0;
+        opacity: 0.98;
+        z-index: 2000;
+    }
+
+    .header-badges {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-top: 8px;
+        margin-bottom: 2px;
+    }
+
+    /* Keep radio circles vertically aligned with labels (some fonts/baselines can drift). */
+    .radio-set {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .radio-row {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .radio-row input[type="radio"] {
+        margin: 0;
+    }
+
+    /* Reserve space so bottom-right badges don't overlap axis labels */
+    .chart-shell.with-bottom-badges {
+        padding-bottom: 55px;
+    }
+
+    .sef-card-with-badge {
+        position: relative;
+        padding-bottom: 36px;
+    }
+
+    .sef-badge-bottom-right {
+        position: absolute;
+        right: -3px;
+        bottom: 0px;
+        z-index: 3;
+        pointer-events: auto;
+        display: flex;
+        gap: 0px;
+    }
+
     .header-row {
         display: flex;
         flex-direction: row;
@@ -1758,6 +1956,7 @@ console.log("selectedDatum", selectedDatum)
         padding-left: 1%;
         padding-right: 1%;
         padding-bottom: 1%;
+        position: relative;
     }
 
     #main-block {
@@ -1791,37 +1990,6 @@ console.log("selectedDatum", selectedDatum)
         /* height: fit-content; */
     }
 
-    .data-btn {
-        padding: 0rem 1rem;
-        margin-bottom: 0.2rem;
-        font-size: 0.9rem;
-        height: 30px;
-        border: none;
-        background-color: #007bff;
-        border-radius: 6px;
-        color: white;
-        cursor: pointer;
-        transition: background-color 0.2s ease;
-    }
-
-    .data-btn-sticky {
-        padding: 0rem 1rem;
-        margin-right: 5.3rem;
-        margin-top: 0.3rem;
-        font-size: 0.9rem;
-        height: 30px;
-        border: none;
-        background-color: #6280a0;
-        border-radius: 6px;
-        color: white;
-        cursor: pointer;
-        transition: background-color 0.2s ease;
-    }
-
-    .data-btn {
-        background-color: #6280a0;
-    }
-
 
     label {
         font-weight: bold;
@@ -1835,6 +2003,12 @@ console.log("selectedDatum", selectedDatum)
         height: 750px;
         /*flex: 1; !* take the remaining height *!*/
     }
+
+    .map-shell {
+        position: relative;
+        width: 100%;
+    }
+
 
     #map-lsoa {
         flex: 1;
@@ -1960,6 +2134,19 @@ console.log("selectedDatum", selectedDatum)
         align-items: flex-start;
     }
 
+    .waffle-stats-shell {
+        position: relative;
+        min-height: 140px;
+    }
+
+    .waffle-stats-loading {
+        position: absolute;
+        inset: 0px;
+        border-radius: 12px;
+        transform: translateX(-100px);
+        pointer-events: none;
+    }
+
     .waffle-value {
         display: flex;
         align-items: baseline;
@@ -2011,7 +2198,7 @@ console.log("selectedDatum", selectedDatum)
         }
 
     .search-container {
-        position: relative; 
+        position: relative;
         }
 
         .search-results {
@@ -2043,12 +2230,12 @@ console.log("selectedDatum", selectedDatum)
         .legend-items-grid {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
-    gap: 0rem 1.5rem; 
+    gap: 0rem 1.5rem;
 }
 
     .controls-container {
         display: flex;
-        gap: 40px; 
+        gap: 40px;
         align-items: flex-start;
         flex-wrap: wrap;
         }

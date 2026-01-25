@@ -4,10 +4,11 @@ import * as maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import * as topojson from 'topojson-client';
 import { Legend } from '$lib/utils';
+import { base } from '$app/paths';
 
 // Topojson files
-const LSOAzonesPath = 'maps/LSOA.json';
-const LADzonesPath = 'maps/LAD3.json';
+const LSOAzonesPath = `${base}/maps/LSOA.json`;
+const LADzonesPath = `${base}/maps/LAD3.json`;
 
 let datazones = await d3.json(LSOAzonesPath);
 datazones = topojson.feature(datazones, datazones.objects['LSOA']);
@@ -74,7 +75,9 @@ export class MapUK {
 			// style: {version: 8, sources: {}, layers: []},
 			center: this.center, // starting position [lng, lat]
 			zoom: zoomLevel, // starting zoom
-			preserveDrawingBuffer: true
+			preserveDrawingBuffer: true,
+			// Disable MapLibre's default attribution control ("info" icon / attribution UI).
+			attributionControl: false
 		});
 
 		this.tooltip = document.createElement('div');
@@ -356,7 +359,7 @@ export class MapUK {
 		this.map.on('click', 'fill', (e) => {
 			let feature = e.features[0];
 			let lad = feature.properties.LAD22CD;
-			window.open(`/location?location=${lad}`, '_blank');
+			window.location.assign(`${base}/location?location=${lad}`);
 		});
 	}
 

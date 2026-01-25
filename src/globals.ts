@@ -215,48 +215,44 @@ export function getIconFromCobenef(cobenefit: CoBenefit) {
 
 
 let spinnerElement: HTMLElement | null = null;
-let overlayElement: HTMLElement | null = null;
 
 export function addSpinner(selection: HTMLElement): void {
     // Prevent multiple spinners
-    if (spinnerElement || overlayElement) return;
+    if (spinnerElement) return;
 
-    // Create gray overlay to block interaction
-    overlayElement = document.createElement('div');
-    overlayElement.style.position = 'absolute';
-    overlayElement.style.top = '0';
-    overlayElement.style.left = '0';
-    overlayElement.style.width = '100%';
-    overlayElement.style.height = '100%';
-    overlayElement.style.backgroundColor = 'rgba(255, 255, 255, 0.6)';
-    overlayElement.style.pointerEvents = 'auto';
-    overlayElement.style.zIndex = '9998';
-
-    // Ensure the selection is relatively positioned
-    const computedStyle = window.getComputedStyle(selection);
-    if (computedStyle.position === 'static') {
-        selection.style.position = 'relative';
-    }
-
-    selection.appendChild(overlayElement);
-
-    // Create spinner at the center of the viewport
+    // Non-blocking global spinner (keeps the UI responsive while data loads)
     spinnerElement = document.createElement('div');
     spinnerElement.style.position = 'fixed';
-    spinnerElement.style.top = '50%';
-    spinnerElement.style.left = '50%';
-    spinnerElement.style.transform = 'translate(-50%, -50%)';
+    spinnerElement.style.top = '12px';
+    spinnerElement.style.right = '12px';
+    spinnerElement.style.pointerEvents = 'none';
     spinnerElement.style.zIndex = '9999';
 
     spinnerElement.innerHTML = `
     <div style="
-      border: 4px solid #f3f3f3;
-      border-top: 4px solid #3498db;
-      border-radius: 50%;
-      width: 40px;
-      height: 40px;
-      animation: spin 1s linear infinite;
-    "></div>
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.85);
+      border: 1px solid rgba(0,0,0,0.08);
+      box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+      backdrop-filter: blur(6px);
+    ">
+      <div style="
+        border: 3px solid #e7e9ee;
+        border-top: 3px solid #3498db;
+        border-radius: 50%;
+        width: 18px;
+        height: 18px;
+        animation: spin 0.9s linear infinite;
+      "></div>
+      <div style="
+        font: 500 12px/1.2 system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica, Arial, sans-serif;
+        color: rgba(17, 24, 39, 0.8);
+      ">Loading…</div>
+    </div>
   `;
 
     // Add spin keyframes if not already present
@@ -276,10 +272,6 @@ export function addSpinner(selection: HTMLElement): void {
 }
 
 export function removeSpinner(selection: HTMLElement): void {
-    if (overlayElement && selection.contains(overlayElement)) {
-        selection.removeChild(overlayElement);
-        overlayElement = null;
-    }
     if (spinnerElement && document.body.contains(spinnerElement)) {
         document.body.removeChild(spinnerElement);
         spinnerElement = null;

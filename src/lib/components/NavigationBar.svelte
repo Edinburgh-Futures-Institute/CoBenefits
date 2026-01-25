@@ -60,7 +60,6 @@ async function goToSection(id: string) {
             data-sveltekit-reload
             style="--cobenef-color: {COBENEFS_SCALE(coBenef.id)}"
             class:selected={$page.url.searchParams.get('cobenefit') === coBenef.id}
-            target="_blank"
           >
             {coBenef.label}
           </a>
@@ -86,6 +85,13 @@ async function goToSection(id: string) {
         <div class="nav-count">46,426</div>
         <a href="{base}/map" class:active={$page.url.pathname === `${base}/map`} target="_blank">Data Zones</a>
       </div>
+
+      <!-- EXPERIMENTAL -->
+      <!-- <div class="nav-item">
+        <a href="{base}/playground" class="playground-pill" class:active={$page.url.pathname === `${base}/playground`}>
+          Playground
+        </a>
+      </div> -->
     </div>
 
     <div class="nav-right" style="gap: 1rem;">
@@ -125,6 +131,22 @@ async function goToSection(id: string) {
     padding-bottom: 4px;
     padding-right: 15px;
     border-bottom: 1px solid #ddd;
+  }
+
+  /* EXPERIMENTAL */
+  .playground-pill {
+    background: #ff4fd8;
+    color: #ffffff !important;
+    border: 1px solid #ff1fc9;
+    border-radius: 999px;
+    padding: 7px 10px;
+    font-weight: 800;
+    line-height: 1;
+    box-shadow: 0 1px 0 rgba(17, 24, 39, 0.06);
+  }
+
+  .playground-pill:hover {
+    filter: brightness(1.02);
   }
 
   /* .nav-left {

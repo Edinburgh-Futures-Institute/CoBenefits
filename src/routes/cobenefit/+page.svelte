@@ -4,8 +4,10 @@
     import {onMount, onDestroy} from 'svelte';
     import {writable} from 'svelte/store';
     import {base} from "$app/paths";
+    import { goto } from '$app/navigation';
     import posthog from 'posthog-js';
 
+    import ChartSkeleton from "$lib/components/ChartSkeleton.svelte";
 
     import {MapUK} from "$lib/components/mapUK";
     import {
@@ -25,7 +27,7 @@
         SEF_SCALE,
         DEFINITIONS,
         SE_FACTORS,
-        SEF_LEVEL_LABELS, removeSpinner, addSpinner, convertToCSV, downloadCSV
+        SEF_LEVEL_LABELS, convertToCSV, downloadCSV
 
     } from "../../globals";
     import {
@@ -40,6 +42,21 @@
     } from "$lib/duckdb";
 
     import NavigationBar from "$lib/components/NavigationBar.svelte";
+    import Badge from '$lib/badge/Badge.svelte';
+    import {
+        BACKGROUND_READING_BADGE,
+        AGGREGATED_DATA_BADGE,
+        BOX_PLOTS_BADGE,
+        CORRELATION_NOT_CAUSATION_BADGE,
+        DISCRETE_SCALES_BADGE,
+        INTERACTIVE_BADGE,
+        MAJOR_FINDING_BADGE,
+        MODELLED_DATA_BADGE,
+        OPEN_DATA_BADGE,
+        PER_CAPITA_MAP_BADGE,
+        RAW_DATA_AVAILABLE_BADGE,
+        TOTAL_VALUES_BADGE
+    } from '$lib/badge/badges';
 
     import total from '$lib/icons/total.png';
     import per_capita from '$lib/icons/per_capita.png';
@@ -61,6 +78,7 @@
     const coBenefit = data.coBenefit;
     const coBenefitLabel = COBENEFS.find(d => d.id === coBenefit)?.label ?? coBenefit;
     const coBenefitDef = DEFINITIONS.find(d => d.id === coBenefit)?.def ?? coBenefit;
+
     let fullData;
     let LADAveragedData;
     let SEFData;
@@ -69,22 +87,20 @@
     let aggregationPerCapitaPerBenefit;
     let totalBenefits;
     let totalBenefitsValue;
-    let dataLoaded = false;
     let coBenefit_percapita;
 
     let map: MapUK;
+    let mapInitialized = false;
 
     let mapDiv: HTMLElement;
     let mapLegendDiv: HTMLElement;
 
-    loadData().then(() => {
-        let colorRange = JSON.parse(JSON.stringify(COBENEFS_SCALE2(coBenefit)))
-        colorRange.shift()
-        colorRange = colorRange.reverse()
-
-        map = new MapUK(fullData, "LAD", mapDiv, "total", true, "LAD", false, colorRange);
-        map.initMap();
-    });
+    // Per-chart loading flags (avoid a blocking full-page spinner)
+    let loadingWaffle = true;
+    let loadingOverviewCharts = true;
+    let loadingMap = true;
+    let loadingSEFCharts = true;
+    let loadingHeaderStats = true;
 
     let icon = getIconFromCobenef(coBenefit)
 
@@ -140,38 +156,67 @@
     })
 
 
-    async function loadData() {
-        fullData = await getTableData(getTotalPerOneCoBenefit(coBenefit))
-        console.log("FULLDATA", fullData);
-        SEFData = await getTableData(getSefForOneCoBenefit(coBenefit))
-        console.log("SEFDATA", SEFData);
-        aggregationPerBenefit = await getTableData(getAggregationPerBenefit());
-        aggregationPerBenefit = aggregationPerBenefit.sort((a, b) => b.total - a.total);
+    async function loadAllData() {
+        // Make sure DuckDB is initialized once (each getTableData call calls initDB otherwise).
+        await initDB();
 
-        aggregationPerCapitaPerBenefit = await getTableData(getAggregationPerCapitaPerBenefit());
-        aggregationPerCapitaPerBenefit = aggregationPerCapitaPerBenefit.sort((a, b) => b.total_value - a.total_value);
-        const matched = aggregationPerCapitaPerBenefit.find(d => d.co_benefit_type === coBenefit);
-        coBenefit_percapita = matched ? matched.value_per_capita : null;
+        // Overview charts (time bars + distribution histogram) + map are based on fullData.
+        void (async () => {
+            try {
+                fullData = await getTableData(getTotalPerOneCoBenefit(coBenefit));
+                totalValue = (d3.sum(fullData, d => d.total / 1000)).toLocaleString('en-US', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                });
+            } finally {
+                loadingOverviewCharts = false;
+            }
+        })();
 
-        // console.log("coben waffle data",aggregationPerCapitaPerBenefit);
-        // console.log("coben type", coBenefit);
+        // Header stats depend on these aggregations.
+        void (async () => {
+            try {
+                totalBenefits = await getTableData(getTotalAggregation());
+                totalBenefitsValue = totalBenefits?.[0]?.total_value;
 
-        LADAveragedData = await getTableData(getSefForOneCoBenefitAveragedByLAD(coBenefit))
-        console.log("data", LADAveragedData);
-        totalBenefits = await getTableData(getTotalAggregation())
-        totalBenefitsValue = totalBenefits[0].total_value
+                aggregationPerCapitaPerBenefit = await getTableData(getAggregationPerCapitaPerBenefit());
+                aggregationPerCapitaPerBenefit = aggregationPerCapitaPerBenefit.sort((a, b) => b.total_value - a.total_value);
+                const matched = aggregationPerCapitaPerBenefit.find(d => d.co_benefit_type === coBenefit);
+                coBenefit_percapita = matched ? matched.value_per_capita : null;
+            } finally {
+                loadingHeaderStats = false;
+            }
+        })();
 
-        SEF.forEach(SE => {
-            SEFData[SE] = +SEFData[SE];
-        })
+        // Waffle depends on aggregationPerBenefit only.
+        void (async () => {
+            try {
+                aggregationPerBenefit = await getTableData(getAggregationPerBenefit());
+                aggregationPerBenefit = aggregationPerBenefit.sort((a, b) => b.total - a.total);
+            } finally {
+                loadingWaffle = false;
+            }
+        })();
 
-        totalValue = (d3.sum(fullData, d => d.total / 1000)).toLocaleString('en-US', {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2
-        });
-
-        dataLoaded = true;
-        removeSpinner(element);
+        // SEF charts depend on the LAD-aggregated per-capita query.
+        void (async () => {
+            try {
+                LADAveragedData = await getTableData(getSefForOneCoBenefitAveragedByLAD(coBenefit));
+                // Ensure numeric SE values for plotting (DuckDB may return strings for some columns).
+                if (Array.isArray(LADAveragedData)) {
+                    LADAveragedData.forEach(d => {
+                        if (d && d.SE !== null && d.SE !== undefined && d.SE !== '' && !Number.isNaN(+d.SE)) {
+                            d.SE = +d.SE;
+                        }
+                        if (d && d.total !== null && d.total !== undefined && d.total !== '' && !Number.isNaN(+d.total)) {
+                            d.total = +d.total;
+                        }
+                    })
+                }
+            } finally {
+                loadingSEFCharts = false;
+            }
+        })();
     }
 
     let waffleData = [];
@@ -338,6 +383,11 @@
     }
 
     function renderSEFPlot() {
+        if (!Array.isArray(LADAveragedData)) {
+            console.warn("Skipping SEF plots: LADAveragedData not loaded", LADAveragedData);
+            return;
+        }
+
         const nationCode = d => d.LAD.startsWith("S") ? "S"
             : d.LAD.startsWith("N") ? "N"
                 : d.LAD.startsWith("E") ? "E"
@@ -367,7 +417,7 @@
                 const fullLevels = labelLookup
                     ? Object.keys(labelLookup).map(Number)
                     : LADAveragedData.filter(d => d["SEFMAME"] == sef).map(d => d.SE);
-                    
+
 
                 plot = Plot.plot({
                     style: {fontSize: "14px", textAnchor: "middle", fill: '#333'},
@@ -514,7 +564,7 @@
 
                         // let text = event.target.textContent;
                         // let cb = COBENEFS.find((d) => d.id == text)
-                        window.open(`${base}/location?location=${lad}`, '_blank').focus();
+                        goto(`${base}/location?location=${lad}`);
                     })
 
             }
@@ -523,18 +573,33 @@
         })
     }
 
-    $: if (height && dataLoaded) {
+    $: if (height && !loadingOverviewCharts && plot && plotDist) {
         plot?.firstChild?.remove();
+        plotDist?.firstChild?.remove();
         renderDistPlot();
         renderPlot();
+    }
+
+    $: if (!loadingWaffle && waffleEl) {
         renderWaffle(300, coBenefit);
     }
 
-    $: if (height && dataLoaded && selectedNation !== undefined) {
+    $: if (height && !loadingSEFCharts && selectedNation !== undefined) {
         Object.values(SEFPlot).forEach(sefPlot => {
-            sefPlot.firstChild?.remove();
+            sefPlot?.firstChild?.remove();
         });
         renderSEFPlot();
+    }
+
+    $: if (!mapInitialized && !loadingOverviewCharts && mapDiv && fullData) {
+        let colorRange = JSON.parse(JSON.stringify(COBENEFS_SCALE2(coBenefit)))
+        colorRange.shift()
+        colorRange = colorRange.reverse()
+
+        mapInitialized = true;
+        map = new MapUK(fullData, "LAD", mapDiv, "total", true, "LAD", false, colorRange);
+        map.initMap();
+        loadingMap = false;
     }
 
     $: textColor = COBENEFS_SCALE2(coBenefit)[0];
@@ -565,14 +630,13 @@
 
         const csv = convertToCSV(data);
         downloadCSV(csv, `cobenefits_${coBenefitLabel}.csv`);
-        downloadStaticPDF("/Scotland_co-benefits_CB7_2045.pdf", "readme.pdf"); // <-- adjust filename/path as needed
+        downloadStaticPDF(`${base}/Scotland_co-benefits_CB7_2045.pdf`, "readme.pdf"); // <-- adjust filename/path as needed
     }
 
 
 
     onMount(() => {
-        addSpinner(element);
-
+        void loadAllData();
 
         document.querySelectorAll(".nation-button").forEach(button => {
             button.addEventListener("click", () => {
@@ -601,14 +665,6 @@
             <div class="header-text">
                 <div class="header-bar">
                 <p class="page-subtitle">Co-Benefit Report</p>
-                <button
-
-                        type="button"
-                        class="data-btn"
-                        on:click={exportData}
-                >
-                    Download Page Data
-                </button>
                 </div>
                 <div class="title-container">
                     <h1 class="page-title">
@@ -620,6 +676,13 @@
                     <p class='definition'> {coBenefitDef} </p>
                 </div>
 
+                <div class="header-badges">
+                    <Badge badge={BACKGROUND_READING_BADGE} onClick={{ href: '/methods', hint: { icon: 'info', text: 'Click for more information' } }} />
+                    <Badge badge={OPEN_DATA_BADGE} />
+                    <Badge badge={RAW_DATA_AVAILABLE_BADGE} onClick={{ action: exportData, hint: { icon: 'download', text: 'Click to download the data' } }} />
+                    <Badge badge={MODELLED_DATA_BADGE} />
+                </div>
+
             </div>
             <div class="header-waffle-wrapper">
                 <div class="waffle-label">
@@ -628,7 +691,7 @@
                             <div class="waffle-value-container">
                             <img class="aggregation-icon-small" src="{total}" alt="icon"/>
                             <div class="waffle-value">
-                                {#if totalValue}
+                                {#if !loadingHeaderStats && totalValue}
                                     <span class="waffle-big">£{totalValue.toLocaleString()}</span>
                                 {/if}
                                 <span class="small">billion</span>
@@ -639,13 +702,13 @@
                             {:else}
                                 <div class="waffle-caption">National costs</div>
                             {/if}
-                        
+
                         </div>
                         <div class="waffle-stat">
                             <div class="waffle-value-container">
                                 <img class="aggregation-icon-small" src="{per_capita}" alt="icon"/>
                             <div class="waffle-value">
-                                {#if totalValue}
+                                {#if !loadingHeaderStats && totalValue}
                                     <span class="waffle-big">£{coBenefit_percapita.toLocaleString('en-US', {
                                         minimumFractionDigits: 2,
                                         maximumFractionDigits: 2
@@ -659,11 +722,11 @@
                                 <div class="waffle-caption">Per capita costs</div>
                             {/if}
                         </div>
-                        
+
                         <div class="waffle-stat">
                             <div class="waffle-value-container">
                                 <img class="aggregation-icon-small" src="{percentage}" alt="icon"/>
-                            {#if totalValue}
+                            {#if !loadingHeaderStats && totalValue && totalBenefitsValue}
                                 <div class="waffle-value">
                                     <span class="waffle-big">{((totalValue / totalBenefitsValue) * 100).toFixed(2)}</span>
                                     <span class="small">%</span>
@@ -673,10 +736,15 @@
                             <div class="waffle-caption">Contribution to national benefits</div>
                         </div>
                     </div>
-                    
+
                 </div>
                 <h3 class="component-title"> Share of total benefits </h3>
-                <div class="waffle-el" bind:this={waffleEl}></div>
+                <div class="chart-shell" style="height: 220px;">
+                    {#if loadingWaffle}
+                        <ChartSkeleton height={220}/>
+                    {/if}
+                    <div class="waffle-el {loadingWaffle ? 'chart-hidden' : ''}" bind:this={waffleEl}></div>
+                </div>
                 <div class="waffle-bg" bind:this={waffleBgEl}></div>
             </div>
         </div>
@@ -694,14 +762,6 @@
                     >> {formatLabel(currentSection)}</span>
 
             </div>
-            <button
-
-                    type="button"
-                    class="data-btn-sticky"
-                    on:click={exportData}
-            >
-                Download Page Data
-            </button>
         </div>
     {/if}
 
@@ -718,20 +778,45 @@
                     </h3>
                     {#if totalValue > 0}
                         <!-- <p class="description">The total benefit for each 5 year interval towards 2050. </p> -->
-                        <p class="description">Each bar shows the predicted total benefits in billion pounds for each
-                            five-year periods for all of UK.</p>
+                        <div class="desc-row">
+                            <p class="description">Each bar shows the predicted total benefits in billion pounds for each
+                                five-year periods for all of UK.</p>
+                            <div class="desc-badges" aria-label="Badges">
+                                <Badge
+                                  badge={MAJOR_FINDING_BADGE}
+                                  type="big"
+                                  bigStyle="round"
+                                  bigVariant="solid"
+                                />
+                            </div>
+                        </div>
                     {:else}
                         <!-- <p class="description">The total cost/benefit for each 5 year interval towards 2050. </p> -->
-                        <p class="description">Each bar shows the predicted total costs in billion pounds for each
-                            five-year periods for all of UK.</p>
+                        <div class="desc-row">
+                            <p class="description">Each bar shows the predicted total costs in billion pounds for each
+                                five-year periods for all of UK.</p>
+                            <div class="desc-badges" aria-label="Badges">
+                                <Badge
+                                  badge={MAJOR_FINDING_BADGE}
+                                  type="big"
+                                  bigStyle="round"
+                                  bigVariant="solid"
+                                />
+                            </div>
+                        </div>
                     {/if}
                     <div class="aggregation-icon-container">
-                        <div class="tooltip-wrapper">
-                            <img class="aggregation-icon" src="{total}" alt="icon"/>
-                            <span class="tooltip-text">This chart uses total values. i.e. shows the total benefit/cost for all of the UK.</span>
-                        </div>
+<!--                        <div class="tooltip-wrapper">-->
+<!--                            <img class="aggregation-icon" src="{total}" alt="icon"/>-->
+<!--                            <span class="tooltip-text">This chart uses total values. i.e. shows the total benefit/cost for all of the UK.</span>-->
+<!--                        </div>-->
                     </div>
-                    <div class="plot-bar" bind:this={plot}></div>
+                    <div class="chart-shell" style="height: 280px;">
+                        {#if loadingOverviewCharts}
+                            <ChartSkeleton height={280}/>
+                        {/if}
+                        <div class="plot-bar {loadingOverviewCharts ? 'chart-hidden' : ''}" bind:this={plot}></div>
+                    </div>
                     <!-- <p class="explanation">Each bar shows the total benefits obtain within the given period.</p> -->
 
                     <br>
@@ -757,14 +842,15 @@
                         <p class="description">The x-axis represents the value of costs, while the y-axis shows the
                             number of data zones falling within each benefit range.</p>
                     {/if}
-                    <div class="aggregation-icon-container">
-                        <div class="tooltip-wrapper">
-                            <img class="aggregation-icon" src="{total}" alt="icon"/>
-                            <span class="tooltip-text">This chart uses total values. i.e. shows the total benefit/cost for all of the UK.</span>
+                    <div class="chart-shell" style="height: 280px;">
+                        {#if loadingOverviewCharts}
+                            <ChartSkeleton height={280}/>
+                        {/if}
+                        <br><br>
+                        <div class="plot-bar {loadingOverviewCharts ? 'chart-hidden' : ''}" bind:this={plotDist}></div>
+                        <div class="chart-badge-bottom-right" aria-label="Chart information badges">
+                            <Badge badge={TOTAL_VALUES_BADGE} variant="outlined" type="mini" />
                         </div>
-                    </div>
-                    <div class="plot-bar" bind:this={plotDist}>
-
                     </div>
                     <br>
                     <!-- <p class="explanation">``Bumps'' in the chart indicate </p> -->
@@ -783,19 +869,29 @@
                     <!--                            <span class="tooltip-text">This chart uses total values. i.e. shows the total benefit/cost for all of the UK.</span>-->
                     <!--                        </div>-->
                     <!--                    </div>-->
+                    <!--
                     <div class="aggregation-icon-container2">
                         <div class="tooltip-wrapper">
                             <img class="aggregation-icon" src="{per_capita}" alt="icon"/>
                             <span class="tooltip-text">This chart uses per capita values. i.e. show the cost/benefit per person in each LAD.</span>
                         </div>
                     </div>
+                    -->
 
                     {#if map}
                         <div id="legend">
                             {@html map.legend().outerHTML}
                         </div>
                     {/if}
-                    <div id="map" bind:this={mapDiv}>
+                    <div class="chart-shell" style="height: 600px;">
+                        {#if loadingMap}
+                            <ChartSkeleton height={600}/>
+                        {/if}
+                        <div id="map" class="{loadingMap ? 'chart-hidden' : ''}" bind:this={mapDiv}></div>
+                    </div>
+                    <div class="chart-badges map-info-badges" aria-label="Map information badges">
+                        <Badge  badge={PER_CAPITA_MAP_BADGE}  variant="filled"/>
+                        <Badge badge={INTERACTIVE_BADGE} variant="filled" />
                     </div>
                 </div>
             </div>
@@ -820,11 +916,26 @@
 
                     <!-- Legend -->
                     <div id="se-legend" class="legend-box">
+                        <!--
                         <div class="aggregation-icon-container2">
                             <div class="tooltip-wrapper">
                                 <img class="aggregation-icon" src="{per_capita}" alt="icon"/>
                                 <span class="tooltip-text">These charts use per capita values. i.e. show the cost/benefit per person in each LAD.</span>
                             </div>
+                        </div>
+                        -->
+                        <div class="legend-badge-bottom-right" aria-label="Legend badges">
+                            <Badge
+                                badge={{
+                                    id: 'per-capita-legend',
+                                    label: 'Per capita',
+                                    intent: 'INFORMATION',
+                                    description:
+                                        'These charts use per capita values. i.e. show the cost/benefit per person in each LAD.'
+                                }}
+                                variant="outlined"
+                                type="mini"
+                            />
                         </div>
 
                         <strong style="margin-bottom: 0.8rem;">Legend:</strong> <br/>
@@ -850,17 +961,11 @@
                     </div>
 
 
-                    <!-- Disclaimer -->
-                    <div id="se-disclaimer" class="disclaimer-box">
-                        <p style="margin: 0 0 0.5rem 0;"><strong>Discrete scales:</strong> The first set of
-                            socio-economic factors are using categorical values where the x-axis is non-linear.</p>
-                        <p style="margin: 0 0 0.5rem 0;"><strong>Correlation ≠ Causation:</strong> The scatter plots
-                            represent modelled associations and should not be interpreted as direct causal
-                            relationships. </p>
-                        <p style="margin: 0 0 0.5rem 0;"><strong>Aggregated data:</strong> Each socio-economic factor
-                            for a given local authority is aggregated from the data zones within its boundary. </p>
+                    <div class="disclaimer-badges" aria-label="Disclaimers">
+                        <Badge badge={DISCRETE_SCALES_BADGE} variant="outlined" />
+                        <Badge badge={AGGREGATED_DATA_BADGE} variant="outlined" />
+                        <Badge badge={CORRELATION_NOT_CAUSATION_BADGE} variant="outlined" />
                     </div>
-
                 </div>
 
 
@@ -870,7 +975,27 @@
                             <div class="plot-container">
                                 <h3 class="component-chart-title">{sef.label}</h3>
                                 <p class="component-chart-caption">{sef.def}</p>
-                                <div class="plot" bind:this={SEFPlot[sef.id]}></div>
+                                <div class="chart-shell" style="height: 260px;">
+                                    {#if loadingSEFCharts}
+                                        <ChartSkeleton height={260}/>
+                                    {/if}
+                                    <div class="plot {loadingSEFCharts ? 'chart-hidden' : ''}" bind:this={SEFPlot[sef.id]}></div>
+                                </div>
+                                {#if SEF_CATEGORICAL.includes(sef.id)}
+                                    <div class="chart-badges" aria-label="Chart badges">
+                                        <Badge
+                                          badge={BOX_PLOTS_BADGE}
+                                          variant="outlined"
+                                          type="mini"
+                                          onClick={{ href: 'https://visualizationcheatsheets.github.io/boxplot.html', external: true, hint: 'Click for more information' }}
+                                        />
+                                    </div>
+                                {:else}
+                                    <div class="chart-badges" aria-label="Chart badges">
+                                        <Badge badge={CORRELATION_NOT_CAUSATION_BADGE} variant="outlined" type="mini" />
+                                        <Badge badge={AGGREGATED_DATA_BADGE} variant="outlined" type="mini" />
+                                    </div>
+                                {/if}
                             </div>
                         {/each}
                     </div>
@@ -883,6 +1008,63 @@
 <Footer></Footer>
 
 <style>
+    .desc-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-bottom: 40px;
+    }
+
+    .desc-row :global(.description) {
+        margin: 0;
+        flex: 1 1 420px;
+    }
+
+    .desc-badges {
+        display: inline-flex;
+        align-items: center;
+        gap: 0px;
+        pointer-events: auto;
+        flex: 0 0 auto;
+    }
+
+    .chart-shell {
+        position: relative;
+        width: 100%;
+    }
+
+    .chart-badges {
+        display: flex;
+        justify-content: flex-end;
+        gap: 0px;
+        margin-top: 6px;
+        pointer-events: auto;
+    }
+
+    .map-info-badges {
+        gap: 3px;
+    }
+
+    .chart-badge-bottom-right {
+        position: absolute;
+        right: 0px;
+        bottom: 30px;
+        pointer-events: auto;
+    }
+
+    .disclaimer-badges {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        align-items: flex-start;
+    }
+
+    .chart-hidden {
+        visibility: hidden;
+    }
+
     #vis-block {
         display: flex;
         flex-direction: row;
@@ -1023,6 +1205,14 @@
         height: 100%;
     }
 
+    .header-badges {
+        margin-top: 10px;
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        align-items: center;
+    }
+
     .page-subtitle {
         font-size: 1.2rem;
         color: #777;
@@ -1101,10 +1291,18 @@
 
     .legend-box {
         margin-bottom: 2rem;
+        position: relative;
         padding: 0.75rem;
         background-color: #f0f0f0;
         border-radius: 8px;
         font-size: 0.9rem;
+    }
+
+    .legend-badge-bottom-right {
+        position: absolute;
+        right: 12px;
+        bottom: 12px;
+        pointer-events: auto;
     }
 
     .legend-list {

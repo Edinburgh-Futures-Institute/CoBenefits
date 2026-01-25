@@ -77,16 +77,16 @@
         <h1>Browse by nation</h1>
         <p>Click on a nation for a detailed report.</p>
         <div class="sef-link-wrapper"> 
-            <a class="sef-link" href="{base}/nation?nation=England" target="_blank" >England</a> 
+            <a class="sef-link" href="{base}/nation?nation=England">England</a> 
         </div>
         <div class="sef-link-wrapper"> 
-            <a class="sef-link" href="{base}/nation?nation=NI" target="_blank" >Northern Ireland</a> 
+            <a class="sef-link" href="{base}/nation?nation=NI">Northern Ireland</a> 
         </div>
         <div class="sef-link-wrapper"> 
-            <a class="sef-link" href="{base}/nation?nation=Scotland" target="_blank" >Scotland</a> 
+            <a class="sef-link" href="{base}/nation?nation=Scotland">Scotland</a> 
         </div>
         <div class="sef-link-wrapper"> 
-            <a class="sef-link" href="{base}/nation?nation=Wales" target="_blank" >Wales</a> 
+            <a class="sef-link" href="{base}/nation?nation=Wales">Wales</a> 
         </div>
         <br>
         <br>

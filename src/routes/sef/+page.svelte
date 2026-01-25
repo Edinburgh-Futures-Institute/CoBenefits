@@ -46,7 +46,6 @@
     import negative from '$lib/icons/negative.png';
     import Footer from "$lib/components/Footer.svelte";
     import {downloadStaticPDF} from "../../globals.js";
-
     const LADEngPath = `${base}/LAD/Eng_Wales_LSOA_LADs.csv`;
     const LADNIPath = `${base}/LAD/NI_DZ_LAD.csv`;
     const LADScotlandPath = `${base}/LAD/Scotland_DZ_LA.csv`;
@@ -65,7 +64,7 @@
     let SEFData;
     let PCData;
     let LADfullData;
-    //let useLAD = false; 
+    //let useLAD = false;
     let LADfullData_alt;
     let LADSEFData;
     let dataLoaded = false;
@@ -227,10 +226,10 @@ loadLADNames();
         console.log("by cobens", SEFData);
         LADSEFData = await getTableData(allCBgetAverageSEFGroupedByLAD(SEF));
         console.log("LADsef", LADSEFData);
-        
+
         PCData = await getTableData(getAggregationPerCapitaPerBenefit());
         console.log("per_capita_data", PCData);
-        
+
         CBS.forEach(CB => {
             SEFData[CB] = +SEFData[CB];
         })
@@ -299,7 +298,7 @@ loadLADNames();
         maximumFractionDigits: 2
     })
     : "N/A";
-    
+
     $: maxName = ladLoaded && maxLookupValue !== "N/A"
   ? (currentData === LADfullData
       ? LADToName[maxLookupValue] ?? maxLookupValue
@@ -337,7 +336,7 @@ $: console.log("LAD name for maxLookupValue:", LADToName[maxLookupValue]);
             d3.bin().thresholds(20).value(d => d.val)(fullData),
             bin => bin.length
         );
-        plotDist.innerHTML = ""; 
+        plotDist.innerHTML = "";
 
         plotDist?.append(
             Plot.plot({
@@ -384,7 +383,7 @@ $: console.log("LAD name for maxLookupValue:", LADToName[maxLookupValue]);
             ? Object.keys(labelLookup).map(Number)
             : currentData.filter(d => d["SEFMAME"] == sefId).map(d => d.SE);
 
-        plotBar.innerHTML = ""; 
+        plotBar.innerHTML = "";
 
         plotBar?.append(
             Plot.plot({
@@ -412,13 +411,13 @@ $: console.log("LAD name for maxLookupValue:", LADToName[maxLookupValue]);
                                                                         dy: -15, // shift the text upward
                                                                         fill: "#333" ,
                                                                         fontWeight: 500})),
-                    Plot.axisY({label: currentData === LADfullData ? 'No. of LADs' : 'No. of LSOAs', labelArrow: false})]                                  
+                    Plot.axisY({label: currentData === LADfullData ? 'No. of LADs' : 'No. of LSOAs', labelArrow: false})]
             })
         );
     }
 
-    function renderDotPlot() {   
-        plotDot.innerHTML = "";     
+    function renderDotPlot() {
+        plotDot.innerHTML = "";
         plotDot?.append(
             Plot.plot({
                 height: height * 1.5,
@@ -441,15 +440,15 @@ $: console.log("LAD name for maxLookupValue:", LADToName[maxLookupValue]);
                         r:  currentData === LADfullData ? 4 : 0.9,
                         fillOpacity: 0.75,
                         channels: {
-                            location: { value: d => currentData === LADfullData 
-                                        ? LADToName[d.Lookup_Value] || "Unknown" 
+                            location: { value: d => currentData === LADfullData
+                                        ? LADToName[d.Lookup_Value] || "Unknown"
                                         : getAreaNameFromCode(d.Lookup_Value), label: "Location" },
                             sef: { value: "val", label: `${sefUnits}` },
                             value: { value: d => d.total_per_capita * 1000, label: "Co-Benefit Value (£, thousand)" },
                         },
                         tip: { format: { location: true, sef: true, value: true, x: false, y: false } },
                         }),
-                        
+
                     Plot.axisY({
                         label: "Per capita co-benefit value (£, thousand)",
                         labelArrow: false,
@@ -472,9 +471,9 @@ $: console.log("LAD name for maxLookupValue:", LADToName[maxLookupValue]);
                 marginRight: 10,
                 marginBottom: 60,
                 x: {grid: false,
-                    domain: 
-                    sefId == "EPC"? [0.5,7.5] : 
-                    sefId == "Tenure"? [0.5,3.5] : 
+                    domain:
+                    sefId == "EPC"? [0.5,7.5] :
+                    sefId == "Tenure"? [0.5,3.5] :
                     sefId == "Typology"? [0.5,6.5]:
                     sefId == "Fuel_Type"? [0.5,3.5]:
                     sefId == "Gas_flag"?[-0.5,1.5]:
@@ -491,17 +490,17 @@ $: console.log("LAD name for maxLookupValue:", LADToName[maxLookupValue]);
                         r: currentData === LADfullData ? 4 : 0.9,
                         fillOpacity: 0.75,
                         channels: {
-                            location: { value: d => currentData === LADfullData 
-                                        ? LADToName[d.Lookup_Value] || "Unknown" 
+                            location: { value: d => currentData === LADfullData
+                                        ? LADToName[d.Lookup_Value] || "Unknown"
                                         : getAreaNameFromCode(d.Lookup_Value), label: "Location" },
                             sef: { value: "val", label: `${sefUnits}` },
                             value: { value: d => d.total_per_capita * 1000, label: "Co-Benefit Value (£, thousand)" },
                         },
-                        tip: { format: 
-                            { location: true, 
-                            sef: false, 
-                            value: true, 
-                            x: false, 
+                        tip: { format:
+                            { location: true,
+                            sef: false,
+                            value: true,
+                            x: false,
                             y: false } },
                     }),
 
@@ -512,15 +511,15 @@ $: console.log("LAD name for maxLookupValue:", LADToName[maxLookupValue]);
                     }),
                     Plot.axisX({label: `${sefUnits}`, labelArrow: false, labelAnchor: "center", tickFormat: () => "", ticks: []}),
                     Plot.text([
-                        {x: 0, y: 0, 
-                            text: 
+                        {x: 0, y: 0,
+                            text:
                             sefId == "Number_cars"? "0":
                             sefId == "Gas_flag"? "No":
-                            "", 
+                            "",
                             fill: "#333", fontWeight: "bold"},
-                        {x: 1, y: 0, 
-                            text: 
-                            sefId == "EPC"? "A" : 
+                        {x: 1, y: 0,
+                            text:
+                            sefId == "EPC"? "A" :
                             sefId == "Tenure"? "Owner":
                             sefId == "Typology"? "Semi-detached":
                             sefId == "Fuel_Type"? "Gas boiler":
@@ -528,55 +527,55 @@ $: console.log("LAD name for maxLookupValue:", LADToName[maxLookupValue]);
                             "1",
                             rotate: sefId === "Typology" ? -50 : 0,
                             fill: "#333", stroke: "white", fontWeight: "bold"},
-                        {x: 2, y: 0, 
-                            text: 
-                            sefId == "EPC"? "B" : 
+                        {x: 2, y: 0,
+                            text:
+                            sefId == "EPC"? "B" :
                             sefId == "Tenure"? "Rented (social)":
                             sefId == "Typology"? "Detached":
                             sefId == "Fuel_Type"? "Electric heating":
                             sefId == "Number_cars"? "2":
-                            "", 
+                            "",
                             fill: "#333", fontWeight: "bold"},
-                        {x: 3, y: 0, 
-                            text: 
-                            sefId == "EPC"? "C" : 
+                        {x: 3, y: 0,
+                            text:
+                            sefId == "EPC"? "C" :
                             sefId == "Tenure"? "Rented (private)":
                             sefId == "Typology"? "Mid-terrace":
                             sefId == "Fuel_Type"? "Oil heating":
-                            "",  
+                            "",
                             fill: "#333", fontWeight: "bold"},
-                        {x: 4, y: 0, 
-                            text: 
+                        {x: 4, y: 0,
+                            text:
                             sefId == "EPC"? "D" :
                             sefId == "Typology"? "End-terrace":
-                            "", 
+                            "",
                             fill: "#333", fontWeight: "bold"},
-                        {x: 5, y: 0, 
-                            text: 
+                        {x: 5, y: 0,
+                            text:
                             sefId == "EPC"? "E" :
                             sefId == "Typology"? "Enclosed":
-                            "", 
+                            "",
                             fill: "#333", fontWeight: "bold"},
                         {x: 5, y: -0.3,
-                            text: 
+                            text:
                             sefId == "Typology"? "end-terrace":
-                            "", 
+                            "",
                             fill: "#333", fontWeight: "bold"},
-                        {x: 6, y: 0, 
-                            text: 
+                        {x: 6, y: 0,
+                            text:
                             sefId == "EPC"? "F" :
                             sefId == "Typology"? "Enclosed":
                             "",
                             fill: "#333", fontWeight: "bold"},
-                        {x: 6, y: -0.3, 
-                            text: 
+                        {x: 6, y: -0.3,
+                            text:
                             sefId == "Typology"? "mid-terrace":
                             "",
                             fill: "#333", fontWeight: "bold"},
-                        {x: 7, y: 0, 
-                            text: 
+                        {x: 7, y: 0,
+                            text:
                             sefId == "EPC"? "G" :
-                            "", 
+                            "",
                             fill: "#333", fontWeight: "bold"}
                     ], {
                         x: "x",
@@ -614,17 +613,17 @@ $: console.log("LAD name for maxLookupValue:", LADToName[maxLookupValue]);
                         fillOpacity: 0.5,
                         r: currentSEFData === LADSEFData ? 3.5 : 0.5,
                         channels: {
-                            location: {value: d => currentData === LADfullData 
-                                        ? LADToName[d.Lookup_Value] || "Unknown" 
+                            location: {value: d => currentData === LADfullData
+                                        ? LADToName[d.Lookup_Value] || "Unknown"
                                         : getAreaNameFromCode(d.Lookup_Value), label: "Location" },
                             //sef: {value: "val", label: `${sefUnits}`},
                             //value: {value: d => d.total_per_capita * 1000, label: "Co-Benefit Value (£, thousand)"},
                         },
                         tip: {format: {
-                            location: true, 
-                            //sef: true, 
-                            //value: true, 
-                            x: false, 
+                            location: true,
+                            //sef: true,
+                            //value: true,
+                            x: false,
                             y: false}},
                     }),
                     Plot.axisY({
@@ -639,7 +638,7 @@ $: console.log("LAD name for maxLookupValue:", LADToName[maxLookupValue]);
         })
     }
 
-    function renderMultPlotJitter() {      
+    function renderMultPlotJitter() {
         CBS.forEach(CB => {
             let plot;
             plot = Plot.plot({
@@ -650,9 +649,9 @@ $: console.log("LAD name for maxLookupValue:", LADToName[maxLookupValue]);
                 marginRight: 10,
                 marginBottom: 50,
                 x: {grid: false,
-                    domain: 
-                    sefId == "EPC"? [0.5,7.5] : 
-                    sefId == "Tenure"? [0.5,3.5] : 
+                    domain:
+                    sefId == "EPC"? [0.5,7.5] :
+                    sefId == "Tenure"? [0.5,3.5] :
                     sefId == "Typology"? [0.5,6.5]:
                     sefId == "Fuel_Type"? [0.5,3.5]:
                     sefId == "Gas_flag"?[-0.5,1.5]:
@@ -669,17 +668,17 @@ $: console.log("LAD name for maxLookupValue:", LADToName[maxLookupValue]);
                         fillOpacity: 0.5,
                         r: currentSEFData === LADSEFData ? 3.5 : 0.5,
                         channels: {
-                            location: { value: d => currentData === LADfullData 
-                                        ? LADToName[d.Lookup_Value] || "Unknown" 
+                            location: { value: d => currentData === LADfullData
+                                        ? LADToName[d.Lookup_Value] || "Unknown"
                                         : getAreaNameFromCode(d.Lookup_Value), label: "Location" },
                             //sef: {value: "val", label: `${sefUnits}`},
                             //value: {value: d => d.total_per_capita * 1000, label: "Co-Benefit Value (£, thousand)"},
                         },
                         tip: {format: {
-                            location: true, 
-                            //sef: true, 
-                            //value: true, 
-                            x: false, 
+                            location: true,
+                            //sef: true,
+                            //value: true,
+                            x: false,
                             y: false}},
                     }),
                     Plot.axisY({
@@ -689,60 +688,60 @@ $: console.log("LAD name for maxLookupValue:", LADToName[maxLookupValue]);
                     }),
                     Plot.axisX({label: `${sefUnits}`, labelArrow: false, labelAnchor: "center", tickFormat: () => "", ticks: []}),
                     Plot.text([
-                        {x: 0, y: 0, 
-                            text: 
+                        {x: 0, y: 0,
+                            text:
                             sefId == "Number_cars"? "0":
                             sefId == "Gas_flag"? "No":
-                            "", 
+                            "",
                             fill: "#333", fontWeight: "bold"},
-                        {x: 1, y: 0, 
-                            text: 
-                            sefId == "EPC"? "A" : 
+                        {x: 1, y: 0,
+                            text:
+                            sefId == "EPC"? "A" :
                             sefId == "Tenure"? "Owner":
                             sefId == "Typology"? "S-D":
                             sefId == "Fuel_Type"? "Gas boiler":
                             sefId == "Gas_flag"? "Yes":
                             "1",
                             fill: "#333", fontWeight: "bold"},
-                        {x: 2, y: 0, 
-                            text: 
-                            sefId == "EPC"? "B" : 
+                        {x: 2, y: 0,
+                            text:
+                            sefId == "EPC"? "B" :
                             sefId == "Tenure"? "Rented (social)":
                             sefId == "Typology"? "D":
                             sefId == "Fuel_Type"? "Electric heating":
                             sefId == "Number_cars"? "2":
-                            "", 
+                            "",
                             fill: "#333", fontWeight: "bold"},
-                        {x: 3, y: 0, 
-                            text: 
-                            sefId == "EPC"? "C" : 
+                        {x: 3, y: 0,
+                            text:
+                            sefId == "EPC"? "C" :
                             sefId == "Tenure"? "Rented (private)":
                             sefId == "Typology"? "M-T":
                             sefId == "Fuel_Type"? "Oil heating":
-                            "",  
+                            "",
                             fill: "#333", fontWeight: "bold"},
-                        {x: 4, y: 0, 
-                            text: 
+                        {x: 4, y: 0,
+                            text:
                             sefId == "EPC"? "D" :
                             sefId == "Typology"? "E-T":
-                            "", 
+                            "",
                             fill: "#333", fontWeight: "bold"},
-                        {x: 5, y: 0, 
-                            text: 
+                        {x: 5, y: 0,
+                            text:
                             sefId == "EPC"? "E" :
                             sefId == "Typology"? "EE-T":
-                            "", 
+                            "",
                             fill: "#333", fontWeight: "bold"},
-                        {x: 6, y: 0, 
-                            text: 
+                        {x: 6, y: 0,
+                            text:
                             sefId == "EPC"? "F" :
                             sefId == "Typology"? "EM-T":
                             "",
                             fill: "#333", fontWeight: "bold"},
-                        {x: 7, y: 0, 
-                            text: 
+                        {x: 7, y: 0,
+                            text:
                             sefId == "EPC"? "G" :
-                            "", 
+                            "",
                             fill: "#333", fontWeight: "bold"}
                     ], {
                         x: "x",
@@ -776,12 +775,12 @@ $: console.log("LAD name for maxLookupValue:", LADToName[maxLookupValue]);
 
         const csv = convertToCSV(data);
         downloadCSV(csv, `cobenefits_${sefId}.csv`);
-        downloadStaticPDF("/Scotland_co-benefits_CB7_2045.pdf", "readme.pdf"); // <-- adjust filename/path as needed
+        downloadStaticPDF(`${base}/Scotland_co-benefits_CB7_2045.pdf`, "readme.pdf"); // <-- adjust filename/path as needed
     }
 
 $: {
     // Clean up existing plots
-    plot?.firstChild?.remove(); 
+    plot?.firstChild?.remove();
     Object.values(plotSmallMult).forEach(multPlot => {
         multPlot.firstChild?.remove();
     });
@@ -797,7 +796,7 @@ $: {
             renderJitterPlot();
         } else {
             renderDotPlot();
-            renderMultPlotDot();  
+            renderMultPlotDot();
             renderDistPlot();
         }
     }
@@ -841,13 +840,13 @@ $: {
                     <h3 class="component-title">Distribution of {sefLabel.toLowerCase()} across the UK</h3>
                     {:else}
                     <h3 class="component-title">Distribution of {sefLabel.toLowerCase()} across the UK</h3>
-                    Max value: <strong>{formatValue(maxValue, sefShortUnits)}</strong> 
+                    Max value: <strong>{formatValue(maxValue, sefShortUnits)}</strong>
                     ({#if currentData == LADfullData}{LADToName[maxLookupValue]}{:else}{maxName}{/if})
                     {/if}
                 </p>
                 <p class="definition-stat">
                     {#if SEF_CATEGORICAL.includes(sefId)}
-                    &nbsp;    
+                    &nbsp;
                     {:else}
                         Average value: <strong style="color: #BD210E;">{formatValue(averageValue, sefShortUnits)}</strong>
                     {/if}
@@ -856,7 +855,7 @@ $: {
                     {#if SEF_CATEGORICAL.includes(sefId)}
                     Most common category: <strong style="color: #BD210E;">{formatValue(modeValue, sefShortUnits)}</strong>
                     {:else}
-                    Min value: <strong>{formatValue(minValue, sefShortUnits)}</strong> 
+                    Min value: <strong>{formatValue(minValue, sefShortUnits)}</strong>
                     ({#if currentData == LADfullData}{LADToName[minLookupValue]}{:else}{minName}{/if})
                     {/if}
                 </p>
@@ -869,9 +868,9 @@ $: {
                         <span class="spinner"></span>
                         Loading...
                     {:else}
-                        {useLAD ? 
+                        {useLAD ?
                         'Currently the data for this page is grouped by local authorities (LADs), click here to switch to data zones (LSOAs).':
-                        'Currently the data for this page is grouped by data zones (LSOAs), click here to switch to local authorities (LADs).'  
+                        'Currently the data for this page is grouped by data zones (LSOAs), click here to switch to local authorities (LADs).'
                         }
                     {/if}
                     </button>
@@ -881,16 +880,16 @@ $: {
         <div class="mini-header">
             <div class="mini-header-content">
         <span class="mini-header-text">
-          {sefLabel} >> 
+          {sefLabel} >>
         </span>
         <button on:click={toggleDataSource} class="switch-button-sticky" disabled={loading}>
             {#if loading}
                 <span class="spinner"></span>
                 Loading...
             {:else}
-                {useLAD ? 
-                'Currently the data for this page is grouped by local authorities (LADs), click here to switch to data zones (LSOAs).': 
-                'Currently the data for this page is grouped by data zones (LSOAs), click here to switch to local authorities (LADs).' 
+                {useLAD ?
+                'Currently the data for this page is grouped by local authorities (LADs), click here to switch to data zones (LSOAs).':
+                'Currently the data for this page is grouped by data zones (LSOAs), click here to switch to local authorities (LADs).'
                 }
             {/if}
                 </button>
@@ -917,16 +916,16 @@ $: {
     </div>-->
 
     <div class="section">
-        <div id="overview">   
+        <div id="overview">
             <div class="section-header">
                 <p class="section-subtitle">Overview</p>
             </div>
             <div id="vis-block">
                 <div class="component column">
                     <h3 class="component-title">{sefLabel} against per capita co-benefit values (£, thousand)</h3>
-                    <p class="description">Each point in the chart below represents a UK 
+                    <p class="description">Each point in the chart below represents a UK
                         {#if currentData == LADfullData}
-                        local authority (LAD). 
+                        local authority (LAD).
                     {:else}
                 data zone (LSOA).
             {/if}</p>
@@ -940,7 +939,7 @@ $: {
                             <img class="aggregation-icon" src="{negative}" alt="icon" />
                             <span class="tooltip-text-neg">This chart includes negative values.</span></div>
                             {/if}
-                        
+
                     </div>
                     {#if SEF_CATEGORICAL.includes(sefId)}
                     <div class="plot" bind:this={plotJitter}></div>
@@ -955,7 +954,7 @@ $: {
                         <div class="tooltip-wrapper">
                             <img class="aggregation-icon" src="{per_capita}" alt="icon" />
                             <span class="tooltip-text">These charts use per capita values. i.e. show the cost/benefit per person in each area.</span>
-                        </div> 
+                        </div>
                     </div>
                     {#if map}
                         <div id="legend">
@@ -979,7 +978,7 @@ $: {
         </div>
         <div id="se-block" class="component" style="margin-left: 1rem;">
             <div id="se-title">
-                <h3 class="component-title">Plotting 
+                <h3 class="component-title">Plotting
                     <!--<span style="background-color: #555; padding: 0 1px; color:#f9f9f9">-->
                     {sefLabel.toLowerCase()}
                 <!--</span> -->
@@ -996,7 +995,7 @@ $: {
                             <div class="legend-header" on:click={() => {
                                 const wasExpanded = expanded.has(CB.id);
                                 toggle(CB.id);
-                                
+
                                 if (!wasExpanded) {
                                     posthog.capture('cobenefit opened', {
                                         cobenefit: CB.label
@@ -1016,9 +1015,9 @@ $: {
                             <div class="legend-description">
                                 <div style="height: 0.8em;"></div>
                                 {CB.def} <br>
-                                
+
                                 <a class="link" href="{base}/cobenefit?cobenefit={CB.id}" target="_blank" rel="noopener noreferrer" style= "color:{COBENEFS_SCALE(CB.id)}; text-decoration: underline">{CB.id} report page</a>
-                                
+
                             </div>
                             </div>
                             {/if}
@@ -1032,7 +1031,7 @@ $: {
                 </div>
                 </div>
 
-        
+
 
             <div id="multiple-comp">
                 <div id="multiple-plots">
@@ -1042,12 +1041,12 @@ $: {
                             <img class="sm-cb-icon" src={getIconFromCobenef(CB.id)} alt="{CB.label} icon" />
                             <h3 class="chart-component-title">{CB.label}</h3>
                             {#if CB.id == "Longer travel times"  || CB.id == "Road repairs" || CB.id == "Road safety" || CB.id == "Congestion" || CB.id == "Excess heat"}
-                           
+
                                 <div class="tooltip-wrapper">
                                     <img class="sm-icon" src="{per_capita}" alt="icon" />
                                     <span class="tooltip-text">This chart uses per capita values. i.e. show the cost/benefit per person in each area.</span>
                                 </div>
-                        
+
                             <div class="tooltip-wrapper">
                                     <img class="sm-icon" src="{negative}" alt="icon" />
                                     <span class="tooltip-text-neg">This chart includes negative values.</span>
@@ -1059,11 +1058,14 @@ $: {
                         </div>
                             {/if}
                         </div>
-                            {#if SEF_CATEGORICAL.includes(sefId)}
-                            <div class="plot" bind:this={plotSmallJitter[CB.id]}></div>
-                            {:else}
-                            <div class="plot" bind:this={plotSmallMult[CB.id]}></div>
-                            {/if}
+                            <div class="chart-shell">
+                                {#if SEF_CATEGORICAL.includes(sefId)}
+                                    <div class="plot" bind:this={plotSmallJitter[CB.id]}></div>
+                                {:else}
+                                    <div class="plot" bind:this={plotSmallMult[CB.id]}></div>
+                                {/if}
+                            </div>
+                            <!-- chart badges intentionally disabled on this page -->
                         </div>
                     {/each}
                 </div>
@@ -1110,7 +1112,7 @@ $: {
     flex: 1;
     margin-left: 0rem;        /* pushes it to the far right */
     margin-top: 1rem;         /* moves it down slightly */
-    padding-right: 0rem;  
+    padding-right: 0rem;
     padding-left: 0rem;    /* adds space from the right edge */
     flex-grow: 1;
     flex-shrink: 0;
@@ -1123,7 +1125,7 @@ $: {
     flex: 1;
     margin-left: 0rem;        /* pushes it to the far right */
     margin-top: 2rem;         /* moves it down slightly */
-    padding-right: 0rem;  
+    padding-right: 0rem;
     padding-left: 0rem;    /* adds space from the right edge */
     line-height: 2;
     }
@@ -1204,7 +1206,21 @@ $: {
         width: 100%;
         margin-bottom: 20px;
     }
-    
+
+    .chart-shell {
+        position: relative;
+        width: 100%;
+    }
+
+    .chart-badges {
+        display: flex;
+        justify-content: flex-end;
+        gap: 0px;
+        margin-top: 6px;
+        pointer-events: auto;
+        opacity: 0.98;
+    }
+
     .component-chart-title {
         font-size: 1.2rem;
         font-weight: bold;
@@ -1311,7 +1327,7 @@ $: {
     display: flex;
     justify-content: flex-end;
     align-items: flex-start;
-    width: 99%; 
+    width: 99%;
     margin-top: -10px;
     margin-bottom: -30px;
     margin-right: 10px;
@@ -1388,8 +1404,8 @@ $: {
     align-items: center;
     gap: 8px;
     margin-top: -5px;
-    justify-content: center; 
-    max-width: 1000px; 
+    justify-content: center;
+    max-width: 1000px;
   }
 
   .switch-button:hover:not(:disabled) {
@@ -1416,9 +1432,9 @@ $: {
     align-items: center;
     gap: 8px;
     margin-top: -5px;
-    justify-content: center; 
+    justify-content: center;
     min-width: 200px;
-    margin-top: 4px; 
+    margin-top: 4px;
     box-shadow: #d3d3d3 0px 0px 6px 0px;
   }
 
@@ -1449,7 +1465,7 @@ $: {
   justify-content: left;
   padding-left: 6rem;
   width: 100%;
-  margin-top: 1rem; 
+  margin-top: 1rem;
   margin-bottom: 0rem;
 }
 </style>
