@@ -37,7 +37,9 @@ const initDB = async () => {
 
 	console.log('INIT DB');
 
-	const logger = new duckdb.ConsoleLogger();
+	const logger = import.meta.env.DEV
+		? new duckdb.ConsoleLogger(duckdb.LogLevel.DEBUG)
+		: new duckdb.VoidLogger();
 	const bundle = await duckdb.selectBundle({
 		mvp: {
 			mainModule: mvp_wasm,
@@ -63,24 +65,16 @@ const initDB = async () => {
 async function loadData() {
 	console.log('loading parqet file in db');
 
-	const response = await fetch(`${base}/database.parquet`);
-	// const response = await fetch('database_onlyIreland.parquet');
-	if (!response.ok) {
-		throw new Error(`Failed to fetch ${base}/database.parquet (${response.status} ${response.statusText})`);
-	}
-
-	const arrayBuffer = await response.arrayBuffer();
-	const uint8Array = new Uint8Array(arrayBuffer);
-
-	// Load the parquet file into the DuckDB instance
-	await db.registerFileBuffer('filename', uint8Array);
-	// await db.open({path: "filename"});
+	// Register the Parquet file by URL to avoid pulling the entire file into JS memory.
+	// Note: `base` is SvelteKit's base path (e.g. "" or "/CoBenefits") — we need an absolute URL.
+	const parquetUrl = new URL(`${base}/database.parquet`, window.location.origin).toString();
+	await db.registerFileURL('database.parquet', parquetUrl, duckdb.DuckDBDataProtocol.HTTP, false);
 
 	const conn = await db.connect();
 
 	await conn.query(`CREATE TABLE ${DB_TABLE_NAME} AS
   SELECT *
-  FROM read_parquet('filename');`);
+  FROM read_parquet('database.parquet');`);
 	console.log('Table created from parquet');
 
 	// Load socio economic table (currenlty merged)
