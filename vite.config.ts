@@ -1,5 +1,5 @@
 import { defineConfig } from 'vite'
-import {sveltekit} from "@sveltejs/kit/vite";
+import { sveltekit } from "@sveltejs/kit/vite";
 
 const buildTimestampPlugin = () => {
   return {
@@ -22,13 +22,14 @@ const buildTimestampPlugin = () => {
 };
 
 // https://vitejs.dev/config/
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   plugins: [sveltekit(), buildTimestampPlugin()],
   define: {
     // BUILD_DATE: JSON.stringify(new Date().toISOString())
     BUILD_DATE: new Date()
   },
+  esbuild: mode === 'production' ? { drop: ['console', 'debugger'] } : undefined,
   build: {
     target: "esnext",
   },
-})
+}))
