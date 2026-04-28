@@ -1,7 +1,7 @@
 <script lang="ts">
     import {base} from "$app/paths";
     import NavigationBar from "$lib/components/NavigationBar.svelte";
-    import {getTableData, getLADRegion} from '$lib/duckdb'
+    import {getTableData, getLADRegion, getAllP_CodeNames, getAllSPC_CodeNames} from '$lib/duckdb'
     import {csv} from "d3";
     import {onMount} from "svelte";
 
@@ -17,6 +17,12 @@
     let entries = [];
     let grouped = {};
     let nations = ["England", "Northern Ireland", "Scotland", "Wales"];
+
+    let constEntries = [];
+    let constGrouped = {};
+
+    let spcEntries = [];
+    let spcGrouped = {};
 
     const nationMap = {
         "NI": "Northern Ireland",
@@ -60,6 +66,30 @@
                 .filter(entry => entry.nation === nation)
                 .sort((a, b) => a.name.localeCompare(b.name));
         }
+
+        const P_CodeData = await getTableData(getAllP_CodeNames());
+
+        constEntries = P_CodeData.map(row => ({
+            code: row.P_Code,
+            name: row.P_Name,
+            nation: nationMap[row.Nation] || row.Nation
+        })).sort((a, b) => a.name.localeCompare(b.name));
+
+        constGrouped = {};
+        for (let nation of nations) {
+            constGrouped[nation] = constEntries.filter(e => e.nation === nation);
+        }
+
+        const SPC_Data = await getTableData(getAllSPC_CodeNames());
+
+        spcEntries = SPC_Data.map(row => ({
+            code: row.SPC_Code,
+            name: row.SPC_Name
+        })).sort((a, b) => a.name.localeCompare(b.name));
+
+        spcGrouped = {
+            Scotland: spcEntries
+        };
     }
 
     onMount(async () => {
@@ -112,6 +142,22 @@
                     {#each grouped[nation] as lad}
                     
                         <a class="lad-link" href="{base}/location?location={lad.code}">{lad.name}</a>
+                    {/each}
+                </div>
+            </details>
+        {/each}
+
+        <br>
+        <h1>Browse by Westminster Parliamentary constituency</h1>
+        <p>Open the tabs and then click on a constituency for a detailed report.</p>
+        {#each nations as nation}
+            <details>
+                <summary>
+                    <p>{nation} ({constGrouped[nation]?.length ?? 0})</p>
+                </summary>
+                <div class="lad-grid">
+                    {#each constGrouped[nation] ?? [] as entry}
+                        <a class="lad-link" href="{base}/election?location={entry.code}">{entry.name}</a>
                     {/each}
                 </div>
             </details>

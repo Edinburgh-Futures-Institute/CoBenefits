@@ -25,14 +25,16 @@ let db: AsyncDuckDB;
 const DB_TABLE_NAME = 'cobenefits';
 const DB_TABLE_SE_NAME = 'socioEconmicFactors';
 
+// Geo level type
+export type GeoLevel = 'LAD' | 'P_Code';
+
 const initDB = async () => {
-	// when building, Sveltekit prerenders pages using Node. In this step, we don't want to call duckdb.
 	if (!browser) {
 		return;
 	}
 
 	if (db) {
-		return db; // Return existing database, if any
+		return db;
 	}
 
 	console.log('INIT DB');
@@ -51,10 +53,8 @@ const initDB = async () => {
 		}
 	});
 
-	// Instantiate worker (DuckDB recommends loading the worker by URL string for bundlers like Vite)
 	const worker = new Worker(bundle.mainWorker);
 
-	// and asynchronous database
 	db = new duckdb.AsyncDuckDB(logger, worker);
 	await db.instantiate(bundle.mainModule);
 
@@ -65,8 +65,6 @@ const initDB = async () => {
 async function loadData() {
 	console.log('loading parqet file in db');
 
-	// Register the Parquet file by URL to avoid pulling the entire file into JS memory.
-	// Note: `base` is SvelteKit's base path (e.g. "" or "/CoBenefits") — we need an absolute URL.
 	const parquetUrl = new URL(`${base}/database.parquet`, window.location.origin).toString();
 	await db.registerFileURL('database.parquet', parquetUrl, duckdb.DuckDBDataProtocol.HTTP, false);
 
@@ -77,23 +75,7 @@ async function loadData() {
   FROM read_parquet('database.parquet');`);
 	console.log('Table created from parquet');
 
-	// Load socio economic table (currenlty merged)
-	// const response2 = await fetch(`${base}/tableSocio.parquet`);
-	// const arrayBuffer2 = await response2.arrayBuffer();
-	// const uint8Array2 = new Uint8Array(arrayBuffer2);
-	//
-	// // Load the parquet file into the DuckDB instance
-	// await db.registerFileBuffer("filename2", uint8Array2);
-	//
-	// await conn.query(`CREATE TABLE ${DB_TABLE_SE_NAME} AS SELECT * FROM read_parquet('filename2');`);
-	//
-	// // Close the connection to release memory
-	// await conn.close();
-
-	// console.log("DB INFO: ", await getTableData(getInfo()));
-
 	const result = await conn.query(`PRAGMA table_info(${DB_TABLE_NAME})`);
-	// console.log("Table schema:", await result.toArray());
 
 	await conn.close();
 }
@@ -103,16 +85,8 @@ async function getTableData(request: string) {
 
 	const conn = await db.connect();
 
-	// await conn.query(`CREATE TABLE ${DB_TABLE_NAME} AS SELECT * FROM read_parquet('filename');`);
-	// console.log("Table created from parquet");
-
-	// Now you can query the table
-	// result is actually an Arrow Table
-	// const result = await conn.query(`SELECT * FROM ${DB_TABLE_NAME}`);
-
 	const result = await conn.query(request);
 
-	// Close the connection to release memory
 	await conn.close();
 
 	const allData = result.toArray().map((row) => row.toJSON());
@@ -147,7 +121,6 @@ export function getSEFData(sef: SEFactor) {
 }
 
 export function getSEFbyCobenData(sef: SEFactor) {
-	// Select total line because the value is repeated for one LSOA
 	let query = `SELECT ${sef} as val, total, total / population as total_per_capita, Lookup_Value, co_benefit_type
                FROM ${DB_TABLE_NAME}
                WHERE co_benefit_type != 'Total'`;
@@ -166,7 +139,18 @@ export function getAverageSEFbyCobenDataGroupedByLAD(sef: SEFactor) {
 	return query;
 }
 
-// CAST(25.65 AS int);
+export function getAverageSEFbyCobenDataGroupedByP_Code(sef: SEFactor) {
+	let query = `SELECT AVG(${sef})        as val,
+                      total,
+                      total / population as total_per_capita,
+                      P_Code             as Lookup_Value,
+                      co_benefit_type
+               FROM ${DB_TABLE_NAME}
+               WHERE co_benefit_type != 'Total'
+               GROUP BY P_Code, scenario`;
+	return query;
+}
+
 export function getAverageSEFGroupedByLAD(sef: SEFactor) {
 	const isCategorical = SEF_CATEGORICAL.includes(sef);
 	const multiplyBy100 = ['Under_35', 'Over_65', 'Unemployment'].includes(sef);
@@ -184,6 +168,28 @@ export function getAverageSEFGroupedByLAD(sef: SEFactor) {
       FROM ${DB_TABLE_NAME}
       WHERE co_benefit_type = 'Total'
       GROUP BY LAD, scenario
+	`;
+
+	return query;
+}
+
+export function getAverageSEFGroupedByP_Code(sef: SEFactor) {
+	const isCategorical = SEF_CATEGORICAL.includes(sef);
+	const multiplyBy100 = ['Under_35', 'Over_65', 'Unemployment'].includes(sef);
+	const valExpression = multiplyBy100 ? `(${sef} * 100)` : sef;
+
+	const aggregation = isCategorical
+		? `MODE() WITHIN GROUP (ORDER BY ${sef})`
+		: `AVG(${valExpression})`;
+
+	const query = `
+      SELECT ${aggregation}               AS val,
+             AVG(total)                   AS total,
+             AVG(total) / AVG(population) AS total_per_capita,
+             P_Code                       AS Lookup_Value
+      FROM ${DB_TABLE_NAME}
+      WHERE co_benefit_type = 'Total'
+      GROUP BY P_Code, scenario
 	`;
 
 	return query;
@@ -212,12 +218,44 @@ export function allCBgetAverageSEFGroupedByLAD(sef: SEFactor) {
 	return query;
 }
 
+export function allCBgetAverageSEFGroupedByP_Code(sef: SEFactor) {
+	const isCategorical = SEF_CATEGORICAL.includes(sef);
+	const multiplyBy100 = ['Under_35', 'Over_65', 'Unemployment'].includes(sef);
+	const valExpression = multiplyBy100 ? `(${sef} * 100)` : sef;
+
+	const aggregation = isCategorical
+		? `MODE() WITHIN GROUP (ORDER BY ${sef})`
+		: `AVG(${valExpression})`;
+
+	const query = `
+      SELECT ${aggregation}               AS val,
+             AVG(total)                   AS total,
+             AVG(total) / AVG(population) AS total_per_capita,
+             P_Code                       AS Lookup_Value,
+             co_benefit_type
+      FROM ${DB_TABLE_NAME}
+      WHERE co_benefit_type != 'Total'
+      GROUP BY P_Code, scenario, co_benefit_type
+	`;
+
+	return query;
+}
+
 export function getModeSEFGroupedByLAD(sef: SEFactor) {
 	let query;
 	query = `SELECT mode(${sef}) as val, LAD as Lookup_Value
            FROM ${DB_TABLE_NAME}
            WHERE co_benefit_type = 'Total'
            GROUP BY LAD, scenario`;
+	return query;
+}
+
+export function getModeSEFGroupedByP_Code(sef: SEFactor) {
+	let query;
+	query = `SELECT mode(${sef}) as val, P_Code as Lookup_Value
+           FROM ${DB_TABLE_NAME}
+           WHERE co_benefit_type = 'Total'
+           GROUP BY P_Code, scenario`;
 	return query;
 }
 
@@ -249,7 +287,6 @@ export function getAverageCBGroupedByLAD(
              WHERE co_benefit_type = 'Total'
              GROUP BY LAD, scenario`;
 	} else {
-		// Need to sum on selected cobenef and then average for the LAD
 		query = `
         SELECT scenario, AVG(val) as val, LAD as Lookup_Value
         FROM (SELECT Lookup_Value, scenario, SUM("${time}") as val, LAD
@@ -257,6 +294,31 @@ export function getAverageCBGroupedByLAD(
               WHERE co_benefit_type in (${cobenefits.map((v) => `'${v}'`).join(',')})
               GROUP BY Lookup_value, LAD, scenario) AS summed
         GROUP BY LAD, scenario
+		`;
+	}
+	return query;
+}
+
+export function getAverageCBGroupedByP_Code(
+	cobenefits: CoBenefit[],
+	scenario: Scenario,
+	time = 'total'
+) {
+	let query;
+
+	if (cobenefits.length == 0) {
+		query = `SELECT scenario, AVG("${time}") as val, P_Code as Lookup_Value
+             FROM ${DB_TABLE_NAME}
+             WHERE co_benefit_type = 'Total'
+             GROUP BY P_Code, scenario`;
+	} else {
+		query = `
+        SELECT scenario, AVG(val) as val, P_Code as Lookup_Value
+        FROM (SELECT Lookup_Value, scenario, SUM("${time}") as val, P_Code
+              FROM ${DB_TABLE_NAME}
+              WHERE co_benefit_type in (${cobenefits.map((v) => `'${v}'`).join(',')})
+              GROUP BY Lookup_value, P_Code, scenario) AS summed
+        GROUP BY P_Code, scenario
 		`;
 	}
 	return query;
@@ -295,6 +357,39 @@ export function getSUMCBGroupedByLAD(cobenefits: CoBenefit[], nation = 'UK', tim
 	return query;
 }
 
+export function getSUMCBGroupedByP_Code(cobenefits: CoBenefit[], nation = 'UK', time = 'total') {
+	let query;
+
+	let nationConstraint;
+	if (nation != 'UK') {
+		nationConstraint = `AND Nation='${nation}'`;
+	} else {
+		nationConstraint = ' ';
+	}
+
+	if (cobenefits.length == 0) {
+		query = `SELECT scenario,
+                    SUM("${time}")                   as val,
+                    SUM("${time}") / SUM(Population) AS value_per_capita,
+                    P_Code                           as Lookup_Value
+             FROM ${DB_TABLE_NAME}
+             WHERE co_benefit_type = 'Total'
+                 ${nationConstraint}
+             GROUP BY P_Code, scenario`;
+	} else {
+		query = `SELECT scenario,
+                    SUM("${time}")                   as val,
+                    SUM("${time}") / SUM(Population) AS value_per_capita,
+                    P_Code                           as Lookup_Value
+             FROM ${DB_TABLE_NAME}
+             WHERE co_benefit_type in (${cobenefits.map((v) => `'${v}'`).join(',')})
+                 ${nationConstraint}
+             GROUP BY P_Code, scenario`;
+	}
+
+	return query;
+}
+
 export function getSUMCBGroupedByLADAndCB(time = 'total', nation = 'UK') {
 	let nationConstraint;
 	if (nation != 'UK') {
@@ -308,6 +403,23 @@ export function getSUMCBGroupedByLADAndCB(time = 'total', nation = 'UK') {
                WHERE co_benefit_type in (${COBENEFS.map((v) => `'${v.id}'`).join(',')})
                    ${nationConstraint}
                GROUP BY LAD, co_benefit_type`;
+
+	return query;
+}
+
+export function getSUMCBGroupedByP_CodeAndCB(time = 'total', nation = 'UK') {
+	let nationConstraint;
+	if (nation != 'UK') {
+		nationConstraint = `AND Nation='${nation}'`;
+	} else {
+		nationConstraint = ' ';
+	}
+
+	let query = `SELECT SUM("${time}") as val, P_Code as Lookup_Value, co_benefit_type
+               FROM ${DB_TABLE_NAME}
+               WHERE co_benefit_type in (${COBENEFS.map((v) => `'${v.id}'`).join(',')})
+                   ${nationConstraint}
+               GROUP BY P_Code, co_benefit_type`;
 
 	return query;
 }
@@ -330,7 +442,6 @@ export function getTotalForOneZone(datazone: string) {
           WHERE Lookup_Value = '${datazone}'`;
 }
 
-// Co-benefit=total to get only one row per datazone
 export function getTotalCBAllDatazones(nation = 'UK') {
 	let nationConstraint;
 	if (nation != 'UK') {
@@ -339,12 +450,12 @@ export function getTotalCBAllDatazones(nation = 'UK') {
 		nationConstraint = ' ';
 	}
 
-	// return `SELECT total, Lookup_value, scenario, co_benefit_type, LAD, ${SEF.join(", ")}, ${TIMES.map(d => `"${d}"`).join(", ")}
 	let query = `SELECT total,
                       Lookup_value,
                       scenario,
                       co_benefit_type,
                       LAD,
+                      P_Code,
                       HH as Households,
                       ${SEF.join(', ')},
                       ${TIMES.map((d) => `"${d}"`).join(', ')}
@@ -353,38 +464,17 @@ export function getTotalCBAllDatazones(nation = 'UK') {
                    ${nationConstraint}
 	`;
 
-	// let query = `SELECT total,
-  //                     Lookup_value,
-  //                     scenario,
-  //                     co_benefit_type,
-  //                     LAD,
-  //                     HH as Households,
-  //              FROM ${DB_TABLE_NAME}
-  //              WHERE co_benefit_type = 'Total'
-	// `;
-
-// 	let query = `SELECT co_benefit_type,
-//                       Lookup_value
-//                FROM ${DB_TABLE_NAME}
-// WHERE co_benefit_type = 'Total'
-// 	`;
-
 	console.log(99, query)
 
 	return query;
 }
 
-// Co-benefit=total to get only one row per datazone
 export function getAllCBAllDatazones() {
-	// const roundedSEF = SEF.map(sef => `ROUND(${sef}) AS ${sef}`)
-
-	// return `SELECT total, Lookup_value, scenario, co_benefit_type, LAD, ${roundedSEF.join(", ")  }
-	return `SELECT total, Lookup_value, scenario, co_benefit_type, LAD, ${SEF.join(', ')}, ${TIMES.map((d) => `"${d}"`).join(', ')}
+	return `SELECT total, Lookup_value, scenario, co_benefit_type, LAD, P_Code, ${SEF.join(', ')}, ${TIMES.map((d) => `"${d}"`).join(', ')}
           FROM ${DB_TABLE_NAME}
           WHERE co_benefit_type!='Total'`;
 }
 
-// Co-benefit=total to get only one row per datazone. We can use this for the SEF data too.
 export function getTotalCBForOneLAD(LAD: string) {
 	let q = `SELECT total,
                   total / Population as totalPerCapita,
@@ -396,6 +486,23 @@ export function getTotalCBForOneLAD(LAD: string) {
                   ${SEF.join(', ')}
            FROM ${DB_TABLE_NAME}
            WHERE LAD = '${LAD}'
+             AND co_benefit_type = 'Total'`;
+
+	return q;
+}
+
+export function getTotalCBForOneP_Code(P_Code: string) {
+	let q = `SELECT total,
+                  total / Population as totalPerCapita,
+                  Lookup_value,
+                  co_benefit_type,
+                  P_Code,
+                  P_Name,
+                  scenario,
+                  ${TIMES.map((d) => `"${d}"`).join(', ')},
+                  ${SEF.join(', ')}
+           FROM ${DB_TABLE_NAME}
+           WHERE P_Code = '${P_Code}'
              AND co_benefit_type = 'Total'`;
 
 	return q;
@@ -425,6 +532,14 @@ export function getAllCBForOneLAD(LAD: string) {
 	`;
 }
 
+export function getAllCBForOneP_Code(P_Code: string) {
+	return `SELECT total, Lookup_value, co_benefit_type, P_Code, scenario, ${SEF.join(', ')}, ${TIMES.map((d) => `"${d}"`).join(', ')}
+          FROM ${DB_TABLE_NAME}
+          WHERE P_Code = '${P_Code}'
+            AND co_benefit_type!='Total'
+	`;
+}
+
 export function getAllCBForOneNation(nation: Nation) {
 	return `SELECT total,
                  Lookup_value,
@@ -448,7 +563,14 @@ export function getTotalCBForOneLADTimed(LAD: string) {
 	`;
 }
 
-// Useful for facetted charts, but not for individual charts.
+export function getTotalCBForOneP_CodeTimed(P_Code: string) {
+	return `SELECT total, Lookup_value, co_benefit_type, P_Code, scenario
+          FROM ${DB_TABLE_NAME}
+          WHERE P_Code = '${P_Code}'
+            AND co_benefit_type!='Total'
+	`;
+}
+
 export function getSefForOneCoBenefit(cobenefit: CoBenefit) {
 	const oneQuery = (SE: SEFactor) => {
 		return `SELECT total, Lookup_value, LAD, ${SE} AS SE, '${SE}' AS SEFMAME
@@ -456,25 +578,9 @@ export function getSefForOneCoBenefit(cobenefit: CoBenefit) {
             WHERE co_benefit_type = '${cobenefit}'`;
 	};
 
-	// let SEF = ['Under_35', 'Over_65'];
 	let query = SEF.map((sef) => oneQuery(sef)).join(' UNION ALL ');
 	return query;
 }
-
-//export function getSefForOneCoBenefitAveragedByLAD(cobenefit: CoBenefit) {
-//
-//    const oneQuery = (SE: SEFactor) => {
-//        return `SELECT AVG(total) as total, LAD, AVG(${SE}) AS SE, '${SE}' AS SEFMAME
-//                FROM ${DB_TABLE_NAME}
-//                WHERE co_benefit_type = '${cobenefit}'
-//                GROUP BY LAD
-//                `
-//    }
-
-//    // let SEF = ['Under_35', 'Over_65'];
-//    let query = SEF.map(sef => oneQuery(sef)).join(" UNION ALL ");
-//    return query;
-//}
 
 export function getSefForOneCoBenefitAveragedByLAD(cobenefit: CoBenefit) {
 	const oneQuery = (SE: SEFactor) => {
@@ -496,12 +602,36 @@ export function getSefForOneCoBenefitAveragedByLAD(cobenefit: CoBenefit) {
 	return query;
 }
 
+export function getSefForOneCoBenefitAveragedByP_Code(cobenefit: CoBenefit) {
+	const oneQuery = (SE: SEFactor) => {
+		const isCategorical = SEF_CATEGORICAL.includes(SE);
+		const aggregation = isCategorical ? `MODE() WITHIN GROUP (ORDER BY ${SE})` : `AVG(${SE})`;
+
+		return `
+        SELECT AVG(total / NULLIF(TRY_CAST(REPLACE(CAST(HH AS TEXT), 'n', '') AS DOUBLE), 0)) AS total,
+               P_Code,
+               ${aggregation}          AS SE,
+               '${SE}'                 AS SEFMAME
+        FROM ${DB_TABLE_NAME}
+        WHERE co_benefit_type = '${cobenefit}'
+        GROUP BY P_Code
+		`;
+	};
+
+	const query = SEF.map(oneQuery).join(' UNION ALL ');
+	return query;
+}
+
 export function getAllLAD() {
 	return `SELECT DISTINCT LAD
           FROM ${DB_TABLE_NAME}`;
 }
 
-// preview database (loged in landing page layout.ts)
+export function getAllP_Codes() {
+	return `SELECT DISTINCT P_Code
+          FROM ${DB_TABLE_NAME}`;
+}
+
 export function previewTableData(limit = 10) {
 	return `
       SELECT *
@@ -509,7 +639,6 @@ export function previewTableData(limit = 10) {
 	`;
 }
 
-// prepare for landing page waffle
 export function getAggregationPerBenefit() {
 	return `
       SELECT co_benefit_type, SUM(total) / 1000 as total
@@ -520,13 +649,21 @@ export function getAggregationPerBenefit() {
 	`;
 }
 
-// LAD total benefits for sorting the top 10 in display for landing page
 export function getAggregatedTotalPerLAD() {
 	return `
       SELECT LAD, SUM(total) AS total_value
       FROM ${DB_TABLE_NAME}
       WHERE co_benefit_type = 'Total'
       GROUP BY LAD
+	`;
+}
+
+export function getAggregatedTotalPerP_Code() {
+	return `
+      SELECT P_Code, SUM(total) AS total_value
+      FROM ${DB_TABLE_NAME}
+      WHERE co_benefit_type = 'Total'
+      GROUP BY P_Code
 	`;
 }
 
@@ -541,7 +678,17 @@ export function getTopSeletedLADsByTotal(n: number) {
 	`;
 }
 
-// preview the household data,  {HHs: 249n}, 249n being obj type
+export function getTopSeletedP_CodesByTotal(n: number) {
+	return `
+      SELECT P_Code, SUM(total) AS total_value
+      FROM ${DB_TABLE_NAME}
+      WHERE co_benefit_type = 'Total'
+      GROUP BY P_Code
+      ORDER BY total_value DESC
+          LIMIT ${n}
+	`;
+}
+
 export function getDistinctHHsValues() {
 	return `
       SELECT DISTINCT HH
@@ -598,8 +745,20 @@ export function getTotalPerHouseholdByLAD() {
 	`;
 }
 
-// display the top selected LADs, but ordered by total value, change order:-- ORDER BY value_per_household DESC
-// unit 1k pounds per household
+export function getTotalPerHouseholdByP_Code() {
+	return `
+      SELECT P_Code,
+             SUM(total)                                                                       AS total_value,
+             SUM(TRY_CAST(REPLACE(CAST(HH AS TEXT), 'n', '') AS DOUBLE))                      AS total_HHs,
+             SUM(total) / SUM(TRY_CAST(REPLACE(CAST(HH AS TEXT), 'n', '') AS DOUBLE))         AS value_per_household
+      FROM ${DB_TABLE_NAME}
+      WHERE co_benefit_type = 'Total'
+        AND HH IS NOT NULL
+      GROUP BY P_Code
+      ORDER BY value_per_household DESC
+	`;
+}
+
 export function getTopSelectedLADsPerHousehold(n: number) {
 	return `
       SELECT LAD,
@@ -611,6 +770,22 @@ export function getTopSelectedLADsPerHousehold(n: number) {
       WHERE co_benefit_type = 'Total'
         AND HH IS NOT NULL
       GROUP BY LAD
+      ORDER BY total_value DESC
+          LIMIT ${n}
+	`;
+}
+
+export function getTopSelectedP_CodesPerHousehold(n: number) {
+	return `
+      SELECT P_Code,
+             SUM(total)                                                                              AS total_value,
+             SUM(TRY_CAST(REPLACE(CAST(HH AS TEXT), 'n', '') AS DOUBLE))                             AS total_HHs,
+             SUM(total) / SUM(TRY_CAST(REPLACE(CAST(HH AS TEXT), 'n', '') AS DOUBLE)) *
+             1000                                                                                    AS value_per_household
+      FROM ${DB_TABLE_NAME}
+      WHERE co_benefit_type = 'Total'
+        AND HH IS NOT NULL
+      GROUP BY P_Code
       ORDER BY total_value DESC
           LIMIT ${n}
 	`;
@@ -644,14 +819,38 @@ export function getTopSelectedLADs({
 	  ORDER BY ${orderBy}
 	  LIMIT ${limit};
 	`;
-
-	// return `
-  //     SELECT Nation
-  //     FROM cobenefits
-	// `;
 }
 
-// per household for aggregate co ben values
+export function getTopSelectedP_Codes({
+	limit = 12,
+	sortBy = 'total',
+	region = 'All'
+}: {
+	limit?: number;
+	sortBy?: 'total' | 'per_capita';
+	region?: string;
+}) {
+	const nationFilter = region && region !== 'All' ? `AND Nation = '${region}'` : '';
+
+	const orderBy = sortBy === 'per_capita' ? 'value_per_capita DESC' : 'total_value DESC';
+
+	return `
+	  SELECT
+	      P_Code,
+	      Nation,
+	      SUM(total) / 1000 AS total_value,
+	      SUM(Population) AS total_Population,
+	      SUM(total) / SUM(Population) * 1000000 AS value_per_capita
+	  FROM cobenefits
+	  WHERE co_benefit_type = 'Total'
+	    AND Population IS NOT NULL
+	    ${nationFilter}
+	  GROUP BY P_Code, Nation
+	  ORDER BY ${orderBy}
+	  LIMIT ${limit};
+	`;
+}
+
 export function getAggregationPerCapitaPerBenefit() {
 	return `
       SELECT co_benefit_type,
@@ -686,4 +885,23 @@ export function getTotalLAD(LAD: string) {
 	`;
 }
 
-export { initDB, getTableData }; // so we can import this elsewhere
+export function getAllP_CodeNames() {
+    return `
+        SELECT DISTINCT P_Code, P_Name, Nation
+        FROM ${DB_TABLE_NAME}
+        WHERE P_Code IS NOT NULL
+          AND P_Name IS NOT NULL
+    `;
+}
+
+export function getAllSPC_CodeNames() {
+    return `
+        SELECT DISTINCT SPC_Code, SPC_Name
+        FROM ${DB_TABLE_NAME}
+        WHERE SPC_Code IS NOT NULL
+          AND SPC_Name IS NOT NULL
+          AND Nation = 'Scotland'
+    `;
+}
+
+export { initDB, getTableData };
