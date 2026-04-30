@@ -68,7 +68,7 @@
                     // fullData = getTableData(getCustomCBData(Array.from(coBenefits), scenario, timeSelected))
                     fullData = getTableData(getCustomCBData(cbs, scenario, timeSelected))
                 }
-            } else if (mapType = "SEF") {
+            } else if (mapType == "SEF") {
                 map.dataKey = "val";
                 if (granularity == "LAD") {
 

@@ -9,6 +9,7 @@ import { base } from '$app/paths';
 // Topojson files
 const LSOAzonesPath = `${base}/maps/LSOA.json`;
 const LADzonesPath = `${base}/maps/LAD3.json`;
+const WestminsterPath = `${base}/maps/Westminster.geojson`
 
 let datazones = await d3.json(LSOAzonesPath);
 datazones = topojson.feature(datazones, datazones.objects['LSOA']);
@@ -16,11 +17,16 @@ datazones = topojson.feature(datazones, datazones.objects['LSOA']);
 let LADZones = await d3.json(LADzonesPath);
 LADZones = topojson.feature(LADZones, LADZones.objects['LAD_MAY_2022_UK_BFE_V3']);
 
+let westminsterZones = await d3.json(WestminsterPath);
+
 // Add an id to each feature for mouse hover events later
 LADZones.features.forEach((f, i) => {
 	f.id = i;
 });
 datazones.features.forEach((f, i) => {
+	f.id = i;
+});
+westminsterZones.features.forEach((f, i) => {
 	f.id = i;
 });
 
@@ -43,7 +49,7 @@ export class MapUK {
 
 	constructor(
 		data,
-		granularity: 'LSOA' | 'LAD',
+		granularity: 'LSOA' | 'LAD' | 'Westminster',
 		component: HTMLElement,
 		dataKey = 'val',
 		border = false,
@@ -130,13 +136,23 @@ export class MapUK {
 	}
 
 	setCenter(zoneIdCenter) {
-		// Lat Long are only in the LAD geojson
 		for (let zone of LADZones.features) {
 			let zoneId = zone.properties.LAD22CD;
-
 			if (zoneId == zoneIdCenter) {
 				this.center = [zone.properties.LONG, zone.properties.LAT];
 				this.map.setCenter(this.center);
+				return;
+			}
+		}
+
+		if (this.granularity === 'Westminster') {
+			for (let zone of westminsterZones.features) {
+				let zoneId = zone.properties.PCON24CD;
+				if (zoneId == zoneIdCenter) {
+					this.center = [-0.127647, 51.507351];
+					this.map.setCenter(this.center);
+					return;
+				}
 			}
 		}
 	}
@@ -150,21 +166,22 @@ export class MapUK {
 		}
 
 		if (justHighlightArea) {
-			if (this.granularity != 'LAD') throw 'Only works for LAD';
-			this.geojson = LADZones;
+			if (this.granularity === 'Westminster') {
+				this.geojson = westminsterZones;
+			} else {
+				this.geojson = LADZones;
+			}
 
 			for (let zone of this.geojson.features) {
 				let zoneId = this.zoneID(zone);
-
 				if (zoneId == data) {
 					this.center = [zone.properties.LONG, zone.properties.LAT];
-
 					zone.properties.value = 1;
 				} else {
 					zone.properties.value = 0;
 				}
 			}
-		} else {
+		}else {
 			if (this.granularity == 'LAD') {
 				this.geojson = LADZones;
 
@@ -178,7 +195,17 @@ export class MapUK {
 					let zoneId = this.zoneID(zone);
 					zone.properties.value = this.dataZoneToValue[zoneId];
 				}
-			} else {
+			} else if (this.granularity == 'Westminster') {
+				this.geojson = westminsterZones;
+				data.forEach((d) => {
+					this.dataZoneToValue[d[this.zoneKey]] = d[this.dataKey];
+				});
+				for (let zone of this.geojson.features) {
+					let zoneId = this.zoneID(zone);
+					zone.properties.value = this.dataZoneToValue[zoneId];
+				}
+			}
+			else {
 				this.geojson = datazones;
 
 				data.forEach((d) => {
@@ -316,6 +343,8 @@ export class MapUK {
 					let name;
 					if (this.granularity == 'LAD') {
 						name = zone.properties.LAD22NM;
+					} else if (this.granularity == 'Westminster') {
+						name = zone.properties.PCON24NM;
 					} else {
 						name = [zone.properties.LSOA21NM, zone.properties.DZ2021_nm, zone.properties.Name].find((v) => v && v != '');
 					}
@@ -358,8 +387,13 @@ export class MapUK {
 		if (click) {
 		this.map.on('click', 'fill', (e) => {
 			let feature = e.features[0];
-			let lad = feature.properties.LAD22CD;
-			window.location.assign(`${base}/location?location=${lad}`);
+			if (this.granularity == 'P_Code') {
+				let pcode = feature.properties.PCON25CD; // ← your geojson property
+				window.location.assign(`${base}/election?location=${pcode}`);
+			} else {
+				let lad = feature.properties.LAD22CD;
+				window.location.assign(`${base}/location?location=${lad}`);
+			}
 		});
 	}
 
@@ -408,17 +442,19 @@ export class MapUK {
 		let zoneName;
 		if (this.granularity == 'LSOA') {
 			zoneName = zone.properties.DZ2021_cd;
-			if (!zoneName) {
-				zoneName = zone.properties.DataZone;
-			}
-			if (!zoneName) {
-				zoneName = zone.properties.LSOA21CD;
-			}
+			if (!zoneName) zoneName = zone.properties.DataZone;
+			if (!zoneName) zoneName = zone.properties.LSOA21CD;
+		} else if (this.granularity == 'Westminster') {
+			zoneName = zone.properties.PCON24CD;
 		} else {
-			// zoneName = zone.properties.lad11cd;
 			zoneName = zone.properties.LAD22CD;
 		}
-
 		return zoneName;
 	}
+
+	destroy() {
+    if (this.map) {
+        this.map.remove();  // MapLibre's cleanup method
+    }
+}
 }

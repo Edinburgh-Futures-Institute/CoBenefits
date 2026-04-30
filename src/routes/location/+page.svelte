@@ -1330,27 +1330,41 @@ console.log("selectedDatum", selectedDatum)
 
             <div class="radio-set">
                 Compare this Local Authority District (LAD) against:
-                <div class="radio-row">
+        
+            <div class="radio-row">
+                <label class="nation-label">
                     <input type="radio" on:change={onChangeComparison} name="compare" value="UK" checked>
-                    <label class="nation-label">UK</label>
-                </div>
-                <div class="radio-row">
-                    <input type="radio" on:change={onChangeComparison} name="compare" value="England">
-                    <label class="nation-label">England</label>
-                </div>
-                <div class="radio-row">
-                    <input type="radio" on:change={onChangeComparison} name="compare" value="Wales">
-                    <label class="nation-label">Wales</label>
-                </div>
-                <div class="radio-row">
-                    <input type="radio" on:change={onChangeComparison} name="compare" value="Scotland">
-                    <label class="nation-label">Scotland</label>
-                </div>
-                <div class="radio-row">
-                    <input type="radio" on:change={onChangeComparison} name="compare" value="NI">
-                    <label class="nation-label">Northern Ireland</label>
-                </div>
+                    UK
+                </label>
             </div>
+            <div class="radio-row">
+                <label class="nation-label">
+                    <input type="radio" on:change={onChangeComparison} name="compare" value="England">
+                    England
+                </label>
+            </div>
+            <div class="radio-row">
+                <label class="nation-label">
+                    <input type="radio" on:change={onChangeComparison} name="compare" value="Wales">
+                    Wales
+                </label>
+            </div>
+            <div class="radio-row">
+                <label class="nation-label">
+                    <input type="radio" on:change={onChangeComparison} name="compare" value="Scotland">
+                    Scotland
+                </label>
+            </div>
+            <div class="radio-row">
+                <label class="nation-label">
+                    <input type="radio" on:change={onChangeComparison} name="compare" value="NI">
+                    Northern Ireland
+                </label>
+            </div>
+
+            </div>
+        
+        
         </div>
 
 
@@ -1904,7 +1918,7 @@ console.log("selectedDatum", selectedDatum)
     .radio-set {
         display: flex;
         flex-wrap: wrap;
-        align-items: center;
+        align-items: flex-start;
         gap: 12px;
     }
 
