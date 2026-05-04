@@ -9,7 +9,13 @@
         getAverageCBGroupedByLAD,
         getTableData,
         getTotalPerPathway,
-        getAverageSEFGroupedByLAD, getSEFData, getSUMCBGroupedByLAD, getModeSEFGroupedByLAD
+        getAverageSEFGroupedByLAD,
+        getAverageSEFGroupedByP_Code,
+        getSEFData,
+        getSUMCBGroupedByLAD,
+        getSUMCBGroupedByP_Code,
+        getModeSEFGroupedByLAD,
+        getModeSEFGroupedByP_Code
     } from "$lib/duckdb";
     import {
         type CoBenefit,
@@ -45,67 +51,55 @@
 
     let timeSelected: string = "total";
     let mapStyleLoaded = false;
-    let granularity: "LSOA" | "LAD" = "LAD";
+    let granularity: "LSOA" | "Westminster" | "LAD" = "LAD";
 
     let selectedSef: SEFactor = "EPC";
     let fullData;
 
     $: {
         if (map?.loaded) {
-
             if (mapType == "Cobenefit") {
                 map.dataKey = "value_per_capita";
                 if (granularity == "LAD") {
                     fullData = getTableData(getSUMCBGroupedByLAD(Array.from(coBenefits), "UK", timeSelected))
-                    // fullData = getTableData(getAverageCBGroupedByLAD(Array.from(coBenefits), scenario, timeSelected))
+                } else if (granularity == "Westminster") {
+                    fullData = getTableData(getSUMCBGroupedByP_Code(Array.from(coBenefits), "UK", timeSelected))
                 } else if (granularity == "LSOA") {
-                    let cbs;
-                    if (coBenefits.length == 11) {
-                        cbs = []
-                    } else {
-                        cbs = coBenefits
-                    }
-                    // fullData = getTableData(getCustomCBData(Array.from(coBenefits), scenario, timeSelected))
+                    let cbs = coBenefits.length == 11 ? [] : coBenefits;
                     fullData = getTableData(getCustomCBData(cbs, scenario, timeSelected))
                 }
             } else if (mapType == "SEF") {
                 map.dataKey = "val";
                 if (granularity == "LAD") {
-
                     if (SEF_CATEGORICAL.includes(selectedSef)) {
                         fullData = getTableData(getModeSEFGroupedByLAD(selectedSef))
                     } else {
                         fullData = getTableData(getAverageSEFGroupedByLAD(selectedSef))
+                    }
+                } else if (granularity == "Westminster") {
+                    if (SEF_CATEGORICAL.includes(selectedSef)) {
+                        fullData = getTableData(getModeSEFGroupedByP_Code(selectedSef))
+                    } else {
+                        fullData = getTableData(getAverageSEFGroupedByP_Code(selectedSef))
                     }
                 } else if (granularity == "LSOA") {
                     fullData = getTableData(getSEFData(selectedSef))
                 }
             }
 
-
             fullData.then((data) => {
-
-                // Convert from millions to £
                 if (mapType == "Cobenefit") {
                     data.forEach(d => {
                         d.value_per_capita = d.value_per_capita * 1000000
                     })
                 }
 
-                // Load layers again when changing granularity
-                // let loadLayers = false;
-                // if (map.map.getStyle().layers.length == 0) {
-                //     loadLayers = true;
-                // }
-
                 let colorRange;
-
                 if (mapType == "Cobenefit") {
                     if (coBenefits.length == 1) {
                         colorRange = JSON.parse(JSON.stringify(COBENEFS_SCALE2(coBenefits[0])))
                         colorRange.shift()
                         colorRange = colorRange.reverse()
-                        // colorRange.splice(0, 0, "red");
                     } else {
                         colorRange = ["red", "white", "black"];
                     }
@@ -157,27 +151,19 @@
 
 
     onMount(async () => {
-        let fullData;
-        if (granularity == "LAD") {
-            // fullData = await getTableData(getAverageCBGroupedByLAD(Array.from(coBenefits), scenario, timeSelected))
-            fullData = await getTableData(getSUMCBGroupedByLAD(Array.from(coBenefits), "UK", timeSelected))
-        } else if (granularity == "LSOA") {
-            fullData = await getTableData(getCustomCBData(Array.from(coBenefits), scenario, timeSelected))
-        }
+        let fullData = await getTableData(getSUMCBGroupedByLAD(Array.from(coBenefits), "UK", timeSelected))
 
-        // COnvert from millions to £
         fullData.forEach(d => {
             d.value_per_capita = d.value_per_capita * 1000000
         })
 
-
-        // map = new MapUK(fullData, granularity, mapDiv, "val", true, "Lookup_Value", true);
         map = new MapUK(fullData, granularity, mapDiv, "value_per_capita", true, "Lookup_Value", true);
         map.initMap();
         map.setTooltipCb(tooltipValue);
 
         legendSvg = map.legend(mapLegend());
         legendDiv.append(legendSvg)
+    })
 
 
         // Listen for zoom events: Too slow to do it like this
@@ -221,7 +207,7 @@
         //         // Zoom level is below or equal to the threshold, revert changes
         //     }
         // });
-    })
+   // })
 
 
     const onChangeScenario = (e) => {
@@ -282,7 +268,7 @@
         map.granularity = granularity;
 
         if (granularity == "LSOA") {
-            map.border = false
+            map.border = false;
         } else {
             map.border = true;
         }
@@ -290,8 +276,8 @@
         loadLayers = true;
 
         posthog.capture('clicked granularity', {
-        granularity: e.currentTarget.value
-        })   
+            granularity: e.currentTarget.value
+        });
     }
 
     const tooltipValue = (value) => {
@@ -375,6 +361,8 @@
             <div class="component">
                 <input type="radio" name="granularity" on:change={onChangeGranularity} value="LAD" checked>
                 <label for="LAD">Local Authorities</label>
+                <input type="radio" name="granularity" on:change={onChangeGranularity} value="Westminster">
+                <label for="Westminster">Westminster Constituencies</label>
                 <input type="radio" name="granularity" on:change={onChangeGranularity} value="LSOA">
                 <label for="LSOA">Data Zones</label>
             </div>
