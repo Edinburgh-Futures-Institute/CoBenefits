@@ -653,90 +653,98 @@
 
         <div id="explore-section-main">
 
-                <div class="explore-block">
-                <h2>Read Stories and Analyses</h2>
-                <div class="explore-stories">
-                    <div class="explore-page">
-                    <a href="{base}/stories/story.pdf" target="_blank" rel="noopener noreferrer">
+               <div class="explore-block">
+                    <h2>Read Stories and Analyses</h2>
+                    <div class="explore-stories explore-stories--reports">
 
-                            <img class="story-teaser-img" src="{base}/stories/Derry_picture.png"/>
-                            <h3 class="hover-underline">Accelerating climate financing in Derry City and Strabane District Council</h3>
+                        <div class="explore-page story-card">
+                            <a href="{base}/lad">
+                                <div class="story-img-wrapper">
+                                    <img class="story-teaser-img" src="{base}/stories/westCropped.png" alt="Westminster constituencies"/>
+                                    <span class="new-badge">NEW</span>
+                                </div>
+                                <h3 class="hover-underline">Westminster constituency report pages</h3>
+                                <p>Choose from 650 areas to see co-benefit distributions, temporal trends, and socio-economic relationships in your constituency.</p>
+                            </a>
+                        </div>
 
-                    </a>
+                        <div class="explore-page story-card">
+                            <a href="{base}/stories/story.pdf" target="_blank" rel="noopener noreferrer">
+                                <div class="story-img-wrapper">
+                                    <img class="story-teaser-img" src="{base}/stories/Derry_picture.png" alt="Derry City"/>
+                                </div>
+                                <h3 class="hover-underline">Accelerating climate financing in Derry City and Strabane District Council</h3>
+                                <p>Read the full story on how co-benefits analysis is informing climate finance decisions locally.</p>
+                            </a>
+                        </div>
+
+                        <div class="explore-page story-card story-card--muted">
+                            <h3>More to come...</h3>
+                            <p>In the meantime, if you have your own ideas for collaboration on stories related to
+                                co-benefits please get in touch using the
+                                <a href="https://docs.google.com/forms/d/1w-8Lt9bESZ56PdklTIT38plec7dPgDbJtORkatoXFVY/viewform?edit_requested=true">feedback form.</a>
+                            </p>
+                        </div>
+
+                    </div>
                 </div>
-                <div class="explore-page">
-     <br>
-     <br>
-     <br>
-                        <h3>More to come...</h3>
-                        <p>In the meantime, if you have your own ideas for collaboration on stories related to
-                            co-benefits please get in touch using the
-                            <a href="https://docs.google.com/forms/d/1w-8Lt9bESZ56PdklTIT38plec7dPgDbJtORkatoXFVY/viewform?edit_requested=true">feedback
-                                form.</a></p>
-
-                </div>
-</div>
-            </div>
-            </div>
 
             <div class="explore-block">
                 <h2>Browse Report Pages</h2>
+                <div class="explore-stories explore-stories--pages">
 
-                <div class="explore-pages">
-
-                    <div on:click={openDropdown} style="cursor: pointer;">
-                        <div class="explore-page">
-                            <img src="{base}/pages-teasers/coben.png" alt="Open Co-Benefits Dropdown"/>
-                            <h3>11 Co-Benefits Pages</h3>
-                            <p> A Co-benefit page shows the spatial and temporal distribution of a given co-benefit, and
-                                its relationship with socio-economic factors. </p>
+                    <a>
+                    <div class="explore-page story-card" on:click={openDropdown} style="cursor: pointer;">
+                        <div class="story-img-wrapper">
+                            <img class="story-teaser-img" src="{base}/pages-teasers/coben.png" alt="Open Co-Benefits Dropdown"/>
                         </div>
+                        <h3 class="hover-underline">11 Co-Benefits</h3>
+                        <p>A Co-benefit page shows the spatial and temporal distribution of a given co-benefit, and its relationship with socio-economic factors.</p>
                     </div>
-
+                    </a>
 
                     <a href="{base}/lad">
-
-                        <div class="explore-page">
-                            <img class="page-teaser-img" src="{base}/pages-teasers/location.png"/>
-                            <h3>382 Local Area Pages</h3>
-                            <p> A Local Area page shows the different co-benefits in this area, temporal distributions,
-                                and their relationships with local socio-economic distributions.</p>
+                        <div class="explore-page story-card">
+                            <div class="story-img-wrapper">
+                                <img class="story-teaser-img" src="{base}/pages-teasers/location.png" alt="Local Area Pages"/>
+                            </div>
+                            <h3 class="hover-underline">382 Local Areas</h3>
+                            <p>A Local Area page shows the different co-benefits in this area, temporal distributions, and their relationships with local socio-economic distributions.</p>
                         </div>
                     </a>
 
                     <a href="{base}/sefs">
-                        <div class="explore-page">
-                            <img class="page-teaser-img" src="{base}/pages-teasers/sef.png"/>
-                            <h3>17 Socio-Economic Factors Pages</h3>
-                            <p> A Socio-Economic Factor Page shows the spatial distribution of a given factor and it's
-                                relationships with the different co-benefits.</p>
-
+                        <div class="explore-page story-card">
+                            <div class="story-img-wrapper">
+                                <img class="story-teaser-img" src="{base}/pages-teasers/sef.png" alt="Socio-Economic Factors"/>
+                            </div>
+                            <h3 class="hover-underline">17 Socio-Economic Factors</h3>
+                            <p>A Socio-Economic Factor Page shows the spatial distribution of a given factor and its relationships with the different co-benefits.</p>
                         </div>
                     </a>
 
                     <a href="{base}/map">
-                        <div class="explore-page">
-                            <img class="page-teaser-img" src="{base}/pages-teasers/map.png"/>
-                            <h3>Interactive Map</h3>
-                            <p> The interactive map enables exploring the spatial distributions of both the co-benefits
-                                and the socio-economic factors at the datazones and local area levels.</p>
+                        <div class="explore-page story-card">
+                            <div class="story-img-wrapper">
+                                <img class="story-teaser-img" src="{base}/pages-teasers/map.png" alt="Interactive Map"/>
+                            </div>
+                            <h3 class="hover-underline">Interactive Map</h3>
+                            <p>The interactive map enables exploring the spatial distributions of both the co-benefits and the socio-economic factors at the datazones and local area levels.</p>
                         </div>
                     </a>
 
                     <a href="{base}/lad">
-                        <div class="explore-page">
-                            <img class="page-teaser-img" src="{base}/pages-teasers/nation.png"/>
-                            <h3>Nation Pages</h3>
-                            <p> The nation pages shows the different co-benefits in this nation and temporal distributions.</p>
+                        <div class="explore-page story-card">
+                            <div class="story-img-wrapper">
+                                <img class="story-teaser-img" src="{base}/pages-teasers/nation.png" alt="Nation Pages"/>
+                            </div>
+                            <h3 class="hover-underline">Nation Pages</h3>
+                            <p>The nation pages show the different co-benefits in this nation and temporal distributions.</p>
                         </div>
                     </a>
+
                 </div>
             </div>
-
-
-
-
-
     </section>
 
     <section class="side-by-side-section">
@@ -1039,17 +1047,14 @@
         font-size: 32px;
         margin: 1rem 0;
     }
-
+    
     #explore-section-main {
         display: flex;
-        flex-direction: row;
+        flex-direction: column;
         gap: 1rem;
-        /*padding: 2rem 3rem;*/
-        /*padding-right: 1.5rem;*/
-        /*padding-left: 1.5rem;*/
         justify-content: space-between;
-        /*background-color: #f9f9f9;*/
     }
+
 
     .side-box {
         flex: 1;
@@ -1105,7 +1110,7 @@
 
     .explore-block {
         padding: 10px 15px;
-        background-color: #fdfdfd;
+        background-color: #fcfcfc;
         border: 1px solid lightgray;
         flex-grow: 1;
         border-radius: 8px;
@@ -1125,13 +1130,62 @@
         gap: 8px; /* space between icon and number */
     }
 
+    .explore-stories--reports .story-card {
+        display: flex;
+        justify-content: flex-start;
+        gap: 1rem;
+        align-items: stretch;
+        max-width: 20rem;
+    }
 
+    .explore-stories--reports .story-card h3 {
+        min-height: 4rem;
+    }
 
+    .explore-stories--pages .story-card {
+        display: flex;
+        justify-content: flex-start;
+        gap: 1rem;
+        align-items: stretch;
+        max-width: 18rem;
 
-    .explore-stories {
-          display: flex;
-          justify-content: flex-start;
-          gap: 10%;
+    }
+
+    .explore-stories--pages .story-card h3 {
+        min-height: 3rem;
+    }
+
+    .explore-stories--pages .story-teaser-img {
+        height: 210px;
+    }
+
+    .explore-stories > a {
+        color: inherit;
+        text-decoration: none;
+    }
+
+    .explore-stories--pages {
+        display: flex;
+        flex-direction: row;
+        align-items: stretch;
+    }
+
+    .explore-stories--pages > a {
+        display: flex;
+        flex: 1;
+        min-width: 0;
+    }
+
+    .explore-stories--reports {
+        display: flex;
+        flex-direction: row;
+        align-items: stretch;
+        gap: 2rem
+    }
+
+    .explore-stories--reports > .explore-page {
+        flex: 1;
+        min-width: 0;
     }
 
     .explore-stories > h3 {
@@ -1209,7 +1263,6 @@
 
     .story-teaser-img {
         width: 320px;
-        height: auto;
         /*border-top: 2px solid #999;
         border-bottom: 2px solid #999;*/
         object-fit: cover;
@@ -1292,13 +1345,102 @@
          letter-spacing: -10px;
     }
 
-    /* when hovering the whole multicolor word */
     .multicolor:hover span {
         color: var(--clr); /* reveal each letter's color */
     }
 
-    /* optional: individual letter hover lift */
     .multicolor span:hover {
         transform: translateY(-4px);
+    }
+    
+    .story-card {
+        border: 1px solid #e5e7eb;
+        border-radius: 10px;
+        overflow: hidden;
+        transition: box-shadow 0.2s ease, transform 0.2s ease;
+        background: #fff;
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+    }
+
+    .story-card:hover {
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+        transform: translateY(-3px);
+    }
+
+    .story-card a {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        padding-bottom: 1rem;
+        color: inherit;
+        text-decoration: none;
+    }
+
+    .story-card h3 {
+        padding: 0.75rem 1rem 0.25rem;
+        margin: 0;
+    }
+
+    .story-card p {
+        padding: 0 1rem;
+        padding-bottom: 0.5rem;
+        margin: 0;
+        color: #555;
+        font-size: 14px;
+        /* margin-top: 0.5rem; */
+        flex-grow: 1;
+    }
+
+    .story-card--muted {
+        background: #f9f9f9;
+        border-style: dashed;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 2rem 1.5rem;
+    }
+
+    .story-card--muted h3 {
+        padding: 0;
+        color: #888;
+    }
+
+    .story-card--muted p {
+        padding: 0;
+        margin-top: 0.5rem;
+    }
+
+    .story-img-wrapper {
+        position: relative;
+        width: 100%;
+    }
+
+    .story-teaser-img {
+        width: 100%;
+        height: 180px;
+        object-fit: cover;
+        object-position: center;
+        display: block;
+    }
+
+    .new-badge {
+        position: absolute;
+        bottom: 12px;
+        right: 12px;
+        background-color: #dc2626;
+        color: white;
+        font-size: 0.7rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        padding: 3px 8px;
+        border-radius: 4px;
+        text-transform: uppercase;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+
+    #guide {
+        padding-bottom: 2rem;
     }
 </style>
