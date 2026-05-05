@@ -361,10 +361,12 @@
             <div class="component">
                 <input type="radio" name="granularity" on:change={onChangeGranularity} value="LAD" checked>
                 <label for="LAD">Local Authorities</label>
-                <input type="radio" name="granularity" on:change={onChangeGranularity} value="Westminster">
-                <label for="Westminster">Westminster Constituencies</label>
                 <input type="radio" name="granularity" on:change={onChangeGranularity} value="LSOA">
                 <label for="LSOA">Data Zones</label>
+                <br>
+                <input type="radio" name="granularity" on:change={onChangeGranularity} value="Westminster">
+                <label for="Westminster">Westminster Constituencies</label>
+                <span class="new-badge">NEW</span>
             </div>
 
 
@@ -555,5 +557,20 @@
 
     .icon {
         height: 2em;
+    }
+
+    .new-badge {
+        display: inline-block;
+        background-color: #dc2626;
+        color: white;
+        font-size: 0.7rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        padding: 1.5px 5px;
+        border-radius: 4px;
+        text-transform: uppercase;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        vertical-align: middle;
+        margin-left: 4px;
     }
 </style>
