@@ -385,17 +385,20 @@ export class MapUK {
 		}
 
 		if (click) {
-		this.map.on('click', 'fill', (e) => {
-			let feature = e.features[0];
-			if (this.granularity == 'P_Code') {
-				let pcode = feature.properties.PCON25CD; // ← your geojson property
-				window.location.assign(`${base}/election?location=${pcode}`);
-			} else {
-				let lad = feature.properties.LAD22CD;
-				window.location.assign(`${base}/location?location=${lad}`);
-			}
-		});
-	}
+			this.map.on('click', 'fill', (e) => {
+				let feature = e.features[0];
+				if (this.granularity == 'P_Code') {
+					let pcode = feature.properties.PCON25CD;
+					window.location.assign(`${base}/election?location=${pcode}`);
+				} else if (this.granularity == 'Westminster') {
+					let pcon = feature.properties.PCON24CD;
+					window.location.assign(`${base}/election?location=${pcon}`);
+				} else {
+					let lad = feature.properties.LAD22CD;
+					window.location.assign(`${base}/location?location=${lad}`);
+				}
+			});
+		}
 
 		// // Listen for zoom events
 		// this.map.on('zoom',  () => {
