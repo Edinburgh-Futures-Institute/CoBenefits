@@ -1,0 +1,1 @@
+import{t as f}from"./lkIfnYzw.js";function r(i,n,c){let l;for(;;){const e=f(i,n,c);if(e===l||e===0||!isFinite(e))return[i,n];e>0?(i=Math.floor(i/e)*e,n=Math.ceil(n/e)*e):e<0&&(i=Math.ceil(i*e)/e,n=Math.floor(n*e)/e),l=e}}export{r as n};
