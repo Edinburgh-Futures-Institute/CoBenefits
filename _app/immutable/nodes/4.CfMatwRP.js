@@ -1,0 +1,1 @@
+import{L as c}from"../chunks/layout.HAoViKnf.js";async function e({url:o}){return{P_Code:o.searchParams.get("location")}}const n=Object.freeze(Object.defineProperty({__proto__:null,load:e},Symbol.toStringTag,{value:"Module"}));export{c as component,n as universal};
