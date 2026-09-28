@@ -15,11 +15,25 @@ if [ ! -d "$REPO_DIR/build" ]; then
   exit 1
 fi
 
-SERVE_PATH="$(command -v serve || true)"
+# Prefer a Node >=18 install (nvm's default alias may still point at an old
+# system Node, e.g. v16, which won't run this project's build/tooling).
+SERVE_PATH=""
+if [ -d "$HOME/.nvm/versions/node" ]; then
+  for d in "$HOME"/.nvm/versions/node/v2*/bin "$HOME"/.nvm/versions/node/v1[89]*/bin; do
+    if [ -x "$d/serve" ]; then
+      SERVE_PATH="$d/serve"
+      break
+    fi
+  done
+fi
 if [ -z "$SERVE_PATH" ]; then
-  echo "error: 'serve' not found on PATH — run 'npm install -g serve' first" >&2
+  SERVE_PATH="$(command -v serve || true)"
+fi
+if [ -z "$SERVE_PATH" ]; then
+  echo "error: 'serve' not found — run 'npm install -g serve' (under Node >=18, e.g. 'nvm use 20 && npm install -g serve') first" >&2
   exit 1
 fi
+SERVE_BIN_DIR="$(dirname "$SERVE_PATH")"
 echo "Using serve at: $SERVE_PATH"
 
 # Free the port if an old foreground/manual `serve` is still holding it.
@@ -38,6 +52,7 @@ After=network.target
 [Service]
 Restart=on-failure
 WorkingDirectory=${REPO_DIR}
+Environment=PATH=${SERVE_BIN_DIR}:/usr/bin:/bin
 ExecStart=${SERVE_PATH} -l tcp://127.0.0.1:${PORT} build
 
 [Install]
