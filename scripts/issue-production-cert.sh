@@ -11,9 +11,15 @@ WEBROOT="/home/admin/CoBenefits/acme-challenge"
 CERT_DIR="/home/admin/CoBenefits/certs"
 
 echo "--- checking DNS resolves here first ---"
-SERVER_IP="$(curl -s https://ifconfig.me || true)"
 for d in "$DOMAIN" "$WWW_DOMAIN"; do
-  RESOLVED="$(dig +short "$d" | tail -1)"
+  RESOLVED="$(getent ahostsv4 "$d" 2>/dev/null | awk '{print $1; exit}')"
+  if [ -z "$RESOLVED" ]; then
+    RESOLVED="$(python3 -c "import socket,sys
+try:
+    print(socket.gethostbyname(sys.argv[1]))
+except Exception:
+    pass" "$d")"
+  fi
   echo "$d -> ${RESOLVED:-<no answer>}"
   if [ -z "$RESOLVED" ]; then
     echo "error: $d does not resolve yet — ask your supervisor to add the DNS record first" >&2
