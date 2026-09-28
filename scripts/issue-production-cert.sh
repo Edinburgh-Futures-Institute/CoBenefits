@@ -9,8 +9,18 @@ DOMAIN="ukcobenefitsatlas.net"
 WWW_DOMAIN="www.ukcobenefitsatlas.net"
 WEBROOT="/home/admin/CoBenefits/acme-challenge"
 CERT_DIR="/home/admin/CoBenefits/certs"
+THIS_SERVER_IP="89.58.55.170"
 
-echo "--- checking DNS resolves here first ---"
+# acme.sh's installer wires it up as a shell alias in ~/.bashrc (interactive
+# shells only) — a non-interactive script never sees it, so call the real
+# binary directly.
+ACME_BIN="$HOME/.acme.sh/acme.sh"
+if [ ! -x "$ACME_BIN" ]; then
+  echo "error: $ACME_BIN not found — is acme.sh actually installed under this user?" >&2
+  exit 1
+fi
+
+echo "--- checking DNS resolves to this server ($THIS_SERVER_IP) first ---"
 for d in "$DOMAIN" "$WWW_DOMAIN"; do
   RESOLVED="$(getent ahostsv4 "$d" 2>/dev/null | awk '{print $1; exit}')"
   if [ -z "$RESOLVED" ]; then
@@ -21,17 +31,17 @@ except Exception:
     pass" "$d")"
   fi
   echo "$d -> ${RESOLVED:-<no answer>}"
-  if [ -z "$RESOLVED" ]; then
-    echo "error: $d does not resolve yet — ask your supervisor to add the DNS record first" >&2
+  if [ "$RESOLVED" != "$THIS_SERVER_IP" ]; then
+    echo "error: $d resolves to '${RESOLVED:-<nothing>}', not $THIS_SERVER_IP — DNS hasn't been updated/propagated yet" >&2
     exit 1
   fi
 done
 
 mkdir -p "$CERT_DIR"
 
-acme.sh --issue -d "$DOMAIN" -d "$WWW_DOMAIN" --webroot "$WEBROOT"
+"$ACME_BIN" --issue -d "$DOMAIN" -d "$WWW_DOMAIN" --webroot "$WEBROOT"
 
-acme.sh --install-cert -d "$DOMAIN" -d "$WWW_DOMAIN" \
+"$ACME_BIN" --install-cert -d "$DOMAIN" -d "$WWW_DOMAIN" \
   --key-file       "$CERT_DIR/privkey.pem" \
   --fullchain-file "$CERT_DIR/fullchain.pem"
 
